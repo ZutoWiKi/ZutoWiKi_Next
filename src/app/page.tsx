@@ -1,10 +1,15 @@
-async function getMovies() {
-  const response = await fetch("http://127.0.0.1:8001/api/hello/");
-  const json = await response.json();
-  return json;
-}
-
+import { Suspense } from "react";
+import GetHello from "@/components/get";
+import PostHello from "@/components/post";
 export default async function MyAPP() {
-  const data = await getMovies();
-  return <h1>{data.message}</h1>;
+  return (
+    <div>
+      <Suspense fallback={<h1>Loading get</h1>}>
+        <GetHello />
+      </Suspense>
+      <Suspense fallback={<h1>Loading post</h1>}>
+        <PostHello />
+      </Suspense>
+    </div>
+  );
 }
