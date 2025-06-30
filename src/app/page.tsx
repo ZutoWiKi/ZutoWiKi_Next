@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import GetHello from "@/components/get";
-import PostHello from "@/components/post";
+import UserForm from "@/components/userform";
 export default async function MyAPP() {
   return (
     <div>
@@ -8,7 +8,7 @@ export default async function MyAPP() {
         <GetHello />
       </Suspense>
       <Suspense fallback={<h1>Loading post</h1>}>
-        <PostHello />
+        <UserForm />
       </Suspense>
     </div>
   );
