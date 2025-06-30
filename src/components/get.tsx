@@ -1,5 +1,5 @@
 async function get() {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 10000));
   const response = await fetch("http://127.0.0.1:8001/api/hello/");
   const json = await response.json();
   return json;

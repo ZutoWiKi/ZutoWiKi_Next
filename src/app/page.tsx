@@ -7,9 +7,9 @@ export default async function MyAPP() {
       <Suspense fallback={<h1>Loading get</h1>}>
         <GetHello />
       </Suspense>
-      <Suspense fallback={<h1>Loading post</h1>}>
+      <div>
         <UserForm />
-      </Suspense>
+      </div>
     </div>
   );
 }
