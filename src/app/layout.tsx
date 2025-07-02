@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import React from "react";
+import FloatingMenu from "@/components/FloatingMenu";
 
 export const metadata: Metadata = {
   title: "윤슬 | Yoonseul",
@@ -14,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <FloatingMenu />
+        {children}
+      </body>
     </html>
   );
 }

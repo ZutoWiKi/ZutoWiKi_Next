@@ -1,5 +1,4 @@
 import React from "react";
-import FloatingMenu from "@/components/FloatingMenu";
 import PageLayout from "@/components/PageLayout";
 
 export default function RootLayout({
@@ -7,10 +6,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <PageLayout>
-      <FloatingMenu />
-      {children}
-    </PageLayout>
-  );
+  return <PageLayout>{children}</PageLayout>;
 }

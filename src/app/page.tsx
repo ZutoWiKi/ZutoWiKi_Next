@@ -1,12 +1,9 @@
-import FloatingMenu from "@/components/FloatingMenu";
 import React from "react";
 import PageLayout from "@/components/PageLayout";
 
 export default function MyAPP() {
   return (
     <PageLayout>
-      <FloatingMenu />
-
       {/* 메인 콘텐츠 영역 (빈 공간) */}
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center text-gray-600">

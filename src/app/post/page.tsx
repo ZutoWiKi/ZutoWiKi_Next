@@ -1,11 +1,21 @@
-import React from "react";
-import { Suspense } from "react";
 import GetWork from "@/components/GetWork";
+import React, { Suspense } from "react";
 
-export default function Post() {
+interface PostTypePageProps {
+  params: {
+    type: string;
+  };
+}
+
+export default function PostTypePage({ params }: PostTypePageProps) {
+  const { type } = params;
+
   return (
-    <Suspense fallback={<h1>Loading get</h1>}>
-      <GetWork />
-    </Suspense>
+    <div>
+      <h1>Post Type: {type}</h1>
+      <Suspense fallback={<h1>Loading get</h1>}>
+        <GetWork type={type} />
+      </Suspense>
+    </div>
   );
 }
