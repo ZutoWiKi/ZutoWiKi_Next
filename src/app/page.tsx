@@ -31,12 +31,8 @@ export default function MyAPP() {
           <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             ✨ 메인 콘텐츠 영역
           </h1>
-          <p className="text-lg mb-2">
-            카테고리 메뉴를 드래그하여 자유롭게 이동시킬 수 있습니다.
-          </p>
-          <p className="text-sm text-gray-500">
-            15개의 카테고리가 세로로 배치되어 있습니다.
-          </p>
+          <p className="text-lg mb-2">안녕하세여~</p>
+          <p className="text-sm text-gray-500">안녕히가세여~</p>
         </div>
       </main>
     </div>
