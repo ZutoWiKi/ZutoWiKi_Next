@@ -1,7 +1,10 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function FloatingMenu() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 90 });
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -16,82 +19,25 @@ export default function FloatingMenu() {
   const lastTimeRef = useRef(0);
   const animationRef = useRef<number | undefined>(undefined);
 
-  // 컴포넌트가 마운트되었는지 확인
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // URL에서 현재 타입 파라미터 가져오기 및 URL 변경 감지
   useEffect(() => {
-    if (typeof window === "undefined" || !mounted) return;
+    if (!mounted) return;
 
-    const updateCurrentType = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const type = urlParams.get("type") || "";
-      setCurrentType(type.toLowerCase());
-    };
+    // pathname에서 type 추출 (예: /post/novel → novel)
+    const pathSegments = pathname.split("/");
+    const typeFromPath = pathSegments[pathSegments.length - 1];
 
-    // 초기 설정
-    updateCurrentType();
-
-    // popstate 이벤트 (뒤로가기/앞으로가기)
-    const handlePopState = () => {
-      updateCurrentType();
-    };
-
-    // pushState/replaceState 감지를 위한 커스텀 이벤트
-    const handleUrlChanged = () => {
-      updateCurrentType();
-    };
-
-    // Next.js의 router 변경 감지
-    const handleRouteChange = () => {
-      updateCurrentType();
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    window.addEventListener("urlChanged", handleUrlChanged);
-
-    // Next.js router events (만약 사용 중이라면)
-    if (typeof window !== "undefined" && (window as any).next) {
-      (window as any).next.router?.events?.on(
-        "routeChangeComplete",
-        handleRouteChange,
-      );
+    // post 페이지에 있고 type이 있는 경우에만 설정
+    if (pathname.startsWith("/post/") && typeFromPath !== "post") {
+      setCurrentType(typeFromPath.toLowerCase());
+    } else {
+      setCurrentType("");
     }
+  }, [pathname, mounted]);
 
-    // pushState와 replaceState를 감지하기 위한 오버라이드
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
-
-    history.pushState = function (...args) {
-      originalPushState.apply(this, args);
-      setTimeout(updateCurrentType, 0);
-    };
-
-    history.replaceState = function (...args) {
-      originalReplaceState.apply(this, args);
-      setTimeout(updateCurrentType, 0);
-    };
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-      window.removeEventListener("urlChanged", handleUrlChanged);
-
-      if (typeof window !== "undefined" && (window as any).next) {
-        (window as any).next.router?.events?.off(
-          "routeChangeComplete",
-          handleRouteChange,
-        );
-      }
-
-      // 원래 함수 복원
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-    };
-  }, [mounted]);
-
-  // 화면 경계 체크 함수
   const constrainToScreen = useCallback((pos: { x: number; y: number }) => {
     if (!menuRef.current || typeof window === "undefined") return pos;
 
@@ -124,7 +70,6 @@ export default function FloatingMenu() {
     return { x: newX, y: newY };
   }, []);
 
-  // 관성 애니메이션 함수
   const animateThrow = useCallback(() => {
     const friction = 0.9;
     const minVelocity = 0.5;
@@ -258,10 +203,17 @@ export default function FloatingMenu() {
     (category) => currentType === category.desc.toLowerCase(),
   );
 
-  // hydration 문제 해결: 마운트되기 전까지는 null 반환
   if (!mounted) {
     return null;
   }
+
+  const handleCategoryClick = (categoryDesc: string) => {
+    const typeSlug = categoryDesc.toLowerCase();
+    setCurrentType(typeSlug);
+
+    // 동적 라우팅 사용: /post/[type]
+    router.push(`/post/${typeSlug}`);
+  };
 
   return (
     <div
@@ -285,7 +237,6 @@ export default function FloatingMenu() {
       }}
       onMouseDown={handleMouseDown}
     >
-      {/* 윈도우 타이틀바 */}
       <div className="drag-handle bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl px-4 py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-lg font-semibold text-gray-700">Menu</span>
@@ -301,7 +252,6 @@ export default function FloatingMenu() {
         </button>
       </div>
 
-      {/* 카테고리 메뉴 목록 */}
       {!isCollapsed && (
         <div className="py-2 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
           {categories.map((category, index) => {
@@ -310,23 +260,7 @@ export default function FloatingMenu() {
             return (
               <button
                 key={index}
-                onClick={() => {
-                  if (typeof window === "undefined") return;
-
-                  const searchParams = new URLSearchParams({
-                    type: category.desc.toLowerCase(),
-                  });
-                  const newUrl = `/post?${searchParams.toString()}`;
-
-                  window.history.pushState({}, "", newUrl);
-                  setCurrentType(category.desc.toLowerCase());
-
-                  window.dispatchEvent(
-                    new CustomEvent("urlChanged", {
-                      detail: { type: category.desc.toLowerCase() },
-                    }),
-                  );
-                }}
+                onClick={() => handleCategoryClick(category.desc)}
                 className={`w-full text-left transition-all duration-300 border-b border-gray-100/50 last:border-b-0 font-medium group flex items-center justify-between relative overflow-hidden ${
                   isActive
                     ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm px-7 py-3"
@@ -365,7 +299,6 @@ export default function FloatingMenu() {
         </div>
       )}
 
-      {/* 윈도우 하단 */}
       <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-b-xl border-t border-gray-200/50">
         <div className="text-xs text-gray-500 text-center flex flex-col items-center justify-center gap-1">
           <span>Drag to Move and Slide</span>
