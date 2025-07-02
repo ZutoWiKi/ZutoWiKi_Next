@@ -194,7 +194,7 @@ const AuthButtons = () => {
                 type="button"
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                비밀번호 찾기
+                비밀번호 찾기 ( 개발 ing... )
               </button>
             </div>
 
