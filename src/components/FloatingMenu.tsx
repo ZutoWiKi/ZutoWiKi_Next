@@ -3,7 +3,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 
 export default function FloatingMenu() {
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 50, y: 130 });
+  const [position, setPosition] = useState({ x: 20, y: 90 });
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [currentType, setCurrentType] = useState<string>("");
