@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { PostLogin } from "@/components/API/PostLogin";
+import { useRouter } from "next/navigation";
 
 // Modal 컴포넌트를 외부로 분리
 const Modal = ({
@@ -42,19 +44,22 @@ const AuthButtons = () => {
     confirmPassword: "",
   });
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  const handleLoginSubmit = React.useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      console.log("로그인 시도:", loginForm);
+  // 로그인 폼 서버 액션 처리
+  const handleLoginAction = async (formData: FormData) => {
+    try {
+      await PostLogin(formData);
       setShowLogin(false);
-    },
-    [loginForm],
-  );
+      router.push("/");
+    } catch (error) {
+      console.error("로그인 실패:", error);
+    }
+  };
 
   const handleSignupSubmit = React.useCallback(
     (e: React.FormEvent) => {
@@ -158,17 +163,20 @@ const AuthButtons = () => {
             </button>
           </div>
 
-          <div onSubmit={handleLoginSubmit} className="space-y-4">
+          {/* 서버 액션을 action 속성으로 연결 */}
+          <form action={handleLoginAction} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 이메일
               </label>
               <input
                 type="email"
+                name="email"
                 value={loginForm.email}
                 onChange={handleLoginEmailChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="이메일을 입력하세요"
+                required
               />
             </div>
 
@@ -178,10 +186,12 @@ const AuthButtons = () => {
               </label>
               <input
                 type="password"
+                name="password"
                 value={loginForm.password}
                 onChange={handleLoginPasswordChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="비밀번호를 입력하세요"
+                required
               />
             </div>
 
@@ -199,13 +209,12 @@ const AuthButtons = () => {
             </div>
 
             <button
-              type="button"
-              onClick={handleLoginSubmit}
+              type="submit"
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               로그인
             </button>
-          </div>
+          </form>
 
           <div className="mt-6 text-center">
             <span className="text-gray-600">아직 계정이 없으신가요? </span>
@@ -255,17 +264,20 @@ const AuthButtons = () => {
             </button>
           </div>
 
-          <div onSubmit={handleSignupSubmit} className="space-y-4">
+          {/* form 태그로 수정 */}
+          <form onSubmit={handleSignupSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 이름
               </label>
               <input
                 type="text"
+                name="name"
                 value={signupForm.name}
                 onChange={handleSignupNameChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="이름을 입력하세요"
+                required
               />
             </div>
 
@@ -275,10 +287,12 @@ const AuthButtons = () => {
               </label>
               <input
                 type="email"
+                name="email"
                 value={signupForm.email}
                 onChange={handleSignupEmailChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="이메일을 입력하세요"
+                required
               />
             </div>
 
@@ -288,10 +302,12 @@ const AuthButtons = () => {
               </label>
               <input
                 type="password"
+                name="password"
                 value={signupForm.password}
                 onChange={handleSignupPasswordChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="비밀번호를 입력하세요"
+                required
               />
             </div>
 
@@ -301,15 +317,17 @@ const AuthButtons = () => {
               </label>
               <input
                 type="password"
+                name="confirmPassword"
                 value={signupForm.confirmPassword}
                 onChange={handleSignupConfirmPasswordChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="비밀번호를 다시 입력하세요"
+                required
               />
             </div>
 
             <div className="flex items-center">
-              <input type="checkbox" className="mr-2 rounded" />
+              <input type="checkbox" className="mr-2 rounded" required />
               <span className="text-sm text-gray-600">
                 <button
                   type="button"
@@ -329,13 +347,12 @@ const AuthButtons = () => {
             </div>
 
             <button
-              type="button"
-              onClick={handleSignupSubmit}
+              type="submit"
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               회원가입
             </button>
-          </div>
+          </form>
 
           <div className="mt-6 text-center">
             <span className="text-gray-600">이미 계정이 있으신가요? </span>
