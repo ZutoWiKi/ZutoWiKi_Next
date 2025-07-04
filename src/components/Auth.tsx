@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PostLogin } from "@/components/API/PostLogin";
+import { PostRegister } from "@/components/API/PostRegister";
 import { useRouter } from "next/navigation";
 
 // Modal 컴포넌트를 외부로 분리
@@ -38,7 +39,7 @@ const AuthButtons = () => {
   const [showSignup, setShowSignup] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -61,14 +62,15 @@ const AuthButtons = () => {
     }
   };
 
-  const handleSignupSubmit = React.useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      console.log("회원가입 시도:", signupForm);
+  const handleSignupSubmit = async (formData: FormData) => {
+    try {
+      await PostRegister(formData);
       setShowSignup(false);
-    },
-    [signupForm],
-  );
+      router.push("/");
+    } catch (error) {
+      console.error("회원가입 실패:", error);
+    }
+  };
 
   const handleLoginEmailChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +88,7 @@ const AuthButtons = () => {
 
   const handleSignupNameChange = React.useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSignupForm((prev) => ({ ...prev, name: e.target.value }));
+      setSignupForm((prev) => ({ ...prev, username: e.target.value }));
     },
     [],
   );
@@ -265,15 +267,15 @@ const AuthButtons = () => {
           </div>
 
           {/* form 태그로 수정 */}
-          <form onSubmit={handleSignupSubmit} className="space-y-4">
+          <form action={handleSignupSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 이름
               </label>
               <input
                 type="text"
-                name="name"
-                value={signupForm.name}
+                name="username"
+                value={signupForm.username}
                 onChange={handleSignupNameChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
                 placeholder="이름을 입력하세요"
