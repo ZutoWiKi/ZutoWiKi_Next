@@ -1,4 +1,4 @@
-"use server";
+"use client";
 export async function PostLogin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -13,6 +13,8 @@ export async function PostLogin(formData: FormData) {
     body: JSON.stringify({ email, password }),
   });
 
-  const json = await response.json();
-  console.log(json);
+  if (!response.ok) throw new Error("로그인 실패");
+  const { token } = await response.json();
+  console.log(token);
+  localStorage.setItem("token", token);
 }

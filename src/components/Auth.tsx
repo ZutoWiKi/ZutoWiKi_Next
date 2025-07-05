@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { PostLogin } from "@/components/API/PostLogin";
 import { PostRegister } from "@/components/API/PostRegister";
 import { useRouter } from "next/navigation";
+import Link from 'next/link'
 
 // Modal 컴포넌트를 외부로 분리
 const Modal = ({
@@ -206,7 +207,7 @@ const AuthButtons = () => {
                 type="button"
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                비밀번호 찾기 ( 개발 ing... )
+                비밀번호 찾기 (기억을 잘 뒤져봐요ㅎ)
               </button>
             </div>
 
@@ -371,6 +372,7 @@ const AuthButtons = () => {
           </div>
         </div>
       </Modal>
+
     </>
   );
 };
