@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image'
+import UserProfileColor from "@/components/UserProfileColor"
 
 interface User {
   id: number;
@@ -37,11 +37,12 @@ const GetMyPage: React.FC = () => {
 
   return (
     <div className="bg-white shadow-md rounded-2xl p-6 flex items-center space-x-4">
-      <Image
+      <UserProfileColor
         src="/image/profile.png"
+        id={user.id}
+        alt="avatar"
         width={120}
         height={60}
-        alt="avatar"
         className="w-16 h-16 rounded-full object-cover"
       />
       <div>
