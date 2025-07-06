@@ -46,10 +46,13 @@ const AuthButtons = () => {
     confirmPassword: "",
   });
   const [isMounted, setIsMounted] = useState(false);
+  const [isLogin, setIsLogin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
+    const token = localStorage.getItem("token");
+    setIsLogin(!!token);
   }, []);
 
   // 로그인 폼 서버 액션 처리
@@ -57,6 +60,7 @@ const AuthButtons = () => {
     try {
       await PostLogin(formData);
       setShowLogin(false);
+      setIsLogin(true);
       router.push("/");
     } catch (error) {
       console.error("로그인 실패:", error);
@@ -115,8 +119,37 @@ const AuthButtons = () => {
     [],
   );
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLogin(false);
+    router.push("/");
+  };
+
   return (
     <>
+    {isMounted && (
+      isLogin
+      ? (
+      <>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={() => router.push("/user/mypage/")}
+          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        >
+          마이페이지
+        </button>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-all duration-200 hover:bg-gray-200 rounded-lg"
+        >
+          로그아웃
+        </button>
+      </div>
+      </>)
+      : (
+      <>
       <div className="flex gap-3">
         <button
           type="button"
@@ -133,6 +166,9 @@ const AuthButtons = () => {
           회원가입
         </button>
       </div>
+      </>
+      )
+    )}
 
       {/* 로그인 모달 */}
       <Modal
