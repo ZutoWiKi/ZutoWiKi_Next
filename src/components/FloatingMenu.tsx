@@ -194,7 +194,7 @@ export default function FloatingMenu() {
     { name: "시", desc: "Poem" },
     { name: "음악", desc: "Music" },
     { name: "게임", desc: "Game" },
-    { name: "영화", desc: "Movie" },
+    { name: "영화 / 드라마", desc: "Movie" },
     { name: "공연", desc: "Performance" },
     { name: "애니메이션", desc: "Animation" },
   ];

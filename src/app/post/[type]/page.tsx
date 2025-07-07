@@ -8,8 +8,8 @@ interface PostTypePageProps {
   };
 }
 
-export default function PostTypePage({ params }: PostTypePageProps) {
-  const { type } = params;
+export default async function PostTypePage({ params }: PostTypePageProps) {
+  const { type } = await params;
 
   return <WorkListPage type={type} />;
 }
