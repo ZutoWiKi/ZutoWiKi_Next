@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter , usePathname } from "next/navigation";
 import AnimatedList from "./AnimatedList";
+import { useCallback } from 'react'
 
 // 목업 게시글 데이터
 const mockPostsData = {
@@ -266,12 +267,11 @@ interface Post {
 
 export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const router = useRouter();
+  const pathname = usePathname()
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [workInfo, setWorkInfo] = useState<any>(null);
   const [sortBy, setSortBy] = useState<"time" | "views" | "likes">("time");
-  const [showWriteModal, setShowWriteModal] = useState(false);
-  const [writeModalParent, setWriteModalParent] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
   const [newPost, setNewPost] = useState({
     title: "",
@@ -290,6 +290,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       setSelectedPost(workPosts[0]);
     }
   }, [workId]);
+
+  const goToWirte = useCallback(() => {
+    router.push(`${pathname}/write`)
+  }, [router, pathname])
 
   // 정렬된 게시글 목록
   const sortedPosts = [...posts].sort((a, b) => {
@@ -316,26 +320,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     setSelectedPost(sortedPosts[index]);
   };
 
-  const handleWritePost = () => {
-    const newPostData = {
-      id: posts.length + 1,
-      title: newPost.title,
-      author: newPost.author,
-      content: newPost.content,
-      createdAt: new Date().toISOString().split("T")[0],
-      views: 0,
-      likes: 0,
-      parentId: writeModalParent,
-      level: writeModalParent
-        ? (posts.find((p) => p.id === writeModalParent)?.level || 0) + 1
-        : 0,
-    };
-
-    console.log("새 게시글 작성:", newPostData);
-    setShowWriteModal(false);
-    setWriteModalParent(null);
-    setNewPost({ title: "", content: "", author: "익명의사용자" });
-  };
 
   if (!mounted || !workInfo) {
     return (
@@ -348,7 +332,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const selectedIndex = selectedPost
     ? sortedPosts.findIndex((p) => p.id === selectedPost.id)
     : -1;
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* 작품 정보 헤더 */}
@@ -563,20 +547,14 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
             <div className="mt-6 flex gap-3">
               <button
-                onClick={() => {
-                  setWriteModalParent(null);
-                  setShowWriteModal(true);
-                }}
+                onClick={goToWirte}
                 className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               >
                 새 해석 작성
               </button>
               {selectedPost && (
-                <button
-                  onClick={() => {
-                    setWriteModalParent(selectedPost.id);
-                    setShowWriteModal(true);
-                  }}
+                <button // 파생 해석 작성임
+                  onClick={goToWirte}
                   className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border border-gray-200 font-medium transition-all duration-300 transform hover:-translate-y-1"
                 >
                   파생 해석
@@ -587,155 +565,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
         </div>
       </div>
 
-      {/* 글 작성 모달 */}
-      {showWriteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowWriteModal(false)}
-          />
-          <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="p-8">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {writeModalParent ? "파생 해석 작성" : "새로운 해석 작성"}
-                  </h2>
-                  <p className="text-gray-600 mt-2">
-                    {writeModalParent
-                      ? "기존 해석에서 영감을 받아 새로운 관점을 제시해보세요"
-                      : "작품에 대한 당신만의 해석을 자유롭게 표현해보세요"}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowWriteModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              {writeModalParent && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg
-                      className="w-5 h-5 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 10V3L4 14h7v7l9-11h-7z"
-                      />
-                    </svg>
-                    <span className="text-green-700 font-medium">
-                      파생 해석
-                    </span>
-                  </div>
-                  <p className="text-green-700 text-sm">
-                    <strong>
-                      "{posts.find((p) => p.id === writeModalParent)?.title}"
-                    </strong>{" "}
-                    해석에서 영감을 받아 작성하는 글입니다.
-                  </p>
-                </div>
-              )}
-
-              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    해석 제목
-                  </label>
-                  <input
-                    type="text"
-                    value={newPost.title}
-                    onChange={(e) =>
-                      setNewPost((prev) => ({ ...prev, title: e.target.value }))
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
-                    placeholder="해석의 제목을 입력하세요"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    작성자 이름
-                  </label>
-                  <input
-                    type="text"
-                    value={newPost.author}
-                    onChange={(e) =>
-                      setNewPost((prev) => ({
-                        ...prev,
-                        author: e.target.value,
-                      }))
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
-                    placeholder="작성자 이름을 입력하세요"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    해석 내용
-                  </label>
-                  <textarea
-                    value={newPost.content}
-                    onChange={(e) =>
-                      setNewPost((prev) => ({
-                        ...prev,
-                        content: e.target.value,
-                      }))
-                    }
-                    rows={10}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200 resize-none"
-                    placeholder="작품에 대한 해석을 자유롭게 작성해주세요. 당신만의 관점과 감상을 진솔하게 표현해보세요..."
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex gap-4">
-                <button
-                  onClick={() => setShowWriteModal(false)}
-                  className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-all duration-300"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleWritePost}
-                  disabled={!newPost.title || !newPost.content}
-                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {writeModalParent ? "파생 해석 발행" : "해석 발행"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 플로팅 네비게이션 */}
       <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-40">
         <button
-          onClick={() => {
-            setWriteModalParent(null);
-            setShowWriteModal(true);
-          }}
+          onClick={goToWirte}
           className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
         >
           <svg
