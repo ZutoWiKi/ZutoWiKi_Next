@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+/* globals.css 또는 해당 CSS 파일에 추가 */
+
+/* 입력 필드 최적화 */
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    /* GPU 가속 활성화 */
+    transform: translateZ(0);
+    will-change: contents;
+
+    /* 불필요한 애니메이션 비활성화 */
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    /* 브라우저 기본 최적화 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 포커스 상태 최적화 */
+input:focus {
+    outline: none;
+    transform: translateZ(0);
+}
+
+/* 모달 최적화 */
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* 불필요한 리페인트 방지 */
+* {
+    box-sizing: border-box;
+}
+
+/* 개발환경에서 디버깅용 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

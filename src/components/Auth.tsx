@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { PostLogin } from "@/components/API/PostLogin";
 import { PostRegister } from "@/components/API/PostRegister";
 import { useRouter } from "next/navigation";
-import Link from 'next/link'
+import Link from "next/link";
 
 // Modal 컴포넌트를 외부로 분리
 const Modal = ({
@@ -38,16 +38,17 @@ const Modal = ({
 const AuthButtons = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [signupForm, setSignupForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
   const [isMounted, setIsMounted] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
   const router = useRouter();
+
+  // 입력 최적화를 위한 ref 사용
+  const loginEmailRef = React.useRef<HTMLInputElement>(null);
+  const loginPasswordRef = React.useRef<HTMLInputElement>(null);
+  const signupUsernameRef = React.useRef<HTMLInputElement>(null);
+  const signupEmailRef = React.useRef<HTMLInputElement>(null);
+  const signupPasswordRef = React.useRef<HTMLInputElement>(null);
+  const signupConfirmPasswordRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -58,10 +59,13 @@ const AuthButtons = () => {
   // 로그인 폼 서버 액션 처리
   const handleLoginAction = async (formData: FormData) => {
     try {
-      await PostLogin(formData);
-      setShowLogin(false);
-      setIsLogin(true);
-      router.push("/");
+      const result = await PostLogin(formData);
+      if (result?.token) {
+        localStorage.setItem("token", result.token);
+        setShowLogin(false);
+        setIsLogin(true);
+        router.push("/");
+      }
     } catch (error) {
       console.error("로그인 실패:", error);
     }
@@ -77,48 +81,6 @@ const AuthButtons = () => {
     }
   };
 
-  const handleLoginEmailChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLoginForm((prev) => ({ ...prev, email: e.target.value }));
-    },
-    [],
-  );
-
-  const handleLoginPasswordChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLoginForm((prev) => ({ ...prev, password: e.target.value }));
-    },
-    [],
-  );
-
-  const handleSignupNameChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSignupForm((prev) => ({ ...prev, username: e.target.value }));
-    },
-    [],
-  );
-
-  const handleSignupEmailChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSignupForm((prev) => ({ ...prev, email: e.target.value }));
-    },
-    [],
-  );
-
-  const handleSignupPasswordChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSignupForm((prev) => ({ ...prev, password: e.target.value }));
-    },
-    [],
-  );
-
-  const handleSignupConfirmPasswordChange = React.useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSignupForm((prev) => ({ ...prev, confirmPassword: e.target.value }));
-    },
-    [],
-  );
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLogin(false);
@@ -127,48 +89,46 @@ const AuthButtons = () => {
 
   return (
     <>
-    {isMounted && (
-      isLogin
-      ? (
-      <>
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => router.push("/user/mypage/")}
-          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          마이페이지
-        </button>
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-all duration-200 hover:bg-gray-200 rounded-lg"
-        >
-          로그아웃
-        </button>
-      </div>
-      </>)
-      : (
-      <>
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setShowLogin(true)}
-          className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-all duration-200 hover:bg-gray-200 rounded-lg"
-        >
-          로그인
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowSignup(true)}
-          className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          회원가입
-        </button>
-      </div>
-      </>
-      )
-    )}
+      {isMounted &&
+        (isLogin ? (
+          <>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => router.push("/user/mypage/")}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                마이페이지
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-all duration-200 hover:bg-gray-200 rounded-lg"
+              >
+                로그아웃
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogin(true)}
+                className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-all duration-200 hover:bg-gray-200 rounded-lg"
+              >
+                로그인
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSignup(true)}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                회원가입
+              </button>
+            </div>
+          </>
+        ))}
 
       {/* 로그인 모달 */}
       <Modal
@@ -209,12 +169,12 @@ const AuthButtons = () => {
                 이메일
               </label>
               <input
+                ref={loginEmailRef}
                 type="email"
                 name="email"
-                value={loginForm.email}
-                onChange={handleLoginEmailChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="이메일을 입력하세요"
+                autoComplete="email"
                 required
               />
             </div>
@@ -224,12 +184,12 @@ const AuthButtons = () => {
                 비밀번호
               </label>
               <input
+                ref={loginPasswordRef}
                 type="password"
                 name="password"
-                value={loginForm.password}
-                onChange={handleLoginPasswordChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="비밀번호를 입력하세요"
+                autoComplete="current-password"
                 required
               />
             </div>
@@ -310,12 +270,12 @@ const AuthButtons = () => {
                 이름
               </label>
               <input
+                ref={signupUsernameRef}
                 type="text"
                 name="username"
-                value={signupForm.username}
-                onChange={handleSignupNameChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="이름을 입력하세요"
+                autoComplete="name"
                 required
               />
             </div>
@@ -325,12 +285,12 @@ const AuthButtons = () => {
                 이메일
               </label>
               <input
+                ref={signupEmailRef}
                 type="email"
                 name="email"
-                value={signupForm.email}
-                onChange={handleSignupEmailChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="이메일을 입력하세요"
+                autoComplete="email"
                 required
               />
             </div>
@@ -340,12 +300,12 @@ const AuthButtons = () => {
                 비밀번호
               </label>
               <input
+                ref={signupPasswordRef}
                 type="password"
                 name="password"
-                value={signupForm.password}
-                onChange={handleSignupPasswordChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="비밀번호를 입력하세요"
+                autoComplete="new-password"
                 required
               />
             </div>
@@ -355,12 +315,12 @@ const AuthButtons = () => {
                 비밀번호 확인
               </label>
               <input
+                ref={signupConfirmPasswordRef}
                 type="password"
                 name="confirmPassword"
-                value={signupForm.confirmPassword}
-                onChange={handleSignupConfirmPasswordChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-all duration-200"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="비밀번호를 다시 입력하세요"
+                autoComplete="new-password"
                 required
               />
             </div>
@@ -408,7 +368,6 @@ const AuthButtons = () => {
           </div>
         </div>
       </Modal>
-
     </>
   );
 };

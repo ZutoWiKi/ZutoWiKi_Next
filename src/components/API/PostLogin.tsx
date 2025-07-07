@@ -1,4 +1,4 @@
-"use client";
+"use server";
 export async function PostLogin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -16,5 +16,7 @@ export async function PostLogin(formData: FormData) {
   if (!response.ok) throw new Error("로그인 실패");
   const { token } = await response.json();
   console.log(token);
-  localStorage.setItem("token", token);
+
+  // 서버 액션에서는 localStorage에 직접 접근할 수 없으므로 token을 반환
+  return { token };
 }
