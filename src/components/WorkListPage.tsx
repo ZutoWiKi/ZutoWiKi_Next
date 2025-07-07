@@ -1,136 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-// 목업 데이터
-const mockWorksData = {
-  novel: [
-    {
-      id: 1,
-      title: "1984",
-      author: "조지 오웰",
-      coverImage:
-        "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop",
-      description: "디스토피아 사회를 그린 고전 소설",
-    },
-    {
-      id: 2,
-      title: "어린 왕자",
-      author: "생텍쥐페리",
-      coverImage:
-        "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop",
-      description: "사랑과 우정에 대한 철학적 동화",
-    },
-    {
-      id: 3,
-      title: "해리포터와 마법사의 돌",
-      author: "J.K. 롤링",
-      coverImage:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=400&fit=crop",
-      description: "마법 세계의 모험 이야기",
-    },
-    {
-      id: 4,
-      title: "카라마조프 가의 형제들",
-      author: "도스토예프스키",
-      coverImage:
-        "https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=300&h=400&fit=crop",
-      description: "인간 본성에 대한 깊이 있는 탐구",
-    },
-  ],
-  poem: [
-    {
-      id: 1,
-      title: "진달래꽃",
-      author: "김소월",
-      coverImage:
-        "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=300&h=400&fit=crop",
-      description: "이별의 정한을 노래한 서정시",
-    },
-    {
-      id: 2,
-      title: "님의 침묵",
-      author: "한용운",
-      coverImage:
-        "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=400&fit=crop",
-      description: "사랑과 그리움의 철학적 성찰",
-    },
-    {
-      id: 3,
-      title: "청록집",
-      author: "박두진, 조지훈, 박목월",
-      coverImage:
-        "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=300&h=400&fit=crop",
-      description: "자연과 향토를 노래한 서정시집",
-    },
-  ],
-  music: [
-    {
-      id: 1,
-      title: "베토벤 교향곡 9번",
-      author: "루트비히 판 베토벤",
-      coverImage:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=300&h=400&fit=crop",
-      description: "합창이 포함된 웅장한 교향곡",
-    },
-    {
-      id: 2,
-      title: "Four Seasons",
-      author: "안토니오 비발디",
-      coverImage:
-        "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=300&h=400&fit=crop",
-      description: "계절의 변화를 표현한 바이올린 협주곡",
-    },
-  ],
-  movie: [
-    {
-      id: 1,
-      title: "기생충",
-      author: "봉준호",
-      coverImage:
-        "https://images.unsplash.com/photo-1489599510846-1aac057aceec?w=300&h=400&fit=crop",
-      description: "계급 갈등을 다룬 블랙 코미디",
-    },
-    {
-      id: 2,
-      title: "인터스텔라",
-      author: "크리스토퍼 놀란",
-      coverImage:
-        "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=300&h=400&fit=crop",
-      description: "우주를 배경으로 한 SF 대작",
-    },
-  ],
-  game: [
-    {
-      id: 1,
-      title: "젤다의 전설: 브레스 오브 더 와일드",
-      author: "닌텐도",
-      coverImage:
-        "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=300&h=400&fit=crop",
-      description: "오픈 월드 어드벤처 게임",
-    },
-  ],
-  performance: [
-    {
-      id: 1,
-      title: "오페라의 유령",
-      author: "앤드류 로이드 웨버",
-      coverImage:
-        "https://images.unsplash.com/photo-1507924538820-ede94a04019d?w=300&h=400&fit=crop",
-      description: "사랑과 집착을 그린 뮤지컬",
-    },
-  ],
-  animation: [
-    {
-      id: 1,
-      title: "센과 치히로의 행방불명",
-      author: "미야자키 하야오",
-      coverImage:
-        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop",
-      description: "환상적인 세계를 그린 애니메이션",
-    },
-  ],
-};
+import { GetWorksList } from "@/components/API/GetWorksList";
+import { PostWork } from "@/components/API/PostWork";
 
 // 카테고리명 매핑
 const categoryNames = {
@@ -143,14 +15,37 @@ const categoryNames = {
   animation: "애니메이션",
 };
 
+// 타입 인덱스 매핑
+const typeIndexMap = {
+  novel: 0,
+  poem: 1,
+  music: 2,
+  game: 3,
+  movie: 4,
+  performance: 5,
+  animation: 6,
+};
+
+interface Work {
+  id: number;
+  title: string;
+  author: string;
+  coverImage: string;
+  description: string;
+}
+
 interface WorkListPageProps {
   type: string;
 }
 
 export default function WorkListPage({ type }: WorkListPageProps) {
   const router = useRouter();
+  const [works, setWorks] = useState<Work[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newWork, setNewWork] = useState({
     title: "",
     author: "",
@@ -160,13 +55,76 @@ export default function WorkListPage({ type }: WorkListPageProps) {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchWorks();
+  }, [type]);
+
+  const fetchWorks = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await GetWorksList(type);
+      setWorks(data.works || data || []); // 백엔드 응답 구조에 따라 조정
+    } catch (err) {
+      console.error("작품 목록 로딩 에러:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "작품 목록을 불러오는데 실패했습니다.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!mounted) {
     return <div>Loading...</div>;
   }
 
-  const works = mockWorksData[type as keyof typeof mockWorksData] || [];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">작품 목록을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg
+              className="w-16 h-16 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            오류가 발생했습니다
+          </h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchWorks}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const categoryName =
     categoryNames[type as keyof typeof categoryNames] || type;
 
@@ -174,10 +132,38 @@ export default function WorkListPage({ type }: WorkListPageProps) {
     router.push(`/post/${type}/${workId}`);
   };
 
-  const handleAddWork = () => {
-    console.log("새 작품 추가:", newWork);
-    setShowAddModal(false);
-    setNewWork({ title: "", author: "", description: "", coverImage: "" });
+  const handleAddWork = async () => {
+    if (!newWork.title || !newWork.author) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const workData = {
+        typeindex: typeIndexMap[type as keyof typeof typeIndexMap],
+        title: newWork.title,
+        author: newWork.author,
+        description: newWork.description,
+        coverImage: newWork.coverImage,
+      };
+
+      const newWorkData = await PostWork(workData);
+      console.log("새 작품 추가 성공:", newWorkData);
+
+      // 모달 닫기 및 폼 초기화
+      setShowAddModal(false);
+      setNewWork({ title: "", author: "", description: "", coverImage: "" });
+
+      // 작품 목록 새로고침
+      await fetchWorks();
+    } catch (error) {
+      console.error("작품 추가 실패:", error);
+      setError(
+        error instanceof Error ? error.message : "작품 추가에 실패했습니다.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getPlaceholderText = () => {
@@ -447,10 +433,17 @@ export default function WorkListPage({ type }: WorkListPageProps) {
 
                 <button
                   onClick={handleAddWork}
-                  disabled={!newWork.title || !newWork.author}
+                  disabled={!newWork.title || !newWork.author || isSubmitting}
                   className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  작품 추가하기
+                  {isSubmitting ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      작품 추가 중...
+                    </div>
+                  ) : (
+                    "작품 추가하기"
+                  )}
                 </button>
               </div>
             </div>

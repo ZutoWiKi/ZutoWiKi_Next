@@ -1,5 +1,3 @@
-import PageLayout from "@/components/PageLayout";
-import FloatingMenu from "@/components/FloatingMenu";
 import WorkListPage from "@/components/WorkListPage";
 
 interface PostTypePageProps {
