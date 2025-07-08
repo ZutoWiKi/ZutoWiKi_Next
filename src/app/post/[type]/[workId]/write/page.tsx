@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import EasyMDE from "easymde";
@@ -26,12 +26,16 @@ interface User {
 const renderer = new marked.Renderer();
 
 renderer.list = (token: Tokens.List) => {
+  // token.items 는 ListItem[] 배열
   const childrenHtml = token.items
     .map((li) => {
+      // ListItem.text 는 원본 마크다운 텍스트
+      // parseInline 으로 inline 요소만 렌더링
       const content = marked.parseInline(li.text);
       return `<li>${content}</li>`;
     })
     .join("");
+  // ordered 여부에 따라 ol / ul 태그 선택
   if (token.ordered) {
     return `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`;
   } else {
@@ -132,18 +136,20 @@ export default function WritePage({ params }: WritePageProps) {
       });
       const data = await res.json();
       const url = data.url as string;
+      // 에디터 인스턴스 가져와서 이미지 마크다운 삽입
       const cm = editorRef.current?.codemirror;
       cm?.replaceSelection(`![${file.name}](${url})`);
       setContent(cm?.getValue() || "");
     } catch {
       alert("이미지 업로드에 실패했습니다.");
     } finally {
+      // 다음 업로드를 위해 리셋
       e.target.value = "";
     }
   };
 
   const mdeOptions: EasyMDE.Options = useMemo(() => {
-    marked.setOptions({ renderer, gfm: true, breaks: true });
+    marked.setOptions({ renderer, gfm: true, breaks: true }); //pedantic
 
     return {
       autofocus: false,
@@ -335,6 +341,7 @@ export default function WritePage({ params }: WritePageProps) {
             onChange={(value: string) => setContent(value)}
             options={mdeOptions}
           />
+          {/* 숨겨진 파일 입력 */}
           <input
             type="file"
             accept="image/*"
