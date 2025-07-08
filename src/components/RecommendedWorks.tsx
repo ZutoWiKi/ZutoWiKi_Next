@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { GetPopularWorksList, Work } from '../components/API/GetPopularWorksList';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { GetPopularWorksList, Work } from "./API/GetPopularWorksList";
 
 export default function RecommendedWorks() {
   const [works, setWorks] = useState<Work[]>([]);
@@ -12,10 +12,11 @@ export default function RecommendedWorks() {
   useEffect(() => {
     (async () => {
       try {
-        const list = await GetPopularWorksList();
+        const token = localStorage.getItem("token");
+        const list = await GetPopularWorksList(token);
         setWorks(list);
       } catch (err: any) {
-        setError(err.message ?? '알 수 없는 오류');
+        setError(err.message ?? "알 수 없는 오류");
       } finally {
         setLoading(false);
       }
@@ -41,7 +42,9 @@ export default function RecommendedWorks() {
               className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
             />
             <div>
-              <p className="font-medium line-clamp-2 text-gray-800">{w.title}</p>
+              <p className="font-medium line-clamp-2 text-gray-800">
+                {w.title}
+              </p>
               <p className="text-sm text-gray-500">— {w.author}</p>
             </div>
           </li>
