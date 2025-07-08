@@ -161,6 +161,7 @@ const AuthButtons = () => {
           <div className="flex gap-3">
             <button
               type="button"
+              data-auth-login-button
               onClick={() => setShowLogin(true)}
               className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium transition-all duration-200 hover:bg-gray-200 rounded-lg"
             >

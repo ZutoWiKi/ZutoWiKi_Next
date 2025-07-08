@@ -1,5 +1,4 @@
-"use server";
-
+// 클라이언트 사이드 API 함수로 변경
 export async function GetWritesList(workId: string, parentId?: string) {
   console.log("해석글 목록 조회 시도:", { workId, parentId });
 
@@ -9,11 +8,20 @@ export async function GetWritesList(workId: string, parentId?: string) {
       url += `&parent_id=${parentId}`;
     }
 
+    // 클라이언트에서 토큰을 가져와서 헤더에 추가
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    // localStorage에서 토큰 가져오기
+    const token = localStorage.getItem("token");
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       cache: "no-store",
     });
 

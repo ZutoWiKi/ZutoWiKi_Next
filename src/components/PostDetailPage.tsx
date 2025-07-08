@@ -7,8 +7,11 @@ import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { GetWritesList } from "@/components/API/GetWriteList";
 import { UpdateWriteLike } from "@/components/API/UpdateWriteLikes";
 import { UpdateWriteViews } from "@/components/API/UpdateWriteViews";
-import Counter from "./Counter"; // Counter 컴포넌트 import
+import Counter from "./Counter";
 import { ViewLimitManager } from "@/components/ViewTracker";
+import AuthButtons from "@/components/Auth";
+import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
+import { createPortal } from "react-dom";
 
 interface PostDetailPageProps {
   workId: string;
@@ -26,6 +29,7 @@ interface Write {
   views: number;
   likes: number;
   parentID: number;
+  is_liked?: boolean; // 사용자의 좋아요 상태
 }
 
 interface Work {
@@ -47,6 +51,102 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewStatus, setViewStatus] = useState<{ [key: number]: boolean }>({});
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginRequired, setShowLoginRequired] = useState(false);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    if (mounted) {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    }
+  }, [mounted]);
+
+  // 로그인 상태 변경 감지
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    const interval = setInterval(() => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    }, 1000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // 로그인 요구 모달 컴포넌트
+  const LoginRequiredModal = ({
+    isOpen,
+    onClose,
+    onLogin,
+    isMounted,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onLogin: () => void;
+    isMounted: boolean;
+  }) => {
+    if (!isOpen || !isMounted) return null;
+
+    const modalContent = (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100">
+          <div className="p-6 text-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              로그인이 필요합니다
+            </h3>
+            <p className="text-gray-600 mb-6">
+              좋아요 기능을 사용하려면 로그인해주세요.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={onLogin}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+              >
+                로그인
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return createPortal(modalContent, document.body);
+  };
 
   // 데이터 로딩 함수
   const loadData = useCallback(async () => {
@@ -54,7 +154,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       setLoading(true);
       setError(null);
 
-      // 작품 정보와 해석글 목록을 병렬로 가져오기
       const [workData, writesData] = await Promise.all([
         GetWorkDetail(workId),
         GetWritesList(workId),
@@ -63,7 +162,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       setWorkInfo(workData);
       setWrites(writesData);
 
-      // 첫 번째 해석글을 기본 선택
       if (writesData.length > 0) {
         setSelectedWrite(writesData[0]);
       }
@@ -88,29 +186,62 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     router.push(`${pathname}/write`);
   }, [router, pathname]);
 
-  // 좋아요 처리
+  // 좋아요 처리 - 토글 기능으로 수정
   const handleLike = useCallback(async () => {
     if (!selectedWrite) return;
 
+    if (!isLoggedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
+
+    if (isLikeLoading) return;
+
     try {
-      const updatedWrite = await UpdateWriteLike(selectedWrite.id, "increase");
+      setIsLikeLoading(true);
+      const updatedWrite = await UpdateWriteLike(selectedWrite.id, "toggle");
 
       // 상태 업데이트
       setWrites((prev) =>
         prev.map((write) =>
           write.id === selectedWrite.id
-            ? { ...write, likes: updatedWrite.likes }
+            ? {
+                ...write,
+                likes: updatedWrite.likes,
+                is_liked: updatedWrite.is_liked,
+              }
             : write,
         ),
       );
 
       setSelectedWrite((prev) =>
-        prev ? { ...prev, likes: updatedWrite.likes } : null,
+        prev
+          ? {
+              ...prev,
+              likes: updatedWrite.likes,
+              is_liked: updatedWrite.is_liked,
+            }
+          : null,
       );
     } catch (error) {
       console.error("좋아요 업데이트 실패:", error);
+    } finally {
+      setIsLikeLoading(false);
     }
-  }, [selectedWrite]);
+  }, [selectedWrite, isLoggedIn, isLikeLoading]);
+
+  // 로그인 모달 표시
+  const handleShowLogin = () => {
+    setShowLoginRequired(false);
+    setTimeout(() => {
+      const loginButton = document.querySelector(
+        "[data-auth-login-button]",
+      ) as HTMLButtonElement;
+      if (loginButton) {
+        loginButton.click();
+      }
+    }, 100);
+  };
 
   // 정렬된 해석글 목록
   const sortedWrites = [...writes].sort((a, b) => {
@@ -133,14 +264,12 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       const selectedWrite = sortedWrites[index];
       setSelectedWrite(selectedWrite);
 
-      // 로컬에서 먼저 확인
       const canView = ViewLimitManager.canView(selectedWrite.id);
 
       if (canView) {
         try {
           const updatedWrite = await UpdateWriteViews(selectedWrite.id);
 
-          // 서버에서 성공적으로 업데이트된 경우
           if (updatedWrite.view_updated !== false) {
             ViewLimitManager.recordView(selectedWrite.id);
 
@@ -162,7 +291,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
           console.error("조회수 업데이트 실패:", error);
         }
       } else {
-        // 24시간 내 이미 조회한 경우
         const timeLeft = ViewLimitManager.getTimeUntilNextView(
           selectedWrite.id,
         );
@@ -171,9 +299,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
         console.log(
           `이미 조회한 글입니다. ${timeLeftFormatted} 후 다시 조회할 수 있습니다.`,
         );
-
-        // 사용자에게 알림 (선택사항)
-        // toast.info(`${timeLeftFormatted} 후 다시 조회할 수 있습니다.`);
       }
     },
     [sortedWrites],
@@ -247,56 +372,59 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* 작품 정보 헤더 */}
+      {/* 헤더 */}
       <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-6 py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={() => router.back()}
-              className="text-gray-600 hover:text-gray-800 transition-colors p-2 rounded-full hover:bg-gray-100"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              {workInfo.coverImage && (
-                <img
-                  src={workInfo.coverImage}
-                  alt={workInfo.title}
-                  className="w-16 h-20 object-cover rounded-lg shadow-md"
-                />
-              )}
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  {workInfo.title}
-                </h1>
-                <p className="text-gray-600">작가: {workInfo.author}</p>
-                <div className="text-sm text-gray-500 flex items-center gap-1">
-                  <Counter
-                    value={writes.length}
-                    fontSize={14}
-                    places={getPlacesArray(writes.length)}
-                    textColor="#6B7280"
-                    fontWeight="normal"
-                    gap={1}
-                    horizontalPadding={0}
-                    gradientHeight={0}
+              <button
+                onClick={() => router.back()}
+                className="text-gray-600 hover:text-gray-800 transition-colors p-2 rounded-full hover:bg-gray-100"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
                   />
-                  <span>개의 해석이 있습니다</span>
+                </svg>
+              </button>
+              <div className="flex items-center gap-4">
+                {workInfo.coverImage && (
+                  <img
+                    src={workInfo.coverImage}
+                    alt={workInfo.title}
+                    className="w-16 h-20 object-cover rounded-lg shadow-md"
+                  />
+                )}
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    {workInfo.title}
+                  </h1>
+                  <p className="text-gray-600">작가: {workInfo.author}</p>
+                  <div className="text-sm text-gray-500 flex items-center gap-1">
+                    <Counter
+                      value={writes.length}
+                      fontSize={14}
+                      places={getPlacesArray(writes.length)}
+                      textColor="#6B7280"
+                      fontWeight="normal"
+                      gap={1}
+                      horizontalPadding={0}
+                      gradientHeight={0}
+                    />
+                    <span>개의 해석이 있습니다</span>
+                  </div>
                 </div>
               </div>
             </div>
+            <AuthButtons />
           </div>
         </div>
       </div>
@@ -387,25 +515,12 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
                   <div className="flex gap-3">
-                    <button
+                    <AnimatedLikeButton
+                      isLiked={selectedWrite.is_liked || false}
+                      likeCount={selectedWrite.likes}
                       onClick={handleLike}
-                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
-                      좋아요
-                    </button>
+                      disabled={isLikeLoading}
+                    />
                     <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300">
                       <svg
                         className="w-4 h-4"
@@ -549,6 +664,14 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
           </svg>
         </button>
       </div>
+
+      {/* 로그인 요구 모달 */}
+      <LoginRequiredModal
+        isOpen={showLoginRequired}
+        onClose={() => setShowLoginRequired(false)}
+        onLogin={handleShowLogin}
+        isMounted={mounted}
+      />
     </div>
   );
 }

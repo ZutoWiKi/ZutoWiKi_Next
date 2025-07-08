@@ -2,17 +2,21 @@
 
 export async function UpdateWriteLike(
   writeId: number,
-  action: "increase" | "decrease",
+  action: "increase" | "decrease" | "toggle",
 ) {
   console.log("좋아요 업데이트 시도:", { writeId, action });
 
   try {
+    // 토큰 가져오기 (실제 구현에서는 쿠키나 다른 방법 사용)
+    const token = process.env.USER_TOKEN || "temp_token"; // 임시
+
     const response = await fetch(
       `http://127.0.0.1:8000/post/write/${writeId}/likes/`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 인증 헤더 추가
         },
         body: JSON.stringify({ action }),
       },
