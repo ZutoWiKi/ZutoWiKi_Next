@@ -1,19 +1,29 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import EasyMDE from "easymde";
+import { marked } from "marked";
 import "easymde/dist/easymde.min.css";
 
-const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), { ssr: false });
+const SimpleMDEEditor = dynamic(
+  () => import("react-simplemde-editor"), 
+  { ssr: false }
+);
 
 export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const router = useRouter();
-  const editorRef = useRef<EasyMDE | null>(null);
 
-  const getMdeOptions = (): EasyMDE.Options => ({
+  const getMdeOptions = (): EasyMDE.Options => {
+
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+    });
+    
+    return {
     autofocus: true,
     spellChecker: false,
     placeholder: "내용을 작성하세요...",
@@ -28,8 +38,8 @@ export default function WritePage() {
     },
     inputStyle: "contenteditable",
     toolbar: [
-      "bold", "italic", "heading", "|",
-      "quote", "unordered-list", "ordered-list", "|",
+      "bold", "italic", "heading", "heading-smaller", "heading-bigger","horizontal-rule", "|",
+      "quote", "code", "unordered-list", "ordered-list", "table", "|",
       "link", "image", {
         name: "youtube",
         action: function (editor) {
@@ -48,13 +58,17 @@ export default function WritePage() {
         className: "fa fa-youtube",
         title: "Insert YouTube Video",
       },
-      "|", "preview", "side-by-side", "fullscreen", "guide"
+      "|",
+      "undo", "redo", "|",
+      "preview", "side-by-side", "fullscreen", "guide"
     ],
     renderingConfig: {
       codeSyntaxHighlighting: true,
     },
+    previewRender: (plainText: string) => marked.parse(plainText),
     minHeight: '500px',
-  });
+  }
+};
 
   const handlePublish = () => {
     // TODO: 유효성 검사 및 API 호출
@@ -76,7 +90,6 @@ export default function WritePage() {
         <div>
           <SimpleMDEEditor
             value={content}
-            onChange={setContent}
             options={getMdeOptions()}
           />
         </div>
