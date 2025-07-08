@@ -171,15 +171,18 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     return createPortal(modalContent, document.body);
   };
 
-  // 데이터 로딩 함수
+  // 데이터 로딩 함수 - 토큰과 함께 요청
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // 토큰 확인
+      const token = localStorage.getItem("token");
+
       const [workData, writesData] = await Promise.all([
         GetWorkDetail(workId),
-        GetWritesList(workId),
+        GetWritesList(workId, token), // 토큰을 전달하여 is_liked 정보 포함
       ]);
 
       setWorkInfo(workData);
@@ -206,11 +209,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   }, [loadData]);
 
   const goToWirte = useCallback(() => {
-    if (!isLoggedIn) {
-      setShowLoginRequired(true);
-      return;
-    }
-    
     router.push(`${pathname}/write`);
   }, [router, pathname]);
 
@@ -226,8 +224,19 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     if (isLikeLoading) return;
 
     try {
+      // 클라이언트에서 토큰 가져오기
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("로그인이 필요합니다.");
+      }
+
       setIsLikeLoading(true);
-      const updatedWrite = await UpdateWriteLike(selectedWrite.id, "toggle");
+      const updatedWrite = await UpdateWriteLike(
+        selectedWrite.id,
+        "toggle",
+        token,
+      );
 
       // 상태 업데이트
       setWrites((prev) =>
@@ -253,6 +262,12 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       );
     } catch (error) {
       console.error("좋아요 업데이트 실패:", error);
+      // 에러 처리 - 로그인 만료 등
+      if (error instanceof Error && error.message.includes("로그인")) {
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+        setShowLoginRequired(true);
+      }
     } finally {
       setIsLikeLoading(false);
     }
@@ -557,7 +572,9 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                 <div className="flex-1 overflow-y-auto">
                   <div
                     className="markdown-body !bg-white !text-black list-disc list-decimal list-inside"
-                    dangerouslySetInnerHTML={{ __html: marked.parse(selectedWrite.content || '') }}
+                    dangerouslySetInnerHTML={{
+                      __html: marked.parse(selectedWrite.content || ""),
+                    }}
                   ></div>
                 </div>
 
