@@ -8,6 +8,7 @@ import { GetWritesList } from "@/components/API/GetWriteList";
 import { UpdateWriteLike } from "@/components/API/UpdateWriteLikes";
 import { UpdateWriteViews } from "@/components/API/UpdateWriteViews";
 import Counter from "./Counter"; // Counter 컴포넌트 import
+import { ViewLimitManager } from "@/components/ViewTracker";
 
 interface PostDetailPageProps {
   workId: string;
@@ -45,6 +46,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewStatus, setViewStatus] = useState<{ [key: number]: boolean }>({});
 
   // 데이터 로딩 함수
   const loadData = useCallback(async () => {
@@ -86,35 +88,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     router.push(`${pathname}/write`);
   }, [router, pathname]);
 
-  // 해석글 선택 시 조회수 증가
-  const handleWriteSelect = useCallback(
-    async (item: string, index: number) => {
-      const selectedWrite = sortedWrites[index];
-      setSelectedWrite(selectedWrite);
-
-      try {
-        // 조회수 증가
-        const updatedWrite = await UpdateWriteViews(selectedWrite.id);
-
-        // 상태 업데이트
-        setWrites((prev) =>
-          prev.map((write) =>
-            write.id === selectedWrite.id
-              ? { ...write, views: updatedWrite.views }
-              : write,
-          ),
-        );
-
-        setSelectedWrite((prev) =>
-          prev ? { ...prev, views: updatedWrite.views } : null,
-        );
-      } catch (error) {
-        console.error("조회수 업데이트 실패:", error);
-      }
-    },
-    [writes, sortBy],
-  );
-
   // 좋아요 처리
   const handleLike = useCallback(async () => {
     if (!selectedWrite) return;
@@ -153,6 +126,58 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
         );
     }
   });
+
+  // 해석글 선택 시 조회수 증가
+  const handleWriteSelect = useCallback(
+    async (item: string, index: number) => {
+      const selectedWrite = sortedWrites[index];
+      setSelectedWrite(selectedWrite);
+
+      // 로컬에서 먼저 확인
+      const canView = ViewLimitManager.canView(selectedWrite.id);
+
+      if (canView) {
+        try {
+          const updatedWrite = await UpdateWriteViews(selectedWrite.id);
+
+          // 서버에서 성공적으로 업데이트된 경우
+          if (updatedWrite.view_updated !== false) {
+            ViewLimitManager.recordView(selectedWrite.id);
+
+            setWrites((prev) =>
+              prev.map((write) =>
+                write.id === selectedWrite.id
+                  ? { ...write, views: updatedWrite.views }
+                  : write,
+              ),
+            );
+
+            setSelectedWrite((prev) =>
+              prev ? { ...prev, views: updatedWrite.views } : null,
+            );
+
+            setViewStatus((prev) => ({ ...prev, [selectedWrite.id]: true }));
+          }
+        } catch (error) {
+          console.error("조회수 업데이트 실패:", error);
+        }
+      } else {
+        // 24시간 내 이미 조회한 경우
+        const timeLeft = ViewLimitManager.getTimeUntilNextView(
+          selectedWrite.id,
+        );
+        const timeLeftFormatted = ViewLimitManager.formatTimeLeft(timeLeft);
+
+        console.log(
+          `이미 조회한 글입니다. ${timeLeftFormatted} 후 다시 조회할 수 있습니다.`,
+        );
+
+        // 사용자에게 알림 (선택사항)
+        // toast.info(`${timeLeftFormatted} 후 다시 조회할 수 있습니다.`);
+      }
+    },
+    [sortedWrites],
+  );
 
   // AnimatedList를 위한 아이템 문자열 배열 생성
   const listItems = sortedWrites.map((write) => write.title);
