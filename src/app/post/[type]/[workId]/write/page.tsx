@@ -1,11 +1,15 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef} from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import EasyMDE from "easymde";
 import { marked, Tokens } from "marked";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
+
+const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
+  ssr: false,
+});
 
 const renderer = new marked.Renderer();
 
@@ -19,7 +23,6 @@ renderer.list = (token: Tokens.List) => {
       return `<li>${content}</li>`;
     })
     .join('');
-
   // ordered 여부에 따라 ol / ul 태그 선택
   if (token.ordered) {
     return `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`;
@@ -28,14 +31,37 @@ renderer.list = (token: Tokens.List) => {
   }
 };
 
-const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
-  ssr: false,
-});
-
 export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<EasyMDE>(null);
   const router = useRouter();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      const url = data.url as string;
+      // 에디터 인스턴스 가져와서 이미지 마크다운 삽입
+      const cm = editorRef.current?.codemirror;
+      cm?.replaceSelection(`![${file.name}](${url})`);
+      setContent(cm?.getValue() || "");
+    } catch {
+      alert("이미지 업로드에 실패했습니다.");
+    } finally {
+      // 다음 업로드를 위해 리셋
+      e.target.value = "";
+    }
+  };
 
   const mdeOptions: EasyMDE.Options = useMemo(() => {
 
@@ -58,8 +84,16 @@ export default function WritePage() {
     toolbar: [
       "bold", "italic", "heading", "heading-smaller", "heading-bigger","horizontal-rule", "|",
       "quote", "code", "unordered-list", "ordered-list", "|",
-      "link", "image", {
-        name: "youtube",
+      "link", 
+      {name: "image",
+        action: (editor: EasyMDE) => {
+          editorRef.current = editor;
+          fileInputRef.current?.click();
+        },
+        className: "fa fa-image",
+        title: "Upload Image",
+      },
+      {name: "youtube",
         action: function (editor) {
           const url = prompt("YouTube URL을 입력하세요:");
           if (url) {
@@ -80,9 +114,7 @@ export default function WritePage() {
       "undo", "redo", "|",
       "preview", "side-by-side", "fullscreen", "guide"
     ],
-    renderingConfig: {
-      codeSyntaxHighlighting: true,
-    },
+    renderingConfig: { codeSyntaxHighlighting: true, },
     previewClass: ["markdown-body", "bg-white", "text-black", "list-disc", "list-decimal", "list-inside",],
     previewRender: (plainText: string) => {
       const parsedHtml = marked.parse(plainText) as string;
@@ -114,6 +146,14 @@ export default function WritePage() {
             value={content}
             onChange={(value: string) => setContent(value)}
             options={mdeOptions}
+          />
+          {/* 숨겨진 파일 입력 */}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileChange}
           />
         </div>
         <div className="flex justify-end space-x-4">
