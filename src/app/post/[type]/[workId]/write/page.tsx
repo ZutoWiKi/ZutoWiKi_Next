@@ -6,10 +6,9 @@ import EasyMDE from "easymde";
 import { marked } from "marked";
 import "easymde/dist/easymde.min.css";
 
-const SimpleMDEEditor = dynamic(
-  () => import("react-simplemde-editor"), 
-  { ssr: false }
-);
+const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
+  ssr: false,
+});
 
 export default function WritePage() {
   const [title, setTitle] = useState("");
@@ -17,58 +16,74 @@ export default function WritePage() {
   const router = useRouter();
 
   const getMdeOptions = (): EasyMDE.Options => {
-
     marked.setOptions({
       gfm: true,
       breaks: true,
     });
-    
+
     return {
-    autofocus: true,
-    spellChecker: false,
-    placeholder: "내용을 작성하세요...",
-    uploadImage: true,
-    imageUploadFunction: (file, onSuccess, onError) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      fetch("/api/upload", { method: "POST", body: formData })
-        .then((res) => res.json())
-        .then((data) => onSuccess(data.url))
-        .catch(() => onError("업로드 실패"));
-    },
-    inputStyle: "contenteditable",
-    toolbar: [
-      "bold", "italic", "heading", "heading-smaller", "heading-bigger","horizontal-rule", "|",
-      "quote", "code", "unordered-list", "ordered-list", "table", "|",
-      "link", "image", {
-        name: "youtube",
-        action: function (editor) {
-          const url = prompt("YouTube URL을 입력하세요:");
-          if (url) {
-            const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
-            const id = match ? match[1] : null;
-            if (id) {
-              const embed = `<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/${id}\" frameborder=\"0\" allowfullscreen></iframe>`;
-              editor.codemirror.replaceSelection(embed);
-            } else {
-              alert("유효한 YouTube URL이 아닙니다.");
-            }
-          }
-        },
-        className: "fa fa-youtube",
-        title: "Insert YouTube Video",
+      autofocus: true,
+      spellChecker: false,
+      placeholder: "내용을 작성하세요...",
+      uploadImage: true,
+      imageUploadFunction: (file, onSuccess, onError) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        fetch("/api/upload", { method: "POST", body: formData })
+          .then((res) => res.json())
+          .then((data) => onSuccess(data.url))
+          .catch(() => onError("업로드 실패"));
       },
-      "|",
-      "undo", "redo", "|",
-      "preview", "side-by-side", "fullscreen", "guide"
-    ],
-    renderingConfig: {
-      codeSyntaxHighlighting: true,
-    },
-    previewRender: (plainText: string) => marked.parse(plainText),
-    minHeight: '500px',
-  }
-};
+      inputStyle: "contenteditable",
+      toolbar: [
+        "bold",
+        "italic",
+        "heading",
+        "heading-smaller",
+        "heading-bigger",
+        "horizontal-rule",
+        "|",
+        "quote",
+        "code",
+        "unordered-list",
+        "ordered-list",
+        "table",
+        "|",
+        "link",
+        "image",
+        {
+          name: "youtube",
+          action: function (editor) {
+            const url = prompt("YouTube URL을 입력하세요:");
+            if (url) {
+              const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
+              const id = match ? match[1] : null;
+              if (id) {
+                const embed = `<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/${id}\" frameborder=\"0\" allowfullscreen></iframe>`;
+                editor.codemirror.replaceSelection(embed);
+              } else {
+                alert("유효한 YouTube URL이 아닙니다.");
+              }
+            }
+          },
+          className: "fa fa-youtube",
+          title: "Insert YouTube Video",
+        },
+        "|",
+        "undo",
+        "redo",
+        "|",
+        "preview",
+        "side-by-side",
+        "fullscreen",
+        "guide",
+      ],
+      renderingConfig: {
+        codeSyntaxHighlighting: true,
+      },
+      minHeight: "500px",
+    };
+  };
 
   const handlePublish = () => {
     // TODO: 유효성 검사 및 API 호출
@@ -88,10 +103,7 @@ export default function WritePage() {
           />
         </div>
         <div>
-          <SimpleMDEEditor
-            value={content}
-            options={getMdeOptions()}
-          />
+          <SimpleMDEEditor value={content} options={getMdeOptions()} />
         </div>
         <div className="flex justify-end space-x-4">
           <button

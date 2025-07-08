@@ -196,7 +196,7 @@ export default function WorkListPage({ type }: WorkListPageProps) {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push("/")}
               className="text-gray-600 hover:text-gray-800 transition-colors p-2 rounded-full hover:bg-gray-100"
             >
               <svg
