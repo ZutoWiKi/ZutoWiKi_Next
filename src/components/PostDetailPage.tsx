@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter , usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import AnimatedList from "./AnimatedList";
-import { useCallback } from 'react'
+import { useCallback } from "react";
 
 // 목업 게시글 데이터
 const mockPostsData = {
@@ -52,8 +52,6 @@ const mockPostsData = {
       createdAt: "2024-01-25",
       views: 678,
       likes: 45,
-      parentId: null,
-      level: 0,
     },
     {
       id: 5,
@@ -261,13 +259,11 @@ interface Post {
   createdAt: string;
   views: number;
   likes: number;
-  parentId: number | null;
-  level: number;
 }
 
 export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const router = useRouter();
-  const pathname = usePathname()
+  const pathname = usePathname();
   const [posts, setPosts] = useState<Post[]>([]);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [workInfo, setWorkInfo] = useState<any>(null);
@@ -292,8 +288,8 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   }, [workId]);
 
   const goToWirte = useCallback(() => {
-    router.push(`${pathname}/write`)
-  }, [router, pathname])
+    router.push(`${pathname}/write`);
+  }, [router, pathname]);
 
   // 정렬된 게시글 목록
   const sortedPosts = [...posts].sort((a, b) => {
@@ -312,14 +308,12 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
   // AnimatedList를 위한 아이템 문자열 배열 생성
   const listItems = sortedPosts.map((post) => {
-    const indicator = post.parentId ? "↳ " : "";
-    return `${indicator}${post.title}`;
+    return post.title;
   });
 
   const handlePostSelect = (item: string, index: number) => {
     setSelectedPost(sortedPosts[index]);
   };
-
 
   if (!mounted || !workInfo) {
     return (
@@ -332,7 +326,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const selectedIndex = selectedPost
     ? sortedPosts.findIndex((p) => p.id === selectedPost.id)
     : -1;
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* 작품 정보 헤더 */}
@@ -384,16 +378,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
             {selectedPost ? (
               <div className="h-full flex flex-col">
                 <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    {selectedPost.parentId && (
-                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm border border-green-200">
-                        파생 해석
-                      </span>
-                    )}
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm border border-blue-200">
-                      Level {selectedPost.level}
-                    </span>
-                  </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-3 leading-relaxed">
                     {selectedPost.title}
                   </h3>
