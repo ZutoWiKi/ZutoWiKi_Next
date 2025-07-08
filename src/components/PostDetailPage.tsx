@@ -206,6 +206,11 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   }, [loadData]);
 
   const goToWirte = useCallback(() => {
+    if (!isLoggedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
+    
     router.push(`${pathname}/write`);
   }, [router, pathname]);
 
