@@ -12,7 +12,7 @@ import { ViewLimitManager } from "@/components/ViewTracker";
 import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
-import { marked } from "marked";
+import { marked, Tokens } from "marked";
 import "github-markdown-css/github-markdown.css";
 
 interface PostDetailPageProps {
@@ -42,7 +42,22 @@ interface Work {
   description: string;
 }
 
+const renderer = new marked.Renderer();
+
+renderer.list = (token: Tokens.List) => {
+  const childrenHtml = token.items
+    .map((li) => {
+      const content = marked.parseInline(li.text);
+      return `<li>${content}</li>`;
+    })
+    .join("");
+  return token.ordered
+    ? `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`
+    : `<ul class="list-disc list-inside pl-5">${childrenHtml}</ul>`;
+};
+
 marked.setOptions({
+  renderer,
   gfm: true,
   breaks: true,
 });
@@ -536,7 +551,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
                 <div className="flex-1 overflow-y-auto">
                   <div
-                    className="markdown-body !bg-white !text-black"
+                    className="markdown-body !bg-white !text-black list-disc list-decimal list-inside"
                     dangerouslySetInnerHTML={{ __html: marked.parse(selectedWrite.content || '') }}
                   ></div>
                 </div>
