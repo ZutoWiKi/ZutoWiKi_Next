@@ -26,6 +26,7 @@ export default function WritePage() {
         .then((data) => onSuccess(data.url))
         .catch(() => onError("업로드 실패"));
     },
+    inputStyle: "contenteditable",
     toolbar: [
       "bold", "italic", "heading", "|",
       "quote", "unordered-list", "ordered-list", "|",
