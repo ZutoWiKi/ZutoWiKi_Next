@@ -7,6 +7,7 @@ import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { GetWritesList } from "@/components/API/GetWriteList";
 import { UpdateWriteLike } from "@/components/API/UpdateWriteLikes";
 import { UpdateWriteViews } from "@/components/API/UpdateWriteViews";
+import Counter from "./Counter"; // Counter 컴포넌트 import
 
 interface PostDetailPageProps {
   workId: string;
@@ -156,6 +157,20 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   // AnimatedList를 위한 아이템 문자열 배열 생성
   const listItems = sortedWrites.map((write) => write.title);
 
+  // 숫자의 자릿수에 따라 places 배열 생성
+  const getPlacesArray = (num: number) => {
+    if (num === 0) return [1];
+    const places = [];
+    let temp = num;
+    let place = 1;
+    while (temp > 0) {
+      places.unshift(place);
+      temp = Math.floor(temp / 10);
+      place *= 10;
+    }
+    return places;
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
@@ -242,9 +257,19 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                   {workInfo.title}
                 </h1>
                 <p className="text-gray-600">작가: {workInfo.author}</p>
-                <p className="text-sm text-gray-500">
-                  {writes.length}개의 해석이 있습니다
-                </p>
+                <div className="text-sm text-gray-500 flex items-center gap-1">
+                  <Counter
+                    value={writes.length}
+                    fontSize={14}
+                    places={getPlacesArray(writes.length)}
+                    textColor="#6B7280"
+                    fontWeight="normal"
+                    gap={1}
+                    horizontalPadding={0}
+                    gradientHeight={0}
+                  />
+                  <span>개의 해석이 있습니다</span>
+                </div>
               </div>
             </div>
           </div>
@@ -288,7 +313,16 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         />
                       </svg>
-                      {selectedWrite.views.toLocaleString()}
+                      <Counter
+                        value={selectedWrite.views}
+                        fontSize={14}
+                        places={getPlacesArray(selectedWrite.views)}
+                        textColor="#6B7280"
+                        fontWeight="normal"
+                        gap={2}
+                        horizontalPadding={0}
+                        gradientHeight={0}
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <svg
@@ -304,7 +338,16 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                           d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                         />
                       </svg>
-                      {selectedWrite.likes}
+                      <Counter
+                        value={selectedWrite.likes}
+                        fontSize={14}
+                        places={getPlacesArray(selectedWrite.likes)}
+                        textColor="#6B7280"
+                        fontWeight="normal"
+                        gap={2}
+                        horizontalPadding={0}
+                        gradientHeight={0}
+                      />
                     </div>
                   </div>
                 </div>
