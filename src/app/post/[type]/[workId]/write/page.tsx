@@ -11,6 +11,10 @@ const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
 });
 
+interface UploadResponse {
+  url: string;
+}
+
 const renderer = new marked.Renderer();
 
 renderer.list = (token: Tokens.List) => {
@@ -45,7 +49,7 @@ export default function WritePage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/upload", {
+      const res = await fetch("http://localhost:8000/post/upload/", {
         method: "POST",
         body: formData,
       });
@@ -74,7 +78,7 @@ export default function WritePage() {
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
         formData.append("file", file);
-        fetch("/api/upload", { method: "POST", body: formData })
+        fetch("http://localhost:8000/post/upload/", { method: "POST", body: formData })
           .then((res) => res.json())
           .then((data) => onSuccess(data.url))
           .catch(() => onError("업로드 실패"));
@@ -133,8 +137,8 @@ export default function WritePage() {
       renderingConfig: { codeSyntaxHighlighting: true },
       previewClass: [
         "markdown-body",
-        "bg-white",
-        "text-black",
+        "!bg-white",
+        "!text-black",
         "list-disc",
         "list-decimal",
         "list-inside",
