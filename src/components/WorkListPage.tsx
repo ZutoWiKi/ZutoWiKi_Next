@@ -139,6 +139,10 @@ export default function WorkListPage({ type }: WorkListPageProps) {
 
     setIsSubmitting(true);
     try {
+      newWork.coverImage = newWork.coverImage
+        ? newWork.coverImage
+        : "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop";
+
       const workData = {
         typeindex: typeIndexMap[type as keyof typeof typeIndexMap],
         title: newWork.title,
