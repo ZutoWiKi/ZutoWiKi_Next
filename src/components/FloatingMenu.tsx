@@ -2,6 +2,11 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
+interface FloatingMenuState {
+  position: { x: number; y: number };
+  isCollapsed: boolean;
+}
+
 export default function FloatingMenu() {
   const router = useRouter();
   const pathname = usePathname();
@@ -19,9 +24,36 @@ export default function FloatingMenu() {
   const lastTimeRef = useRef(0);
   const animationRef = useRef<number | undefined>(undefined);
 
+  // localStorage에서 상태 로드
   useEffect(() => {
     setMounted(true);
+
+    try {
+      const savedState = localStorage.getItem("floatingMenuState");
+      if (savedState) {
+        const parsed: FloatingMenuState = JSON.parse(savedState);
+        setPosition(parsed.position);
+        setIsCollapsed(parsed.isCollapsed);
+      }
+    } catch (error) {
+      console.warn("Failed to load floating menu state:", error);
+    }
   }, []);
+
+  // 상태가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    if (!mounted) return;
+
+    try {
+      const state: FloatingMenuState = {
+        position,
+        isCollapsed,
+      };
+      localStorage.setItem("floatingMenuState", JSON.stringify(state));
+    } catch (error) {
+      console.warn("Failed to save floating menu state:", error);
+    }
+  }, [position, isCollapsed, mounted]);
 
   useEffect(() => {
     if (!mounted) return;

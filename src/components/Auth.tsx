@@ -76,7 +76,9 @@ const AuthButtons = () => {
         localStorage.setItem("token", result.token);
         setShowLogin(false);
         setIsLogin(true);
-        router.push("/");
+
+        // 현재 페이지를 새로고침
+        window.location.reload();
       }
     } catch (error: any) {
       console.error("로그인 실패:", error);
@@ -122,7 +124,9 @@ const AuthButtons = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLogin(false);
-    router.push("/");
+
+    // 현재 페이지를 새로고침
+    window.location.reload();
   };
 
   // 모달 닫기 시 에러 메시지 초기화
