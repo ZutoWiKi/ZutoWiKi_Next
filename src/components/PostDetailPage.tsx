@@ -12,6 +12,9 @@ import { ViewLimitManager } from "@/components/ViewTracker";
 import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface PostDetailPageProps {
   workId: string;
@@ -529,9 +532,12 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
                 <div className="flex-1 overflow-y-auto">
                   <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                    >
                       {selectedWrite.content}
-                    </p>
+                    </ReactMarkdown>
                   </div>
                 </div>
 
