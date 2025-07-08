@@ -12,9 +12,8 @@ import { ViewLimitManager } from "@/components/ViewTracker";
 import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
+import { marked } from "marked";
+import "github-markdown-css/github-markdown.css";
 
 interface PostDetailPageProps {
   workId: string;
@@ -42,6 +41,11 @@ interface Work {
   coverImage?: string;
   description: string;
 }
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+});
 
 export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const router = useRouter();
@@ -531,14 +535,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                  <div className="prose prose-gray max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                    >
-                      {selectedWrite.content}
-                    </ReactMarkdown>
-                  </div>
+                  <div
+                    className="markdown-body !bg-white !text-black"
+                    dangerouslySetInnerHTML={{ __html: marked.parse(selectedWrite.content || '') }}
+                  ></div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">

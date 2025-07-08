@@ -11,10 +11,6 @@ const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
 });
 
-interface UploadResponse {
-  url: string;
-}
-
 const renderer = new marked.Renderer();
 
 renderer.list = (token: Tokens.List) => {
