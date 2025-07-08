@@ -3,7 +3,7 @@ export interface Work {
   type_index: number;
   title: string;
   author: string;
-  cover_image: string;
+  coverImage: string;
   description: string;
 }
 

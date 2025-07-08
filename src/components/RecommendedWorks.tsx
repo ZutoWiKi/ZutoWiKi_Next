@@ -36,7 +36,7 @@ export default function RecommendedWorks() {
             onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
           >
             <img
-              src={w.cover_image || '/profile.png'}
+              src={w.coverImage}
               alt={w.title}
               className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
             />
