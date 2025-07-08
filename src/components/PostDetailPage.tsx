@@ -54,6 +54,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginRequired, setShowLoginRequired] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [showCopyMessage, setShowCopyMessage] = useState(false);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -229,6 +230,27 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       setIsLikeLoading(false);
     }
   }, [selectedWrite, isLoggedIn, isLikeLoading]);
+
+  // 공유 기능 - 링크 복사
+  const handleShare = useCallback(async () => {
+    try {
+      const currentUrl = window.location.href;
+      await navigator.clipboard.writeText(currentUrl);
+      setShowCopyMessage(true);
+      setTimeout(() => setShowCopyMessage(false), 2000);
+    } catch (error) {
+      console.error("클립보드 복사 실패:", error);
+      // 폴백: 텍스트 선택 방식
+      const textArea = document.createElement("textarea");
+      textArea.value = window.location.href;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setShowCopyMessage(true);
+      setTimeout(() => setShowCopyMessage(false), 2000);
+    }
+  }, []);
 
   // 로그인 모달 표시
   const handleShowLogin = () => {
@@ -521,7 +543,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                       onClick={handleLike}
                       disabled={isLikeLoading}
                     />
-                    <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300">
+                    <button
+                      onClick={handleShare}
+                      className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300"
+                    >
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -664,6 +689,28 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
           </svg>
         </button>
       </div>
+
+      {/* 복사 완료 메시지 */}
+      {showCopyMessage && (
+        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50">
+          <div className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-2 animate-bounce">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="font-medium">복사되었습니다!</span>
+          </div>
+        </div>
+      )}
 
       {/* 로그인 요구 모달 */}
       <LoginRequiredModal
