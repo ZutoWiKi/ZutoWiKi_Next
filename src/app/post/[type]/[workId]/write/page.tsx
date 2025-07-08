@@ -3,9 +3,30 @@ import React, { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import EasyMDE from "easymde";
-import { marked } from "marked";
+import { marked, Tokens } from "marked";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
+
+const renderer = new marked.Renderer();
+
+renderer.list = (token: Tokens.List) => {
+  // token.items 는 ListItem[] 배열
+  const childrenHtml = token.items
+    .map(li => {
+      // ListItem.text 는 원본 마크다운 텍스트
+      // parseInline 으로 inline 요소만 렌더링
+      const content = marked.parseInline(li.text);
+      return `<li>${content}</li>`;
+    })
+    .join('');
+
+  // ordered 여부에 따라 ol / ul 태그 선택
+  if (token.ordered) {
+    return `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`;
+  } else {
+    return `<ul class="list-disc list-inside pl-5">${childrenHtml}</ul>`;
+  }
+};
 
 const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
@@ -18,7 +39,7 @@ export default function WritePage() {
 
   const mdeOptions: EasyMDE.Options = useMemo(() => {
 
-    marked.setOptions({ pedantic: true, breaks: true, });
+    marked.setOptions({ renderer, gfm: true, breaks: true, }); //pedantic
     
     return {
     autofocus: false,
@@ -36,7 +57,7 @@ export default function WritePage() {
     inputStyle: "contenteditable",
     toolbar: [
       "bold", "italic", "heading", "heading-smaller", "heading-bigger","horizontal-rule", "|",
-      "quote", "code", "unordered-list", "ordered-list", "table", "|",
+      "quote", "code", "unordered-list", "ordered-list", "|",
       "link", "image", {
         name: "youtube",
         action: function (editor) {
@@ -62,10 +83,12 @@ export default function WritePage() {
     renderingConfig: {
       codeSyntaxHighlighting: true,
     },
-    previewClass: ["markdown-body", "bg-white"],
-    previewRender: (plainText: string) => 
-      marked.parse(plainText) as string,
-    minHeight: '500px',
+    previewClass: ["markdown-body", "bg-white", "text-black", "list-disc", "list-decimal", "list-inside",],
+    previewRender: (plainText: string) => {
+      const parsedHtml = marked.parse(plainText) as string;
+      return `<div class="markdown-body" style="background-color: white; color: black; padding: 16px;">${parsedHtml}</div>`;
+    },
+    minHeight: '450px',
     }
   }, []);
 
@@ -86,7 +109,7 @@ export default function WritePage() {
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/90 backdrop-blur-sm transition-all"
           />
         </div>
-        <div>
+        <div className="bg-white">
           <SimpleMDEEditor
             value={content}
             onChange={(value: string) => setContent(value)}
