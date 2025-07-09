@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import EasyMDE from "easymde";
 import { marked, Tokens } from "marked";
 import "easymde/dist/easymde.min.css";
@@ -50,10 +50,28 @@ interface WritePageProps {
   };
 }
 
+interface Write {
+  id: number;
+  title: string;
+  user_name: string;
+  content: string;
+  work_title: string;
+  work_author: string;
+  created_at: string;
+  views: number;
+  likes: number;
+  parentID: number;
+  is_liked?: boolean; // 사용자의 좋아요 상태
+}
+
 export default function WritePage({ params }: WritePageProps) {
+  const searchParams = useSearchParams();
+  const parentIDParam = searchParams.get("parentID");
+  const parentID = parentIDParam ? parseInt(parentIDParam, 10) : 0;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedWrite, setSelectedWrite] = useState<Write | null>(null);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -274,6 +292,7 @@ export default function WritePage({ params }: WritePageProps) {
         content: content.trim(),
         user: user.id,
         work: workIdNumber,
+        parentID: parentID,
       };
 
       console.log("글 작성 데이터:", writeData); // 디버깅용

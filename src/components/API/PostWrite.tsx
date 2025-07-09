@@ -5,7 +5,7 @@ interface WriteData {
   content: string;
   user: number;
   work: number;
-  parentID?: number;
+  parentID: number;
 }
 
 export async function PostWrite(writeData: WriteData) {

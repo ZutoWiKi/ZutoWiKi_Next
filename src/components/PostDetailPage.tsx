@@ -236,7 +236,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       return;
     }
 
-    router.push(`${pathname}/write`);
+    router.push(`${pathname}/write?parentID=${selectedWrite.id}`);
   }, [selectedWrite, isLoggedIn, router, pathname]);
 
   // 좋아요 처리 - 토글 기능으로 수정
