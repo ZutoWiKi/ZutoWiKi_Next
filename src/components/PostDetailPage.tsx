@@ -215,13 +215,29 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     loadData();
   }, [loadData]);
 
-  const goToWirte = useCallback(() => {
+  const goToWirte = useCallback(async () => {
+
     if (!isLoggedIn) {
       setShowLoginRequired(true);
       return;
     }
+
     router.push(`${pathname}/write`);
-  }, [router, pathname]);
+  }, [isLoggedIn, router, pathname]);
+
+  const goToParentWirte = useCallback(async () => {
+    if (!selectedWrite) {
+      alert("파생할 작품을 선택해주세요.");
+      return;
+    };
+
+    if (!isLoggedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
+
+    router.push(`${pathname}/write`);
+  }, [selectedWrite, isLoggedIn, router, pathname]);
 
   // 좋아요 처리 - 토글 기능으로 수정
   const handleLike = useCallback(async () => {
@@ -624,6 +640,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                         gradientHeight={0}
                       />
                     </div>
+                    {/* 파생된 글 뭔지 */}
+                    {!(selectedWrite.parentID == 0) && (
+                      <span>파생한 글 : {selectedWrite.parentID} 번째</span>
+                    )}
                   </div>
                 </div>
 
@@ -765,7 +785,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
               </button>
               {selectedWrite && (
                 <button
-                  onClick={goToWirte}
+                  onClick={goToParentWirte}
                   className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border border-gray-200 font-medium transition-all duration-300 transform hover:-translate-y-1"
                 >
                   파생 해석
