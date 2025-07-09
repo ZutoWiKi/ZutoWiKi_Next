@@ -783,14 +783,15 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                   <div key={c.id} className="mb-4 flex gap-3">
                     {/* 프로필 이미지 */}
                     <div className="flex-shrink-0">
-                      <UserProfileColor
-                        src="/image/profile.png"
-                        alt="profile"
-                        width={32}
-                        height={32}
-                        className=""
-                        id={c.user_id}
-                      />
+                      {c && (
+                        <UserProfileColor
+                          id={c.user_id}
+                          alt="avatar"
+                          width={120}
+                          height={60}
+                          className="w-16 h-16 rounded-full object-cover"
+                        />
+                      )}
                     </div>
 
                     {/* 댓글 내용 */}
