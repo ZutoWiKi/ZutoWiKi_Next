@@ -3,11 +3,12 @@ export async function CreateComment(
   content: string,
   token: string
 ) {
-  const res = await fetch(`/api/comments/`, {
+  const res = await fetch(`http://127.0.0.1:8000/post/comment/comments/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
+      'Accept': 'application/json',
+      Authorization: `Token ${token}`
     },
     body: JSON.stringify({ write: writeId, content })
   });
