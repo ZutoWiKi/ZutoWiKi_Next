@@ -154,7 +154,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
               로그인이 필요합니다
             </h3>
             <p className="text-gray-600 mb-6">
-              좋아요 기능을 사용하려면 로그인해주세요.
+              이 기능을 사용하려면 로그인해주세요.
             </p>
             <div className="flex gap-3">
               <button
@@ -216,6 +216,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   }, [loadData]);
 
   const goToWirte = useCallback(() => {
+    if (!isLoggedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
     router.push(`${pathname}/write`);
   }, [router, pathname]);
 
