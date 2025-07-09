@@ -329,21 +329,30 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     }
   });
 
-  // 해석글 선택 시 조회수 증가
+  // PostDetailPage의 handleWriteSelect 함수 수정된 버전
+
   const handleWriteSelect = useCallback(
     async (item: string, index: number) => {
       const selectedWrite = sortedWrites[index];
       setSelectedWrite(selectedWrite);
 
+      // 조회수 증가 로직
+      console.log("선택된 글:", selectedWrite.id, selectedWrite.title);
+
       const canView = ViewLimitManager.canView(selectedWrite.id);
+      console.log("조회 가능 여부:", canView);
 
       if (canView) {
         try {
+          console.log("조회수 증가 시도 중...");
           const updatedWrite = await UpdateWriteViews(selectedWrite.id);
+          console.log("조회수 증가 응답:", updatedWrite);
 
-          if (updatedWrite.view_updated !== false) {
+          if (updatedWrite && updatedWrite.views !== undefined) {
+            // 조회수 증가 성공
             ViewLimitManager.recordView(selectedWrite.id);
 
+            // 상태 업데이트
             setWrites((prev) =>
               prev.map((write) =>
                 write.id === selectedWrite.id
@@ -357,6 +366,9 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
             );
 
             setViewStatus((prev) => ({ ...prev, [selectedWrite.id]: true }));
+            console.log("조회수 증가 완료. 새 조회수:", updatedWrite.views);
+          } else {
+            console.log("조회수 증가 실패: 서버 응답이 올바르지 않음");
           }
         } catch (error) {
           console.error("조회수 업데이트 실패:", error);
@@ -366,7 +378,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
           selectedWrite.id,
         );
         const timeLeftFormatted = ViewLimitManager.formatTimeLeft(timeLeft);
-
         console.log(
           `이미 조회한 글입니다. ${timeLeftFormatted} 후 다시 조회할 수 있습니다.`,
         );

@@ -1,6 +1,6 @@
 export class ViewLimitManager {
   private static STORAGE_KEY = "write_views_24h";
-  private static CACHE_DURATION = 3600000; //1시간 //86400000; // 24시간
+  private static CACHE_DURATION = 3600000; // 1시간 (필요시 조정)
 
   // 로컬에서 먼저 확인 (불필요한 서버 요청 방지)
   static canView(writeId: number): boolean {
@@ -11,8 +11,18 @@ export class ViewLimitManager {
       const parsed = JSON.parse(viewData);
       const now = Date.now();
 
-      return !parsed[writeId] || now - parsed[writeId] >= this.CACHE_DURATION;
-    } catch {
+      // 해당 글에 대한 기록이 없거나, 캐시 시간이 지났으면 조회 가능
+      const lastViewTime = parsed[writeId];
+      if (!lastViewTime) return true;
+
+      const timeDiff = now - lastViewTime;
+      console.log(
+        `글 ${writeId} 마지막 조회: ${timeDiff}ms 전, 제한: ${this.CACHE_DURATION}ms`,
+      );
+
+      return timeDiff >= this.CACHE_DURATION;
+    } catch (error) {
+      console.error("ViewLimitManager.canView 에러:", error);
       return true;
     }
   }
@@ -33,6 +43,7 @@ export class ViewLimitManager {
 
       parsed[writeId] = now;
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(parsed));
+      console.log(`글 ${writeId} 조회 기록됨:`, new Date(now).toLocaleString());
     } catch (error) {
       console.error("조회 기록 저장 실패:", error);
     }
@@ -58,10 +69,39 @@ export class ViewLimitManager {
   static formatTimeLeft(ms: number): string {
     const hours = Math.floor(ms / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
 
     if (hours > 0) {
       return `${hours}시간 ${minutes}분`;
+    } else if (minutes > 0) {
+      return `${minutes}분 ${seconds}초`;
+    } else {
+      return `${seconds}초`;
     }
-    return `${minutes}분`;
+  }
+
+  // 디버깅용: 현재 저장된 데이터 확인
+  static getStoredData(): any {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY);
+      return data ? JSON.parse(data) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  // 디버깅용: 특정 글의 조회 제한 해제
+  static clearViewLimit(writeId: number): void {
+    try {
+      const viewData = localStorage.getItem(this.STORAGE_KEY);
+      if (!viewData) return;
+
+      const parsed = JSON.parse(viewData);
+      delete parsed[writeId];
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(parsed));
+      console.log(`글 ${writeId} 조회 제한 해제됨`);
+    } catch (error) {
+      console.error("조회 제한 해제 실패:", error);
+    }
   }
 }
