@@ -6,6 +6,9 @@ export interface Work {
   author: string;
   coverImage: string;
   description: string;
+  num_likes?: number; // 좋아요 수 (인기 작품 조회시에만)
+  total_views?: number; // 총 조회수 (인기 작품 조회시에만)
+  write_count?: number; // 해석글 개수 (인기 작품 조회시에만)
 }
 
 export async function GetPopularWorksList(token: any): Promise<Work[]> {
