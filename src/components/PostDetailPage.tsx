@@ -15,7 +15,7 @@ import { createPortal } from "react-dom";
 import { marked, Tokens } from "marked";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
-import UserProfileColor from "@/components/UserProfileColor"
+import UserProfileColor from "@/components/UserProfileColor";
 import "github-markdown-css/github-markdown.css";
 
 interface PostDetailPageProps {
@@ -537,9 +537,9 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* 왼쪽: 선택된 해석 상세 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 min-h-[500px]">
             {selectedWrite ? (
               <div className="h-full flex flex-col">
                 <div className="mb-6">
@@ -681,7 +681,8 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
           </div>
 
           {/* 오른쪽: 해석 목록 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 flex flex-col h-[calc(150vh-200px)]">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 flex flex-col min-h-[calc(100vh-200px)]">
+            {/* 헤더 */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">해석 목록</h2>
               <select
@@ -697,44 +698,50 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
               </select>
             </div>
 
-            {writes.length > 0 ? (
-              <AnimatedList
-                items={listItems}
-                onItemSelect={handleWriteSelect}
-                showGradients={true}
-                enableArrowNavigation={true}
-                className="w-full"
-                itemClassName="hover:bg-blue-50 transition-all duration-300"
-                displayScrollbar={false}
-                initialSelectedIndex={selectedIndex}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"
-                      />
-                    </svg>
+            {/* 글 목록 영역 - 고정 높이 */}
+            <div className="h-[400px] overflow-y-auto mb-6">
+              {writes.length > 0 ? (
+                <AnimatedList
+                  items={listItems}
+                  onItemSelect={handleWriteSelect}
+                  showGradients={true}
+                  enableArrowNavigation={true}
+                  className="w-full"
+                  itemClassName="hover:bg-blue-50 transition-all duration-300"
+                  displayScrollbar={false}
+                  initialSelectedIndex={selectedIndex}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 text-lg">
+                      아직 해석이 없습니다
+                    </p>
+                    <p className="text-gray-400 text-sm mt-2">
+                      첫 번째 해석을 작성해보세요!
+                    </p>
                   </div>
-                  <p className="text-gray-600 text-lg">아직 해석이 없습니다</p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    첫 번째 해석을 작성해보세요!
-                  </p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className="mt-6 flex gap-3">
+            {/* 버튼 영역 */}
+            <div className="flex gap-3 mb-6">
               <button
                 onClick={goToWirte}
                 className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
@@ -752,30 +759,44 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
             </div>
 
             {/* ── 댓글 섹션 ── */}
-            <div className="mt-6 pt-6 border-t border-gray-200 overflow-y-auto flex-1">
+            <div className="flex-1 pt-6 border-t border-gray-200 flex flex-col max-h-[calc(80vh)]">
               <h4 className="text-lg font-semibold mb-3">댓글</h4>
 
-              {/* 댓글 목록 */}
-              {comments.map((c) => (
-                <div key={c.id} className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-500 mb-1">
-                    <UserProfileColor 
-                    src="/image/profile.png" 
-                    alt="profile" 
-                    width={32}
-                    height={32}
-                    className=""
-                    id={c.user_id}/>
-                    <span>{c.user_name}</span>
-                    <span>{new Date(c.created_at).toLocaleString()}</span>
-                  </div>
-                  <p className="text-gray-800">{c.content}</p>
-                </div>
-              ))}
+              {/* 댓글 목록 - 남은 공간 모두 사용 */}
+              <div className="flex-1 overflow-y-auto pr-2 mb-4">
+                {comments.map((c) => (
+                  <div key={c.id} className="mb-4 flex gap-3">
+                    {/* 프로필 이미지 */}
+                    <div className="flex-shrink-0">
+                      <UserProfileColor
+                        src="/image/profile.png"
+                        alt="profile"
+                        width={32}
+                        height={32}
+                        className=""
+                        id={c.user_id}
+                      />
+                    </div>
 
-              {/* 새 댓글 폼 */}
+                    {/* 댓글 내용 */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-medium text-gray-900">
+                          {c.user_name}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {new Date(c.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="text-gray-800">{c.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 새 댓글 폼 - 하단 고정 */}
               {isLoggedIn && (
-                <div className="mt-auto pt-4">
+                <div className="border-t border-gray-100 pt-4">
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
