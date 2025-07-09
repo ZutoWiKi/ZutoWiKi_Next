@@ -1,6 +1,7 @@
 export interface Comment {
   id: number;
-  user_name: string; // 백엔드 수정에 맞춤
+  user_id: number;
+  user_name: string;
   content: string;
   created_at: string;
   likes: number;

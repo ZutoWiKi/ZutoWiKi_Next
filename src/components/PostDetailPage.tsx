@@ -15,6 +15,7 @@ import { createPortal } from "react-dom";
 import { marked, Tokens } from "marked";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
+import UserProfileColor from "@/components/UserProfileColor"
 import "github-markdown-css/github-markdown.css";
 
 interface PostDetailPageProps {
@@ -758,7 +759,13 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
               {comments.map((c) => (
                 <div key={c.id} className="mb-4">
                   <div className="flex justify-between text-sm text-gray-500 mb-1">
-                    {/*<img src="" alt="profie" />*/}
+                    <UserProfileColor 
+                    src="/image/profile.png" 
+                    alt="profile" 
+                    width={32}
+                    height={32}
+                    className=""
+                    id={c.user_id}/>
                     <span>{c.user_name}</span>
                     <span>{new Date(c.created_at).toLocaleString()}</span>
                   </div>
