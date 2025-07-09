@@ -1,0 +1,12 @@
+export interface Comment {
+  id: number;
+  user_name: string;
+  content: string;
+  created_at: string;
+}
+
+export async function GetCommentsList(writeId: number) {
+  const res = await fetch(`/api/comments/?write=${writeId}`);
+  if (!res.ok) throw new Error('댓글 목록을 불러오지 못했습니다.');
+  return (await res.json()) as Comment[];
+}

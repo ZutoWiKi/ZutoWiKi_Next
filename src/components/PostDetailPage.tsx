@@ -13,6 +13,8 @@ import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
 import { marked, Tokens } from "marked";
+import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
+import { CreateComment } from "@/components/API/CreateComment";
 import "github-markdown-css/github-markdown.css";
 
 interface PostDetailPageProps {
@@ -77,6 +79,10 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [showLoginRequired, setShowLoginRequired] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showCopyMessage, setShowCopyMessage] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -385,6 +391,42 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     return places;
   };
 
+  // 1) 선택된 해석이 바뀔 때마다 댓글 불러오기
+  useEffect(() => {
+    async function loadComments() {
+      if (!selectedWrite) return;
+      try {
+        const data = await GetCommentsList(selectedWrite.id);
+        setComments(data);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadComments();
+  }, [selectedWrite]);
+
+  // 2) 댓글 등록 핸들러
+  const handleCommentSubmit = async () => {
+    if (!isLoggedIn) {
+      setShowLoginRequired(true);
+      return;
+    }
+    if (!selectedWrite || !newComment.trim()) return;
+    try {
+      setCommentLoading(true);
+      const token = localStorage.getItem("token")!;
+      await CreateComment(selectedWrite.id, newComment.trim(), token);
+      setNewComment("");
+      // 등록 후 목록 리로드
+      const data = await GetCommentsList(selectedWrite.id);
+      setComments(data);
+    } catch (err: any) {
+      setCommentError(err.message);
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
@@ -638,7 +680,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
           </div>
 
           {/* 오른쪽: 해석 목록 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 flex flex-col h-[calc(100vh-200px)]">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 flex flex-col h-[calc(150vh-200px)]">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-800">해석 목록</h2>
               <select
@@ -691,6 +733,8 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
               </div>
             )}
 
+            
+
             <div className="mt-6 flex gap-3">
               <button
                 onClick={goToWirte}
@@ -707,10 +751,48 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                 </button>
               )}
             </div>
+            
+            {/* ── 댓글 섹션 ── */}
+            <div className="mt-6 pt-6 border-t border-gray-200 overflow-y-auto flex-1">
+              <h4 className="text-lg font-semibold mb-3">댓글</h4>
+
+              {/* 댓글 목록 */}
+              {comments.map(c => (
+                <div key={c.id} className="mb-4">
+                  <div className="flex justify-between text-sm text-gray-500 mb-1">
+                    <img src="" alt="profie" />
+                    <span>{c.user_name}</span>
+                    <span>{new Date(c.created_at).toLocaleString()}</span>
+                  </div>
+                  <p className="text-gray-800">{c.content}</p>
+                </div>
+              ))}
+
+              {/* 새 댓글 폼 */}
+              {isLoggedIn && (
+                <div className="mt-auto pt-4">
+                  <textarea
+                    value={newComment}
+                    onChange={e => setNewComment(e.target.value)}
+                    rows={2}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="댓글을 입력하세요."
+                  />
+                  <button
+                    onClick={handleCommentSubmit}
+                    disabled={commentLoading}
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    {commentLoading ? "등록 중..." : "댓글 등록"}
+                  </button>
+                  {commentError && <p className="text-red-500 mt-2">{commentError}</p>}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
-
+   
       {/* 플로팅 네비게이션 */}
       <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-40">
         <button
