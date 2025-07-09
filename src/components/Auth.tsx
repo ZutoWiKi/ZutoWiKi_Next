@@ -245,30 +245,12 @@ const AuthButtons = () => {
               <input
                 type="password"
                 name="password"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
+                className="w-full px-4 py-3 mb-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
                 placeholder="비밀번호를 입력하세요"
                 autoComplete="current-password"
                 required
                 disabled={isLoading}
               />
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="mr-2 rounded"
-                  disabled={isLoading}
-                />
-                <span className="text-gray-600">로그인 상태 유지</span>
-              </label>
-              <button
-                type="button"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-                disabled={isLoading}
-              >
-                비밀번호 찾기
-              </button>
             </div>
 
             <button
