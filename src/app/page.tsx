@@ -1,7 +1,7 @@
-import React from 'react';
-import PageLayout from '@/components/PageLayout';
-import RecommendedWorks from '@/components/RecommendedWorks';
-import PurposeSection from '@/components/MainPurpose';
+import React from "react";
+import PageLayout from "@/components/PageLayout";
+import RecommendedWorks from "@/components/RecommendedWorks";
+import PurposeSection from "@/components/MainPurpose";
 
 export default function HomePage() {
   return (
