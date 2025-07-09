@@ -733,8 +733,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
               </div>
             )}
 
-            
-
             <div className="mt-6 flex gap-3">
               <button
                 onClick={goToWirte}
@@ -751,16 +749,16 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                 </button>
               )}
             </div>
-            
+
             {/* ── 댓글 섹션 ── */}
             <div className="mt-6 pt-6 border-t border-gray-200 overflow-y-auto flex-1">
               <h4 className="text-lg font-semibold mb-3">댓글</h4>
 
               {/* 댓글 목록 */}
-              {comments.map(c => (
+              {comments.map((c) => (
                 <div key={c.id} className="mb-4">
                   <div className="flex justify-between text-sm text-gray-500 mb-1">
-                    <img src="" alt="profie" />
+                    {/*<img src="" alt="profie" />*/}
                     <span>{c.user_name}</span>
                     <span>{new Date(c.created_at).toLocaleString()}</span>
                   </div>
@@ -773,7 +771,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                 <div className="mt-auto pt-4">
                   <textarea
                     value={newComment}
-                    onChange={e => setNewComment(e.target.value)}
+                    onChange={(e) => setNewComment(e.target.value)}
                     rows={2}
                     className="w-full p-2 border border-gray-300 rounded-md"
                     placeholder="댓글을 입력하세요."
@@ -785,14 +783,16 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                   >
                     {commentLoading ? "등록 중..." : "댓글 등록"}
                   </button>
-                  {commentError && <p className="text-red-500 mt-2">{commentError}</p>}
+                  {commentError && (
+                    <p className="text-red-500 mt-2">{commentError}</p>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </div>
       </div>
-   
+
       {/* 플로팅 네비게이션 */}
       <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-40">
         <button
