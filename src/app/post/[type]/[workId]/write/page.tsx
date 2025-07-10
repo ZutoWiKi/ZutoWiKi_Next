@@ -40,11 +40,12 @@ renderer.list = (token: Tokens.List) => {
 };
 
 interface WritePageProps {
-  params: {
+  params: Promise<{
     type: string;
     workId: string;
-  };
+  }>;
 }
+
 export default function WritePage({ params }: WritePageProps) {
   const searchParams = useSearchParams();
   const parentIDParam = searchParams.get("parentID");

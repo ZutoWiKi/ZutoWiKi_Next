@@ -8,24 +8,19 @@ export default function RecommendedWorks() {
   const [works, setWorks] = useState<Work[]>([]);
   const [viewsWorks, setViewsWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     (async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const [writeList, viewsList] = await Promise.all([
-          GetPopularWorksList(token),
-          GetPopularByViewsList(token),
-        ]);
-        setWorks(writeList);
-        setViewsWorks(viewsList);
-      } catch (err: any) {
-        setError(err.message ?? "알 수 없는 오류");
-      } finally {
-        setLoading(false);
-      }
+      const token = localStorage.getItem("token");
+      const [writeList, viewsList] = await Promise.all([
+        GetPopularWorksList(token),
+        GetPopularByViewsList(token),
+      ]);
+      setWorks(writeList);
+      setViewsWorks(viewsList);
+      setLoading(false); // Set loading to false after data is loaded
     })();
   }, []);
 
@@ -47,10 +42,13 @@ export default function RecommendedWorks() {
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
                 {index + 1}
               </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={w.coverImage}
                 alt={w.title}
                 className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                width={48}
+                height={64}
               />
               <div className="flex-1">
                 <p className="font-medium line-clamp-2 text-gray-800">
@@ -84,10 +82,13 @@ export default function RecommendedWorks() {
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
                 {index + 1}
               </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={w.coverImage}
                 alt={w.title}
                 className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                width={48}
+                height={64}
               />
               <div className="flex-1">
                 <p className="font-medium line-clamp-2 text-gray-800">

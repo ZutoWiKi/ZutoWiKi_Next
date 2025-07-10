@@ -1,9 +1,9 @@
 import WorkListPage from "@/components/WorkListPage";
 
 interface PostTypePageProps {
-  params: {
+  params: Promise<{
     type: string;
-  };
+  }>;
 }
 
 export default async function PostTypePage({ params }: PostTypePageProps) {

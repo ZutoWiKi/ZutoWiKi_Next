@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Image from "next/image";
 import clsx from "clsx";
 
 interface Props {
@@ -318,12 +317,8 @@ export default function UserProfileColorImage({
       )}
       style={{ width: size, height: size }}
     >
-      <Image
-        src={src}
-        alt="avatar"
-        fill
-        className="object-cover mix-blend-multiply"
-      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="avatar" className="object-cover mix-blend-multiply" />
     </div>
   );
 }

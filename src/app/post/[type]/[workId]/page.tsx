@@ -1,18 +1,14 @@
-import React, { ReactElement } from "react";
-import PageLayout from "@/components/PageLayout";
-import FloatingMenu from "@/components/FloatingMenu";
+import React from "react";
 import PostDetailPage from "@/components/PostDetailPage";
-import AnimatedList from "@/components/AnimatedList";
 
 interface WorkDetailPageProps {
-  params: {
-    type: string;
+  params: Promise<{
     workId: string;
-  };
+  }>;
 }
 
 export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
-  const { type, workId } = await params;
+  const { workId } = await params;
 
-  return <PostDetailPage workId={workId} type={type} />;
+  return <PostDetailPage workId={workId} />;
 }

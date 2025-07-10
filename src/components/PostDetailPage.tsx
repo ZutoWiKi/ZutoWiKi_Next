@@ -23,7 +23,6 @@ import { ChevronRightIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
 
 interface PostDetailPageProps {
   workId: string;
-  type: string;
 }
 
 interface Write {
@@ -68,7 +67,7 @@ marked.setOptions({
   breaks: true,
 });
 
-export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
+export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [writes, setWrites] = useState<Write[]>([]);
@@ -78,7 +77,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewStatus, setViewStatus] = useState<{ [key: number]: boolean }>({});
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginRequired, setShowLoginRequired] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
@@ -86,7 +84,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
-  const [commentError, setCommentError] = useState<string | null>(null);
+  const [commentError] = useState<string | null>(null);
   const [showList, setShowList] = useState(true);
   const animatedListRef = useRef<AnimatedListRef>(null);
 
@@ -388,8 +386,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
             setSelectedWrite((prev) =>
               prev ? { ...prev, views: updatedWrite.views } : null,
             );
-
-            setViewStatus((prev) => ({ ...prev, [selectedWrite.id]: true }));
             console.log("조회수 증가 완료. 새 조회수:", updatedWrite.views);
           } else {
             console.log("조회수 증가 실패: 서버 응답이 올바르지 않음");
@@ -479,19 +475,13 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       return;
     }
     if (!selectedWrite || !newComment.trim()) return;
-    try {
-      setCommentLoading(true);
-      const token = localStorage.getItem("token")!;
-      await CreateComment(selectedWrite.id, newComment.trim(), token);
-      setNewComment("");
-      // 등록 후 목록 리로드
-      const data = await GetCommentsList(selectedWrite.id);
-      setComments(data);
-    } catch (err: any) {
-      setCommentError(err.message);
-    } finally {
-      setCommentLoading(false);
-    }
+    setCommentLoading(true);
+    const token = localStorage.getItem("token")!;
+    await CreateComment(selectedWrite.id, newComment.trim(), token);
+    setNewComment("");
+    // 등록 후 목록 리로드
+    const data = await GetCommentsList(selectedWrite.id);
+    setComments(data);
   };
 
   if (!mounted) {
@@ -569,6 +559,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                 </svg>
               </button>
               <div className="flex items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 {workInfo.coverImage && (
                   <img
                     src={workInfo.coverImage}
@@ -603,12 +594,14 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]">
-        <div className={`
+        <div
+          className={`
             max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]
             grid
-            ${showList ? 'lg:grid-cols-2' : 'grid-cols-1 place-items-center'}
+            ${showList ? "lg:grid-cols-2" : "grid-cols-1 place-items-center"}
             gap-8 items-start
-            `}>
+            `}
+        >
           {/* 왼쪽: 선택된 해석 상세 */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 min-h-[500px]">
             {selectedWrite ? (
@@ -908,14 +901,14 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       {/* 플로팅 네비게이션 */}
       <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-40">
         <button
-              onClick={() => setShowList(prev => !prev)}
-              className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
-              >
-              {showList ? (
-                <ChevronRightIcon className="w-8 h-8 transition-transform duration-300 group-hover:rotate-90" />
-                ) : (
-                <ChevronLeftIcon className="w-8 h-8 transition-transform duration-300 group-hover:-rotate-90" />
-              )}
+          onClick={() => setShowList((prev) => !prev)}
+          className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+        >
+          {showList ? (
+            <ChevronRightIcon className="w-8 h-8 transition-transform duration-300 group-hover:rotate-90" />
+          ) : (
+            <ChevronLeftIcon className="w-8 h-8 transition-transform duration-300 group-hover:-rotate-90" />
+          )}
         </button>
         <button
           onClick={goToWirte}
