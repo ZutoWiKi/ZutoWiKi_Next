@@ -3,7 +3,7 @@
 export async function UpdateWriteLike(
   writeId: number,
   action: "increase" | "decrease" | "toggle",
-  token: any,
+  token: string | null,
 ) {
   console.log("좋아요 업데이트 시도:", { writeId, action });
 

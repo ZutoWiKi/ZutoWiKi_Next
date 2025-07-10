@@ -3,7 +3,6 @@ import { useState } from "react";
 // 애니메이션 좋아요 버튼 컴포넌트
 const AnimatedLikeButton = ({
   isLiked,
-  likeCount,
   onClick,
   disabled,
 }: {
@@ -13,18 +12,15 @@ const AnimatedLikeButton = ({
   disabled: boolean;
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
-  const [showHearts, setShowHearts] = useState(false);
 
   const handleClick = () => {
     if (disabled) return;
 
     setIsAnimating(true);
-    setShowHearts(true);
     onClick();
 
     // 애니메이션 리셋
     setTimeout(() => setIsAnimating(false), 600);
-    setTimeout(() => setShowHearts(false), 1000);
   };
 
   return (

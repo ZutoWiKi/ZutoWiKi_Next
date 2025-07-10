@@ -11,7 +11,9 @@ export interface Work {
   write_count?: number; // 해석글 개수 (인기 작품 조회시에만)
 }
 
-export async function GetPopularWorksList(token: any): Promise<Work[]> {
+export async function GetPopularWorksList(
+  token: string | null,
+): Promise<Work[]> {
   const res = await fetch("http://localhost:8000/post/popular/", {
     headers: {
       Authorization: token ? `Bearer ${token}` : "",

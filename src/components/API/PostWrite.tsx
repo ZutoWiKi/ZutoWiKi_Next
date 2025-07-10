@@ -8,6 +8,16 @@ interface WriteData {
   parentID: number;
 }
 
+interface WriteResponse {
+  detail?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+  title?: string | string[];
+  content?: string | string[];
+  user?: string | string[];
+  work?: string | string[];
+}
+
 export async function PostWrite(writeData: WriteData) {
   console.log("글 작성 시도:", writeData);
 
@@ -20,7 +30,7 @@ export async function PostWrite(writeData: WriteData) {
       body: JSON.stringify(writeData),
     });
 
-    const data = await response.json();
+    const data: WriteResponse = await response.json();
 
     if (!response.ok) {
       // 백엔드에서 온 에러 메시지를 파싱
@@ -33,7 +43,7 @@ export async function PostWrite(writeData: WriteData) {
       } else if (data.errors) {
         // 필드별 에러 메시지가 있는 경우
         const errorMessages = [];
-        for (const [field, messages] of Object.entries(data.errors)) {
+        for (const [, messages] of Object.entries(data.errors)) {
           if (Array.isArray(messages)) {
             errorMessages.push(...messages);
           } else {

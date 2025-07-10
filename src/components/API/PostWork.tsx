@@ -8,6 +8,15 @@ interface WorkData {
   coverImage: string;
 }
 
+interface WorkResponse {
+  detail?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+  title?: string | string[];
+  author?: string | string[];
+  typeindex?: string | string[];
+}
+
 export async function PostWork(workData: WorkData) {
   console.log("작품 추가 시도:", workData);
 
@@ -20,7 +29,7 @@ export async function PostWork(workData: WorkData) {
       body: JSON.stringify(workData),
     });
 
-    const data = await response.json();
+    const data: WorkResponse = await response.json();
 
     if (!response.ok) {
       // 백엔드에서 온 에러 메시지를 파싱
@@ -33,7 +42,7 @@ export async function PostWork(workData: WorkData) {
       } else if (data.errors) {
         // 필드별 에러 메시지가 있는 경우
         const errorMessages = [];
-        for (const [field, messages] of Object.entries(data.errors)) {
+        for (const [, messages] of Object.entries(data.errors)) {
           if (Array.isArray(messages)) {
             errorMessages.push(...messages);
           } else {

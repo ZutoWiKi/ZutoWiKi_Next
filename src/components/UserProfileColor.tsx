@@ -273,7 +273,6 @@ export default function UserProfileColorImage({
   className,
   showProfile = true,
   fallbackComponent,
-  ...rest
 }: Props) {
   // id가 유효하지 않거나 showProfile이 false인 경우 처리
   if (!id || id <= 0 || !showProfile) {

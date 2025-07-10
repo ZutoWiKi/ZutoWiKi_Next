@@ -1,6 +1,20 @@
 "use server";
 
-export async function GetWorkDetail(workId: string) {
+interface WorkDetailResponse {
+  id: number;
+  type_index: number;
+  title: string;
+  author: string;
+  coverImage: string;
+  description: string;
+  num_likes?: number;
+  total_views?: number;
+  write_count?: number;
+}
+
+export async function GetWorkDetail(
+  workId: string,
+): Promise<WorkDetailResponse> {
   console.log("작품 상세 조회 시도:", workId);
 
   try {
@@ -21,7 +35,9 @@ export async function GetWorkDetail(workId: string) {
     }
 
     // workId와 일치하는 작품 찾기
-    const work = data.find((work: any) => work.id.toString() === workId);
+    const work = data.find(
+      (work: WorkDetailResponse) => work.id.toString() === workId,
+    );
 
     if (!work) {
       throw new Error("해당 작품을 찾을 수 없습니다.");

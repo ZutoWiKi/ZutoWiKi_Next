@@ -113,9 +113,7 @@ const AnimatedList = forwardRef<AnimatedListRef, AnimatedListProps>(
 
         if (targetItem) {
           const container = listRef.current;
-          const extraMargin = 50;
           const itemTop = targetItem.offsetTop;
-          const itemBottom = itemTop + targetItem.offsetHeight;
           const containerHeight = container.clientHeight;
 
           // 아이템이 화면 중앙에 오도록 스크롤

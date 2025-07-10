@@ -79,29 +79,4 @@ export class ViewLimitManager {
       return `${seconds}초`;
     }
   }
-
-  // 디버깅용: 현재 저장된 데이터 확인
-  static getStoredData(): any {
-    try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
-      return data ? JSON.parse(data) : {};
-    } catch {
-      return {};
-    }
-  }
-
-  // 디버깅용: 특정 글의 조회 제한 해제
-  static clearViewLimit(writeId: number): void {
-    try {
-      const viewData = localStorage.getItem(this.STORAGE_KEY);
-      if (!viewData) return;
-
-      const parsed = JSON.parse(viewData);
-      delete parsed[writeId];
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(parsed));
-      console.log(`글 ${writeId} 조회 제한 해제됨`);
-    } catch (error) {
-      console.error("조회 제한 해제 실패:", error);
-    }
-  }
 }

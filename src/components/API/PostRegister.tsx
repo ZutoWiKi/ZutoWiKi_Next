@@ -1,4 +1,14 @@
 "use server";
+
+interface RegisterResponse {
+  detail?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
+  username?: string[];
+  email?: string[];
+  password?: string[];
+}
+
 export async function PostRegister(formData: FormData) {
   const username = formData.get("username") as string;
   const email = formData.get("email") as string;
@@ -16,7 +26,7 @@ export async function PostRegister(formData: FormData) {
       body: JSON.stringify({ username, email, password, confirmPassword }),
     });
 
-    const data = await response.json();
+    const data: RegisterResponse = await response.json();
     console.log("회원가입 응답:", data);
 
     if (!response.ok) {
@@ -30,7 +40,7 @@ export async function PostRegister(formData: FormData) {
       } else if (data.errors) {
         // 필드별 에러 메시지가 있는 경우
         const errorMessages = [];
-        for (const [field, messages] of Object.entries(data.errors)) {
+        for (const [, messages] of Object.entries(data.errors)) {
           if (Array.isArray(messages)) {
             errorMessages.push(...messages);
           } else {
@@ -46,7 +56,7 @@ export async function PostRegister(formData: FormData) {
         errorMessage = `비밀번호: ${data.password.join(", ")}`;
       }
 
-      //throw new Error(errorMessage);
+      throw new Error(errorMessage);
     }
 
     return data;

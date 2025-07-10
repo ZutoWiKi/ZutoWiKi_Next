@@ -53,9 +53,9 @@ const AuthButtons = () => {
   }, []);
 
   // 에러 메시지 파싱 함수
-  const parseErrorMessage = (error: any): string => {
-    if (error.message) {
-      return error.message;
+  const parseErrorMessage = (error: unknown): string => {
+    if (error && typeof error === "object" && "message" in error) {
+      return String(error.message);
     }
 
     if (typeof error === "string") {
@@ -80,7 +80,7 @@ const AuthButtons = () => {
         // 현재 페이지를 새로고침
         window.location.reload();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("로그인 실패:", error);
       setLoginError(parseErrorMessage(error));
     } finally {
@@ -113,7 +113,7 @@ const AuthButtons = () => {
         setShowLogin(true);
         setSignupSuccess("");
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("회원가입 실패:", error);
       setSignupError(parseErrorMessage(error));
     } finally {

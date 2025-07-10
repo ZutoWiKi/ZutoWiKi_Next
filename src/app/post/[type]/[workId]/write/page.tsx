@@ -12,10 +12,6 @@ const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
 });
 
-interface UploadResponse {
-  url: string;
-}
-
 interface User {
   id: number;
   username: string;
@@ -49,21 +45,6 @@ interface WritePageProps {
     workId: string;
   };
 }
-
-interface Write {
-  id: number;
-  title: string;
-  user_name: string;
-  content: string;
-  work_title: string;
-  work_author: string;
-  created_at: string;
-  views: number;
-  likes: number;
-  parentID: number;
-  is_liked?: boolean; // 사용자의 좋아요 상태
-}
-
 export default function WritePage({ params }: WritePageProps) {
   const searchParams = useSearchParams();
   const parentIDParam = searchParams.get("parentID");
@@ -71,7 +52,6 @@ export default function WritePage({ params }: WritePageProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedWrite, setSelectedWrite] = useState<Write | null>(null);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -80,7 +60,6 @@ export default function WritePage({ params }: WritePageProps) {
   const router = useRouter();
 
   const [workId, setWorkId] = useState<string>("");
-  const [type, setType] = useState<string>("");
 
   // 사용자 정보 가져오기
   useEffect(() => {
@@ -129,7 +108,6 @@ export default function WritePage({ params }: WritePageProps) {
         typeof resolvedParams.workId,
       ); // 디버깅
       setWorkId(resolvedParams.workId);
-      setType(resolvedParams.type);
     };
     loadParams();
   }, [params]);
@@ -172,7 +150,8 @@ export default function WritePage({ params }: WritePageProps) {
     return {
       autofocus: false,
       spellChecker: false,
-      placeholder: "윤슬은 자유로운 다각도의 문학적 해석/상상/비평을 장려합니다. \n단, 아래 기준에 명백히 어긋나는 글은 제한될 수 있습니다.\n - 전혀 관련 없는 글\n - 악의적인 조롱\n - 단순 욕설",
+      placeholder:
+        "윤슬은 자유로운 다각도의 문학적 해석/상상/비평을 장려합니다. \n단, 아래 기준에 명백히 어긋나는 글은 제한될 수 있습니다.\n - 전혀 관련 없는 글\n - 악의적인 조롱\n - 단순 욕설",
       uploadImage: true,
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
@@ -297,7 +276,7 @@ export default function WritePage({ params }: WritePageProps) {
 
       console.log("글 작성 데이터:", writeData); // 디버깅용
 
-      const result = await PostWrite(writeData);
+      await PostWrite(writeData);
       router.back();
     } catch (error) {
       console.error("글 작성 실패:", error); // 디버깅용
