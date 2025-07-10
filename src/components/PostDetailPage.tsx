@@ -17,6 +17,8 @@ import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
 import UserProfileColor from "@/components/UserProfileColor";
 import "github-markdown-css/github-markdown.css";
+import { useRef } from "react";
+import { AnimatedListRef } from "./AnimatedList";
 
 interface PostDetailPageProps {
   workId: string;
@@ -84,6 +86,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
+  const animatedListRef = useRef<AnimatedListRef>(null);
 
   // 로그인 상태 확인
   useEffect(() => {
@@ -216,7 +219,6 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   }, [loadData]);
 
   const goToWirte = useCallback(async () => {
-
     if (!isLoggedIn) {
       setShowLoginRequired(true);
       return;
@@ -229,7 +231,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
     if (!selectedWrite) {
       alert("파생할 작품을 선택해주세요.");
       return;
-    };
+    }
 
     if (!isLoggedIn) {
       setShowLoginRequired(true);
@@ -404,6 +406,37 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       }
     },
     [sortedWrites],
+  );
+
+  const handleParentClick = useCallback(
+    async (parentId: number) => {
+      if (parentId === 0) return; // 원본 글인 경우 아무것도 하지 않음
+
+      // 현재 목록에서 해당 ID의 글을 찾기
+      const parentWrite = writes.find((write) => write.id === parentId);
+
+      if (parentWrite) {
+        // 현재 목록에 있는 경우: 해당 글로 스크롤
+        const parentIndex = sortedWrites.findIndex((w) => w.id === parentId);
+        if (parentIndex !== -1) {
+          // 먼저 선택된 글 업데이트
+          setSelectedWrite(parentWrite);
+
+          // AnimatedList의 ref를 통해 스크롤
+          setTimeout(() => {
+            if (animatedListRef.current) {
+              animatedListRef.current.scrollToIndex(parentIndex);
+            }
+          }, 100);
+        }
+      } else {
+        // 현재 목록에 없는 경우
+        alert(
+          `글 ID ${parentId}로 이동하려고 했지만 현재 목록에서 찾을 수 없습니다.`,
+        );
+      }
+    },
+    [writes, sortedWrites],
   );
 
   // AnimatedList를 위한 아이템 문자열 배열 생성
@@ -642,7 +675,14 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
                     </div>
                     {/* 파생된 글 뭔지 */}
                     {!(selectedWrite.parentID == 0) && (
-                      <span>파생한 글 : {selectedWrite.parentID} 번째</span>
+                      <button
+                        onClick={() =>
+                          handleParentClick(selectedWrite.parentID)
+                        }
+                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0 text-sm"
+                      >
+                        파생한 글: {selectedWrite.parentID}번째로 이동 →
+                      </button>
                     )}
                   </div>
                 </div>
@@ -737,6 +777,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
             <div className="h-[400px] overflow-y-auto mb-6">
               {writes.length > 0 ? (
                 <AnimatedList
+                  ref={animatedListRef} // ref 추가
                   items={listItems}
                   onItemSelect={handleWriteSelect}
                   showGradients={true}
