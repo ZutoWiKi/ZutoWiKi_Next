@@ -19,6 +19,7 @@ import UserProfileColor from "@/components/UserProfileColor";
 import "github-markdown-css/github-markdown.css";
 import { useRef } from "react";
 import { AnimatedListRef } from "./AnimatedList";
+import { ChevronRightIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
 
 interface PostDetailPageProps {
   workId: string;
@@ -86,6 +87,7 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
+  const [showList, setShowList] = useState(true);
   const animatedListRef = useRef<AnimatedListRef>(null);
 
   // 로그인 상태 확인
@@ -601,7 +603,12 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div className={`
+            max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]
+            grid
+            ${showList ? 'lg:grid-cols-2' : 'grid-cols-1 place-items-center'}
+            gap-8 items-start
+            `}>
           {/* 왼쪽: 선택된 해석 상세 */}
           <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 min-h-[500px]">
             {selectedWrite ? (
@@ -900,6 +907,16 @@ export default function PostDetailPage({ workId, type }: PostDetailPageProps) {
 
       {/* 플로팅 네비게이션 */}
       <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-40">
+        <button
+              onClick={() => setShowList(prev => !prev)}
+              className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+              >
+              {showList ? (
+                <ChevronRightIcon className="w-8 h-8 transition-transform duration-300 group-hover:rotate-90" />
+                ) : (
+                <ChevronLeftIcon className="w-8 h-8 transition-transform duration-300 group-hover:-rotate-90" />
+              )}
+        </button>
         <button
           onClick={goToWirte}
           className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
