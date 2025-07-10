@@ -126,6 +126,12 @@ export default function WritePage({ params }: WritePageProps) {
     const formData = new FormData();
     formData.append("file", file);
 
+    if (!file.type.startsWith("image/")) {
+      alert("사진 파일만 업로드할 수 있습니다.");
+      e.target.value = "";
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:8000/post/upload/", {
         method: "POST",
