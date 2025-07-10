@@ -460,7 +460,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       if (!selectedWrite) return;
       try {
         const data = await GetCommentsList(selectedWrite.id);
-        setComments(data);
+        setComments(data || []);
       } catch (e) {
         console.error(e);
       }
@@ -481,7 +481,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     setNewComment("");
     // 등록 후 목록 리로드
     const data = await GetCommentsList(selectedWrite.id);
-    setComments(data);
+    setComments(data || []);
   };
 
   if (!mounted) {
