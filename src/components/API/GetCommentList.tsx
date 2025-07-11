@@ -10,9 +10,7 @@ export interface Comment {
 
 export async function GetCommentsList(writeId: number) {
   try {
-    const res = await fetch(
-      `http://127.0.0.1:8000/api/post/comment/comments/?write=${writeId}`,
-    );
+    const res = await fetch(`/api/post/comment/comments/?write=${writeId}`);
     if (!res.ok) throw new Error("댓글 목록을 불러오지 못했습니다.");
     return (await res.json()) as Comment[];
   } catch {
