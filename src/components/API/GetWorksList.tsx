@@ -4,15 +4,18 @@ export async function GetWorksList(type: string) {
   console.log("작품 목록 조회 시도:", type);
 
   try {
-    const response = await fetch(`http://localhost:8000/api/post/work?type=${type}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/post/work?type=${type}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // 캐시 설정 (선택사항)
+        cache: "no-store", // 실시간 데이터가 필요한 경우
+        // 또는 next: { revalidate: 60 } // 60초마다 갱신
       },
-      // 캐시 설정 (선택사항)
-      cache: "no-store", // 실시간 데이터가 필요한 경우
-      // 또는 next: { revalidate: 60 } // 60초마다 갱신
-    });
+    );
     const data = await response.json();
 
     if (!response.ok) {

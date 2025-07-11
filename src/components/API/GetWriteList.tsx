@@ -13,10 +13,13 @@ export async function GetWritesList(workId: string, token?: string | null) {
       headers["Authorization"] = `Token ${token}`;
     }
 
-    const response = await fetch(`http://localhost:8000/api/post/write/?work_id=${workId}`, {
-      method: "GET",
-      headers,
-    });
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/post/write/?work_id=${workId}`,
+      {
+        method: "GET",
+        headers,
+      },
+    );
 
     const data = await response.json();
 
