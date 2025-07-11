@@ -21,7 +21,7 @@ export async function PostWork(workData: WorkData) {
   console.log("작품 추가 시도:", workData);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/post/work/", {
+    const response = await fetch("http://yoonseul.site/post/work/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

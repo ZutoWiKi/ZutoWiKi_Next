@@ -5,7 +5,7 @@ export async function GetWorksList(type: string) {
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/post/work?type=${type}`,
+      `http://yoonseul.site/post/work?type=${type}`,
       {
         method: "GET",
         headers: {

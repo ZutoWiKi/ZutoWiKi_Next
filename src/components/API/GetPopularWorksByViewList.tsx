@@ -13,7 +13,7 @@ export interface Work {
 
 export async function GetPopularByViewsList(token: string | null) {
   try {
-    const res = await fetch("http://localhost:8000/post/popular/views/", {
+    const res = await fetch("http://yoonseul.site/post/popular/views/", {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },
