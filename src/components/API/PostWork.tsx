@@ -21,7 +21,7 @@ export async function PostWork(workData: WorkData) {
   console.log("작품 추가 시도:", workData);
 
   try {
-    const response = await fetch("/api/post/work/", {
+    const response = await fetch("http://localhost:8000/api/post/work/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

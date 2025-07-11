@@ -18,7 +18,7 @@ export async function PostRegister(formData: FormData) {
   console.log("회원가입 시도", username, email, password, confirmPassword);
 
   try {
-    const response = await fetch("/api/user/register/", {
+    const response = await fetch("http://localhost:8000/api/user/register/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

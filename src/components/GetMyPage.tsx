@@ -15,7 +15,7 @@ const GetMyPage: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("/api/mypage/", {
+    fetch("http://localhost:8000/api/mypage/", {
       credentials: "include",
       headers: {
         Authorization: `Token ${token}`,

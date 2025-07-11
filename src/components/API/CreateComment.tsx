@@ -4,7 +4,7 @@ export async function CreateComment(
   token: string,
 ) {
   try {
-    const res = await fetch(`/api/post/comment/comments/`, {
+    const res = await fetch(`http://localhost:8000/api/post/comment/comments/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

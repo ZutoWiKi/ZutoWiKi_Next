@@ -4,7 +4,7 @@ export async function UpdateWriteViews(writeId: number) {
   console.log("조회수 증가 시도:", writeId);
 
   try {
-    const response = await fetch(`/api/post/write/${writeId}/views/`, {
+    const response = await fetch(`http://localhost:8000/api/post/write/${writeId}/views/`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

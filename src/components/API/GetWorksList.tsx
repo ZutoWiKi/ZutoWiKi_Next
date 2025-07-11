@@ -4,7 +4,7 @@ export async function GetWorksList(type: string) {
   console.log("작품 목록 조회 시도:", type);
 
   try {
-    const response = await fetch(`/api/post/work?type=${type}`, {
+    const response = await fetch(`http://localhost:8000/api/post/work?type=${type}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -8,7 +8,7 @@ export async function UpdateWriteLike(
   console.log("좋아요 업데이트 시도:", { writeId, action });
 
   try {
-    const response = await fetch(`/api/post/write/${writeId}/likes/`, {
+    const response = await fetch(`http://localhost:8000/api/post/write/${writeId}/likes/`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
