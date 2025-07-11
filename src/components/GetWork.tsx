@@ -4,7 +4,7 @@ interface GetWorkProps {
 
 async function get(type: string) {
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  const response = await fetch(`http://127.0.0.1:8000/pages/${type}/`);
+  const response = await fetch(`https://127.0.0.1:8000/pages/${type}/`);
   const json = await response.json();
   return json;
 }
