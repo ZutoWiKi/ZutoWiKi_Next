@@ -14,7 +14,7 @@ export async function GetWritesList(workId: string, token?: string | null) {
     }
 
     const response = await fetch(
-      `https://127.0.0.1:8000/post/write/?work_id=${workId}`,
+      `https://localhost:8000/post/write/?work_id=${workId}`,
       {
         method: "GET",
         headers,

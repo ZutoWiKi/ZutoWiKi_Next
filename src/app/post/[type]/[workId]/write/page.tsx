@@ -133,7 +133,7 @@ export default function WritePage({ params }: WritePageProps) {
     }
 
     try {
-      const res = await fetch("https://127.0.0.1:8000/post/upload/", {
+      const res = await fetch("https://localhost:8000/post/upload/", {
         method: "POST",
         body: formData,
       });
@@ -163,7 +163,7 @@ export default function WritePage({ params }: WritePageProps) {
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
         formData.append("file", file);
-        fetch("https://127.0.0.1:8000/post/upload/", {
+        fetch("https://localhost:8000/post/upload/", {
           method: "POST",
           body: formData,
         })

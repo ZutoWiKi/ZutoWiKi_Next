@@ -22,7 +22,7 @@ export async function PostWrite(writeData: WriteData) {
   console.log("글 작성 시도:", writeData);
 
   try {
-    const response = await fetch("https://127.0.0.1:8000/post/write/", {
+    const response = await fetch("https://localhost:8000/post/write/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
