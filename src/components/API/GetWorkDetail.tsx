@@ -18,7 +18,7 @@ export async function GetWorkDetail(
   console.log("작품 상세 조회 시도:", workId);
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/post/work/`, {
+    const response = await fetch(`/api/post/work/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
