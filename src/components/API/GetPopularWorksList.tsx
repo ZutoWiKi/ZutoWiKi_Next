@@ -13,7 +13,7 @@ export interface Work {
 
 export async function GetPopularWorksList(token: string | null) {
   try {
-    const res = await fetch("http://yoonseul.site/post/popular/", {
+    const res = await fetch("http://127.0.0.1:8000/post/popular/", {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },
