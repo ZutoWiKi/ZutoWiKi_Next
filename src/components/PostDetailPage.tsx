@@ -474,16 +474,12 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       setShowLoginRequired(true);
       return;
     }
-    console.log("hh");
     if (!selectedWrite || !newComment.trim()) return;
-    console.log("hhh");
     setCommentLoading(true);
-    console.log("hhhh");
     const token = localStorage.getItem("token")!;
-    console.log("hhhhh");
     await CreateComment(selectedWrite.id, newComment.trim(), token);
-    console.log("hhhhhh");
     setNewComment("");
+    setCommentLoading(false);
     // 등록 후 목록 리로드
     const data = await GetCommentsList(selectedWrite.id);
     setComments(data || []);
