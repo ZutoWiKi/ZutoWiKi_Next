@@ -3,7 +3,7 @@ export async function PostLogin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  console.log("로그인 시도 : ", email, password);
+  console.log("로그인 시도 : ", email);
 
   try {
     const response = await fetch("http://127.0.0.1:8000/api/user/login/", {

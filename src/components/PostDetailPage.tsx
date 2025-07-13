@@ -479,6 +479,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     const token = localStorage.getItem("token")!;
     await CreateComment(selectedWrite.id, newComment.trim(), token);
     setNewComment("");
+    setCommentLoading(false);
     // 등록 후 목록 리로드
     const data = await GetCommentsList(selectedWrite.id);
     setComments(data || []);

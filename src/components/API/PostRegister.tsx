@@ -15,7 +15,7 @@ export async function PostRegister(formData: FormData) {
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  console.log("회원가입 시도", username, email, password, confirmPassword);
+  console.log("회원가입 시도", username, email);
 
   try {
     const response = await fetch("http://127.0.0.1:8000/api/user/register/", {
