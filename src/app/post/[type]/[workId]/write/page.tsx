@@ -7,6 +7,7 @@ import { marked, Tokens } from "marked";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { PostWrite } from "@/components/API/PostWrite";
+import { GetUserInfo, UploadImage } from "@/components/API/postimg";
 
 const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
@@ -17,6 +18,11 @@ interface User {
   username: string;
   email: string;
   date_joined: string;
+}
+
+function extractYouTubeId(url: string): string | null {
+  const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
+  return match ? match[1] : null;
 }
 
 const renderer = new marked.Renderer();
@@ -62,7 +68,7 @@ export default function WritePage({ params }: WritePageProps) {
 
   const [workId, setWorkId] = useState<string>("");
 
-  // 사용자 정보 가져오기
+  // 사용자 정보 가져오기 - server action 사용
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
@@ -73,18 +79,7 @@ export default function WritePage({ params }: WritePageProps) {
           return;
         }
 
-        const response = await fetch("/api_/mypage/", {
-          credentials: "include",
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("사용자 정보를 가져올 수 없습니다.");
-        }
-
-        const userData = await response.json();
+        const userData = await GetUserInfo(token);
         setUser(userData);
       } catch (error) {
         console.error("사용자 정보 조회 실패:", error);
@@ -120,11 +115,10 @@ export default function WritePage({ params }: WritePageProps) {
     }
   }, [workId, router]);
 
+  // 파일 업로드 핸들러 - server action 사용
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
 
     if (!file.type.startsWith("image/")) {
       alert("사진 파일만 업로드할 수 있습니다.");
@@ -133,12 +127,12 @@ export default function WritePage({ params }: WritePageProps) {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/post/upload/", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const data = await UploadImage(formData);
       const url = data.url as string;
+
       // 에디터 인스턴스 가져와서 이미지 마크다운 삽입
       const cm = editorRef.current?.codemirror;
       cm?.replaceSelection(`![${file.name}](${url})`);
@@ -160,16 +154,15 @@ export default function WritePage({ params }: WritePageProps) {
       placeholder:
         "윤슬은 자유로운 다각도의 문학적 해석/상상/비평을 장려합니다. \n단, 아래 기준에 명백히 어긋나는 글은 제한될 수 있습니다.\n - 전혀 관련 없는 글\n - 악의적인 조롱\n - 단순 욕설",
       uploadImage: true,
-      imageUploadFunction: (file, onSuccess, onError) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        fetch("http://127.0.0.1:8000/api/post/upload/", {
-          method: "POST",
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => onSuccess(data.url))
-          .catch(() => onError("업로드 실패"));
+      imageUploadFunction: async (file, onSuccess, onError) => {
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+          const data = await UploadImage(formData);
+          onSuccess(data.url);
+        } catch {
+          onError("업로드 실패");
+        }
       },
       inputStyle: "contenteditable",
       toolbar: [
@@ -200,8 +193,7 @@ export default function WritePage({ params }: WritePageProps) {
           action: function (editor) {
             const url = prompt("YouTube URL을 입력하세요:");
             if (url) {
-              const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
-              const id = match ? match[1] : null;
+              const id = extractYouTubeId(url);
               if (id) {
                 const embed = `<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/${id}\" frameborder=\"0\" allowfullscreen></iframe>`;
                 editor.codemirror.replaceSelection(embed);
