@@ -1,3 +1,4 @@
+"use server";
 export interface Comment {
   id: number;
   user_id: number;
