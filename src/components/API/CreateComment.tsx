@@ -4,6 +4,7 @@ export async function CreateComment(
   token: string,
 ) {
   try {
+    console.log(writeId, content, token);
     const res = await fetch(
       `http://127.0.0.1:8000/api/post/comment/comments/`,
       {
