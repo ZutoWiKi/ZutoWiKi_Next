@@ -7,7 +7,6 @@ import { GetPopularByLikesList } from "@/components/API/GetPopularWorksByLikeLis
 
 export default function RecommendedWorks() {
   const [works, setWorks] = useState<Work[]>([]);
-  const [viewsWorks, setViewsWorks] = useState<Work[]>([]);
   const [likesWorks, setLikesWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
   const [error] = useState<string | null>(null);
@@ -22,7 +21,6 @@ export default function RecommendedWorks() {
         GetPopularByLikesList(token),
       ]);
       setWorks(writeList);
-      setViewsWorks(viewsList);
       setLikesWorks(likesList);
       setLoading(false);
     })();
