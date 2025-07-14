@@ -134,6 +134,7 @@ export default function FloatingMenu() {
     animate();
   }, [constrainToScreen]);
 
+  // 마우스 이벤트 핸들러들
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const currentTime = Date.now();
@@ -213,6 +214,94 @@ export default function FloatingMenu() {
     [handleMouseMove, handleMouseUp],
   );
 
+  // 터치 이벤트 핸들러들
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      const currentTime = Date.now();
+      const currentX = touch.clientX - dragOffsetRef.current.x;
+      const currentY = touch.clientY - dragOffsetRef.current.y;
+
+      if (lastTimeRef.current > 0) {
+        const deltaTime = currentTime - lastTimeRef.current;
+        if (deltaTime > 0) {
+          velocityRef.current.x =
+            ((currentX - lastPositionRef.current.x) / deltaTime) * 16;
+          velocityRef.current.y =
+            ((currentY - lastPositionRef.current.y) / deltaTime) * 16;
+        }
+      }
+
+      lastPositionRef.current = { x: currentX, y: currentY };
+      lastTimeRef.current = currentTime;
+
+      requestAnimationFrame(() => {
+        const constrainedPos = constrainToScreen({ x: currentX, y: currentY });
+        setPosition(constrainedPos);
+      });
+    },
+    [constrainToScreen],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    document.removeEventListener("touchmove", handleTouchMove);
+    document.removeEventListener("touchend", handleTouchEnd);
+
+    const speed = Math.sqrt(
+      velocityRef.current.x ** 2 + velocityRef.current.y ** 2,
+    );
+
+    if (speed > 2) {
+      animateThrow();
+    }
+
+    lastTimeRef.current = 0;
+  }, [handleTouchMove, animateThrow]);
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length !== 1) return;
+
+      if (
+        e.target instanceof Element &&
+        e.target.closest(".drag-handle") &&
+        menuRef.current
+      ) {
+        e.preventDefault();
+
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+          setIsAnimating(false);
+        }
+
+        const touch = e.touches[0];
+        const rect = menuRef.current.getBoundingClientRect();
+        dragOffsetRef.current = {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top,
+        };
+
+        velocityRef.current = { x: 0, y: 0 };
+        lastPositionRef.current = {
+          x: touch.clientX - dragOffsetRef.current.x,
+          y: touch.clientY - dragOffsetRef.current.y,
+        };
+        lastTimeRef.current = Date.now();
+
+        setIsDragging(true);
+
+        document.addEventListener("touchmove", handleTouchMove, {
+          passive: false,
+        });
+        document.addEventListener("touchend", handleTouchEnd);
+      }
+    },
+    [handleTouchMove, handleTouchEnd],
+  );
+
   useEffect(() => {
     return () => {
       if (animationRef.current) {
@@ -268,8 +357,9 @@ export default function FloatingMenu() {
             : "scale(1)",
       }}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
-      <div className="drag-handle bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl px-4 py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between">
+      <div className="drag-handle bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl px-4 py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between touch-none">
         <div className="flex items-center gap-3">
           <span className="text-lg font-semibold text-gray-700">Menu</span>
           {isAnimating && (
