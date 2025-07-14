@@ -160,6 +160,7 @@ export default function WritePage({ params }: WritePageProps) {
       placeholder:
         "윤슬은 자유로운 다각도의 문학적 해석/상상/비평을 장려합니다. \n단, 아래 기준에 명백히 어긋나는 글은 제한될 수 있습니다.\n - 전혀 관련 없는 글\n - 악의적인 조롱\n - 단순 욕설",
       uploadImage: true,
+      // page.tsx의 imageUploadFunction 수정
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
         formData.append("file", file);
@@ -168,7 +169,11 @@ export default function WritePage({ params }: WritePageProps) {
           body: formData,
         })
           .then((res) => res.json())
-          .then((data) => onSuccess(data.url))
+          .then((data) => {
+            // 절대 URL 확인
+            console.log("업로드된 이미지 URL:", data.url);
+            onSuccess(data.url);
+          })
           .catch(() => onError("업로드 실패"));
       },
       inputStyle: "contenteditable",
