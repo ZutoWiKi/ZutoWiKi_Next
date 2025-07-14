@@ -62,6 +62,8 @@ export default function WritePage({ params }: WritePageProps) {
 
   const [workId, setWorkId] = useState<string>("");
 
+  const UPLOAD_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/post/upload/`;
+
   // 사용자 정보 가져오기
   useEffect(() => {
     const fetchUserInfo = async () => {
@@ -133,7 +135,7 @@ export default function WritePage({ params }: WritePageProps) {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/post/upload/", {
+      const res = await fetch(UPLOAD_URL, {
         method: "POST",
         body: formData,
       });
@@ -163,7 +165,7 @@ export default function WritePage({ params }: WritePageProps) {
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
         formData.append("file", file);
-        fetch("http://127.0.0.1:8000/api/post/upload/", {
+        fetch(UPLOAD_URL, {
           method: "POST",
           body: formData,
         })
