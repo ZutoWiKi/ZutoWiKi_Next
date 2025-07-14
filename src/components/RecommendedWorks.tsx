@@ -33,6 +33,46 @@ export default function RecommendedWorks() {
 
   return (
     <div className="space-y-6">
+      {/* 좋아요 순 목록 (새로 추가) */}
+      <div className="p-4 bg-white/90 rounded-2xl shadow-lg">
+        <h2 className="text-xl font-semibold mb-4">❤️ 인기 작품 (좋아요 순)</h2>
+        <ul className="space-y-4">
+          {likesWorks.map((w, index) => (
+            <li
+              key={w.id}
+              className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition"
+              onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
+            >
+              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
+                {index + 1}
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={w.coverImage}
+                alt={w.title}
+                className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                width={48}
+                height={64}
+              />
+              <div className="flex-1">
+                <p className="font-medium line-clamp-2 text-gray-800">
+                  {w.title}
+                </p>
+                <p className="text-sm text-gray-500 mb-1">— {w.author}</p>
+                <div className="flex items-center gap-3 text-xs text-gray-400">
+                  <span className="flex items-center gap-1">
+                    📝 {w.write_count || 0}개
+                  </span>
+                  <span className="flex items-center gap-1 font-medium text-red-600">
+                    ❤️ {w.total_likes || 0}
+                  </span>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {/* 해석글 순 목록 */}
       <div className="p-4 bg-white/90 rounded-2xl shadow-lg">
         <h2 className="text-xl font-semibold mb-4">🔥 인기 작품 (해석글 순)</h2>
@@ -64,95 +104,6 @@ export default function RecommendedWorks() {
                     📝 {w.write_count || 0}개
                   </span>
                   <span className="flex items-center gap-1">
-                    👀 {w.total_views || 0}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    ❤️ {w.total_likes || 0}
-                  </span>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 조회수 순 목록 */}
-      <div className="p-4 bg-white/90 rounded-2xl shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">👀 인기 작품 (조회수 순)</h2>
-        <ul className="space-y-4">
-          {viewsWorks.map((w, index) => (
-            <li
-              key={w.id}
-              className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition"
-              onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
-            >
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-green-400 to-teal-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
-                {index + 1}
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={w.coverImage}
-                alt={w.title}
-                className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
-                width={48}
-                height={64}
-              />
-              <div className="flex-1">
-                <p className="font-medium line-clamp-2 text-gray-800">
-                  {w.title}
-                </p>
-                <p className="text-sm text-gray-500 mb-1">— {w.author}</p>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span className="flex items-center gap-1">
-                    📝 {w.write_count || 0}개
-                  </span>
-                  <span className="flex items-center gap-1 font-medium text-green-600">
-                    👀 {w.total_views || 0}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    ❤️ {w.total_likes || 0}
-                  </span>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* 좋아요 순 목록 (새로 추가) */}
-      <div className="p-4 bg-white/90 rounded-2xl shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">❤️ 인기 작품 (좋아요 순)</h2>
-        <ul className="space-y-4">
-          {likesWorks.map((w, index) => (
-            <li
-              key={w.id}
-              className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition"
-              onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
-            >
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
-                {index + 1}
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={w.coverImage}
-                alt={w.title}
-                className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
-                width={48}
-                height={64}
-              />
-              <div className="flex-1">
-                <p className="font-medium line-clamp-2 text-gray-800">
-                  {w.title}
-                </p>
-                <p className="text-sm text-gray-500 mb-1">— {w.author}</p>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span className="flex items-center gap-1">
-                    📝 {w.write_count || 0}개
-                  </span>
-                  <span className="flex items-center gap-1">
-                    👀 {w.total_views || 0}
-                  </span>
-                  <span className="flex items-center gap-1 font-medium text-red-600">
                     ❤️ {w.total_likes || 0}
                   </span>
                 </div>
