@@ -15,7 +15,7 @@ export default function RecommendedWorks() {
   useEffect(() => {
     (async () => {
       const token = localStorage.getItem("token");
-      const [writeList, viewsList, likesList] = await Promise.all([
+      const [writeList, likesList] = await Promise.all([
         GetPopularWorksList(token),
         GetPopularByViewsList(token),
         GetPopularByLikesList(token),
