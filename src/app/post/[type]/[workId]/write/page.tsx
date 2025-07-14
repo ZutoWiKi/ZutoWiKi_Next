@@ -133,7 +133,7 @@ export default function WritePage({ params }: WritePageProps) {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/post/upload/", {
+      const res = await fetch("http://yoonseul.site:8000/api/post/upload/", {
         method: "POST",
         body: formData,
       });
@@ -164,7 +164,7 @@ export default function WritePage({ params }: WritePageProps) {
       imageUploadFunction: (file, onSuccess, onError) => {
         const formData = new FormData();
         formData.append("file", file);
-        fetch("http://127.0.0.1:8000/api/post/upload/", {
+        fetch("http://yoonseul.site:8000/api/post/upload/", {
           method: "POST",
           body: formData,
         })
