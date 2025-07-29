@@ -35,6 +35,41 @@ input:focus {
     box-sizing: border-box;
 }
 
+/* 유튜브 임베딩 반응형 스타일 */
+.youtube-embed-wrapper {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 비율 */
+    overflow: hidden;
+    background: #000;
+    border-radius: 8px;
+    margin: 16px 0;
+}
+
+.youtube-embed-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* 마크다운 콘텐츠 내 iframe 일반 스타일링 */
+.markdown-body iframe {
+    max-width: 100%;
+    border-radius: 8px;
+}
+
+/* 모바일에서 유튜브 임베딩 최적화 */
+@media (max-width: 640px) {
+    .youtube-embed-wrapper {
+        margin: 12px 0;
+        border-radius: 6px;
+    }
+}
+
 /* 개발환경에서 디버깅용 */
 @media (prefers-reduced-motion: reduce) {
     * {

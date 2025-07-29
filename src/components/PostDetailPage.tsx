@@ -537,9 +537,9 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* 헤더 */}
-      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-6 py-6">
+      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 sm:gap-0">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
@@ -559,20 +559,22 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                   />
                 </svg>
               </button>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {workInfo.coverImage && (
                   <img
                     src={workInfo.coverImage}
                     alt={workInfo.title}
-                    className="w-16 h-20 object-cover rounded-lg shadow-md"
+                    className="w-12 h-16 sm:w-16 sm:h-20 object-cover rounded-lg shadow-md"
                   />
                 )}
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     {workInfo.title}
                   </h1>
-                  <p className="text-gray-600">작가: {workInfo.author}</p>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    작가: {workInfo.author}
+                  </p>
                   <div className="text-sm text-gray-500 flex items-center gap-1">
                     <Counter
                       value={writes.length}
@@ -594,21 +596,20 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 min-h-[calc(100vh-140px)]">
         <div
           className={`
-            max-w-7xl mx-auto px-6 py-6 min-h-[calc(100vh-140px)]
             grid
-            ${showList ? "lg:grid-cols-2" : "grid-cols-1 place-items-center"}
-            gap-8 items-start
+            ${showList ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 place-items-center"}
+            gap-4 sm:gap-8 items-start
             `}
         >
           {/* 왼쪽: 선택된 해석 상세 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 min-h-[500px]">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6 min-h-[400px] sm:min-h-[500px]">
             {selectedWrite ? (
               <div className="h-full flex flex-col">
                 <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-gray-800 mb-3 leading-relaxed">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 leading-relaxed">
                     {selectedWrite.title}
                   </h3>
                   <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
@@ -757,10 +758,12 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
           </div>
 
           {/* 오른쪽: 해석 목록 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6 flex flex-col min-h-[calc(100vh-200px)]">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6 flex flex-col min-h-[400px] sm:min-h-[calc(100vh-200px)]">
             {/* 헤더 */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-800">해석 목록</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                해석 목록
+              </h2>
               <select
                 value={sortBy}
                 onChange={(e) =>
@@ -775,7 +778,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
             </div>
 
             {/* 글 목록 영역 - 고정 높이 */}
-            <div className="h-[400px] overflow-y-auto mb-6">
+            <div className="h-[300px] sm:h-[400px] overflow-y-auto mb-4 sm:mb-6">
               {writes.length > 0 ? (
                 <AnimatedList
                   ref={animatedListRef} // ref 추가
@@ -818,17 +821,17 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
             </div>
 
             {/* 버튼 영역 */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
               <button
                 onClick={goToWirte}
-                className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                className="flex-1 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-sm sm:text-base"
               >
                 새 해석 작성
               </button>
               {selectedWrite && (
                 <button
                   onClick={goToParentWirte}
-                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border border-gray-200 font-medium transition-all duration-300 transform hover:-translate-y-1"
+                  className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 border border-gray-200 font-medium transition-all duration-300 transform hover:-translate-y-1 text-sm sm:text-base"
                 >
                   파생 해석
                 </button>
@@ -836,11 +839,11 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
             </div>
 
             {/* ── 댓글 섹션 ── */}
-            <div className="flex-1 pt-6 border-t border-gray-200 flex flex-col max-h-[calc(80vh)]">
-              <h4 className="text-lg font-semibold mb-3">댓글</h4>
+            <div className="flex-1 pt-4 sm:pt-6 border-t border-gray-200 flex flex-col max-h-[60vh] sm:max-h-[calc(80vh)]">
+              <h4 className="text-base sm:text-lg font-semibold mb-3">댓글</h4>
 
               {/* 댓글 목록 - 남은 공간 모두 사용 */}
-              <div className="flex-1 overflow-y-auto pr-2 mb-4">
+              <div className="flex-1 overflow-y-auto pr-2 mb-4 min-h-[200px] sm:min-h-[300px]">
                 {comments.map((c) => (
                   <div key={c.id} className="mb-4 flex gap-3">
                     {/* 프로필 이미지 */}
@@ -851,7 +854,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                           alt="avatar"
                           width={120}
                           height={60}
-                          className="w-16 h-16 rounded-full object-cover"
+                          className="w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover"
                         />
                       )}
                     </div>
@@ -859,14 +862,16 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                     {/* 댓글 내용 */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-gray-900 text-sm sm:text-base">
                           {c.user_name}
                         </span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-xs sm:text-sm text-gray-500">
                           {new Date(c.created_at).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-gray-800">{c.content}</p>
+                      <p className="text-gray-800 text-sm sm:text-base">
+                        {c.content}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -900,23 +905,23 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       </div>
 
       {/* 플로팅 네비게이션 */}
-      <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-40">
+      <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 flex flex-col gap-2 sm:gap-3 z-40">
         <button
           onClick={() => setShowList((prev) => !prev)}
-          className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+          className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
         >
           {showList ? (
-            <ChevronRightIcon className="w-8 h-8 transition-transform duration-300 group-hover:rotate-90" />
+            <ChevronRightIcon className="w-5 h-5 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:rotate-90" />
           ) : (
-            <ChevronLeftIcon className="w-8 h-8 transition-transform duration-300 group-hover:-rotate-90" />
+            <ChevronLeftIcon className="w-5 h-5 sm:w-8 sm:h-8 transition-transform duration-300 group-hover:-rotate-90" />
           )}
         </button>
         <button
           onClick={goToWirte}
-          className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+          className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
         >
           <svg
-            className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300"
+            className="w-5 h-5 sm:w-8 sm:h-8 group-hover:rotate-90 transition-transform duration-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

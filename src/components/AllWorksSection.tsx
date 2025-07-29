@@ -65,38 +65,38 @@ export default function AllWorksSection() {
   }
 
   return (
-    <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">모든 작품 둘러보기</h2>
-        <div className="flex gap-2">
+    <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">모든 작품 둘러보기</h2>
+        <div className="flex gap-2 self-end sm:self-auto">
           <button
             onClick={scrollLeft}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="p-1.5 sm:p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
           >
-            <ChevronLeftIcon className="w-5 h-5 text-gray-600" />
+            <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
           </button>
           <button
             onClick={scrollRight}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="p-1.5 sm:p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
           >
-            <ChevronRightIcon className="w-5 h-5 text-gray-600" />
+            <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
           </button>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
+        className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-4"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {works.map((work) => (
           <div
             key={work.id}
             onClick={() => router.push(`/post/${work.type_index}/${work.id}`)}
-            className="flex-shrink-0 w-48 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border border-gray-100"
+            className="flex-shrink-0 w-36 sm:w-48 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border border-gray-100"
           >
             {/* 표지 이미지 */}
-            <div className="h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-t-xl flex items-center justify-center overflow-hidden">
+            <div className="h-48 sm:h-64 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-t-xl flex items-center justify-center overflow-hidden">
               {work.coverImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -105,13 +105,13 @@ export default function AllWorksSection() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="text-6xl">📖</div>
+                <div className="text-4xl sm:text-6xl">📖</div>
               )}
             </div>
 
             {/* 작품 정보 */}
-            <div className="p-4">
-              <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-2 leading-tight">
+            <div className="p-3 sm:p-4">
+              <h3 className="font-bold text-gray-800 text-xs sm:text-sm mb-1 line-clamp-2 leading-tight">
                 {work.title}
               </h3>
               <p className="text-xs text-gray-500">— {work.author}</p>

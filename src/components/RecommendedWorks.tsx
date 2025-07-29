@@ -28,15 +28,15 @@ export default function RecommendedWorks() {
   if (error) return <div className="p-4 text-red-500">{error}</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 좋아요 순 목록 (새로 추가) */}
-      <div className="p-4 bg-white/90 rounded-2xl shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">❤️ 인기 작품 (좋아요 순)</h2>
-        <ul className="space-y-4">
+      <div className="p-3 sm:p-4 bg-white/90 rounded-2xl shadow-lg">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">❤️ 인기 작품 (좋아요 순)</h2>
+        <ul className="space-y-3 sm:space-y-4">
           {likesWorks.map((w, index) => (
             <li
               key={w.id}
-              className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition"
+              className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
               onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
             >
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
@@ -70,13 +70,13 @@ export default function RecommendedWorks() {
       </div>
 
       {/* 해석글 순 목록 */}
-      <div className="p-4 bg-white/90 rounded-2xl shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">🔥 인기 작품 (해석글 순)</h2>
-        <ul className="space-y-4">
+      <div className="p-3 sm:p-4 bg-white/90 rounded-2xl shadow-lg">
+        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">🔥 인기 작품 (해석글 순)</h2>
+        <ul className="space-y-3 sm:space-y-4">
           {works.map((w, index) => (
             <li
               key={w.id}
-              className="flex items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg transition"
+              className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
               onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
             >
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-bold rounded-full mr-3 flex-shrink-0">

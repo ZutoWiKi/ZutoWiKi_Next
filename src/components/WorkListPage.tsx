@@ -197,7 +197,7 @@ export default function WorkListPage({ type }: WorkListPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* 헤더 */}
-      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-6 py-8">
+      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
             <button
@@ -218,11 +218,11 @@ export default function WorkListPage({ type }: WorkListPageProps) {
                 />
               </svg>
             </button>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {categoryName} 작품 목록
             </h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             {works.length}개의 {categoryName} 작품이 있습니다. 작품을 클릭하여
             다양한 해석과 관점을 탐색해보세요.
           </p>
@@ -230,7 +230,7 @@ export default function WorkListPage({ type }: WorkListPageProps) {
       </div>
 
       {/* 작품 목록 */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {works.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-gray-400 mb-4">
@@ -262,41 +262,44 @@ export default function WorkListPage({ type }: WorkListPageProps) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-8">
             {works.map((work) => (
               <div
                 key={work.id}
                 onClick={() => handleWorkClick(work.id)}
-                className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/30 hover:border-white/50 transform hover:-translate-y-2"
+                className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/30 hover:border-white/50 transform hover:-translate-y-2"
               >
-                <div className="aspect-[3/4] overflow-hidden">
+                <div className="aspect-[2/3] sm:aspect-[3/4] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={work.coverImage}
                     alt={work.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    width={300}
-                    height={400}
+                    width={200}
+                    height={300}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = `https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop`;
                     }}
                   />
                 </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-lg text-gray-800 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
+                <div className="p-3 sm:p-6">
+                  <h3 className="font-bold text-sm sm:text-lg text-gray-800 mb-1 sm:mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
                     {work.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-3 font-medium">
+                  <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 font-medium">
                     {placeholderInfo.author}: {work.author}
                   </p>
-                  <p className="text-gray-500 text-sm line-clamp-3">
-                    {work.description}
+                  <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 hidden sm:block">
+                    {work.description && work.description.length > 100 
+                      ? work.description.substring(0, 100) + '...' 
+                      : work.description}
                   </p>
-                  <div className="mt-4 flex items-center text-blue-600 text-sm font-medium group-hover:text-blue-700">
-                    <span>해석 보기</span>
+                  <div className="mt-2 sm:mt-4 flex items-center text-blue-600 text-xs sm:text-sm font-medium group-hover:text-blue-700">
+                    <span className="hidden sm:inline">해석 보기</span>
+                    <span className="sm:hidden">보기</span>
                     <svg
-                      className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+                      className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -319,10 +322,10 @@ export default function WorkListPage({ type }: WorkListPageProps) {
       {/* 플로팅 추가 버튼 */}
       <button
         onClick={() => setShowAddModal(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center group hover:scale-110 z-40"
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center group hover:scale-110 z-40"
       >
         <svg
-          className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300"
+          className="w-5 h-5 sm:w-8 sm:h-8 group-hover:rotate-90 transition-transform duration-300"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -343,10 +346,10 @@ export default function WorkListPage({ type }: WorkListPageProps) {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowAddModal(false)}
           />
-          <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-md mx-4 transform transition-all duration-300">
-            <div className="p-8">
+          <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300">
+            <div className="p-4 sm:p-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   새 {categoryName} 작품 추가
                 </h2>
                 <button

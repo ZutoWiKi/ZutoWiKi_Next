@@ -339,7 +339,7 @@ export default function FloatingMenu() {
   return (
     <div
       ref={menuRef}
-      className={`fixed bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/30 select-none z-50 ${
+      className={`fixed bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/30 select-none z-50 hidden lg:block ${
         isDragging || isAnimating
           ? "transition-none"
           : "transition-all duration-300"
@@ -347,7 +347,8 @@ export default function FloatingMenu() {
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        minWidth: hasActiveItem ? "300px" : "280px",
+        minWidth: hasActiveItem ? "min(300px, 90vw)" : "min(280px, 90vw)",
+        maxWidth: "90vw",
         maxHeight: "80vh",
         cursor: isDragging ? "grabbing" : "default",
         transform: isDragging
@@ -359,9 +360,9 @@ export default function FloatingMenu() {
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
-      <div className="drag-handle bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl px-4 py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between touch-none">
-        <div className="flex items-center gap-3">
-          <span className="text-lg font-semibold text-gray-700">Menu</span>
+      <div className="drag-handle bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between touch-none">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="text-base sm:text-lg font-semibold text-gray-700">Menu</span>
           {isAnimating && (
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
           )}
@@ -385,8 +386,8 @@ export default function FloatingMenu() {
                 onClick={() => handleCategoryClick(category.desc)}
                 className={`w-full text-left transition-all duration-300 border-b border-gray-100/50 last:border-b-0 font-medium group flex items-center justify-between relative overflow-hidden ${
                   isActive
-                    ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm px-7 py-3"
-                    : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 hover:px-6 px-5 py-3"
+                    ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm px-4 sm:px-7 py-2 sm:py-3"
+                    : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 hover:px-4 sm:hover:px-6 px-3 sm:px-5 py-2 sm:py-3"
                 }`}
               >
                 {isActive && (
@@ -394,7 +395,7 @@ export default function FloatingMenu() {
                 )}
 
                 <span
-                  className={`text-sm transition-all duration-300 ${
+                  className={`text-xs sm:text-sm transition-all duration-300 ${
                     isActive ? "font-semibold" : ""
                   }`}
                 >
@@ -407,7 +408,7 @@ export default function FloatingMenu() {
                       isActive
                         ? "text-blue-600 font-medium"
                         : "text-gray-400 group-hover:text-blue-500"
-                    }`}
+                    } hidden sm:inline`}
                   >
                     {category.desc}
                   </span>
@@ -421,11 +422,12 @@ export default function FloatingMenu() {
         </div>
       )}
 
-      <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-b-xl border-t border-gray-200/50">
+      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-b-xl border-t border-gray-200/50">
         <div className="text-xs text-gray-500 text-center flex flex-col items-center justify-center gap-1">
-          <span>Drag to Move and Slide</span>
+          <span className="hidden sm:inline">Drag to Move and Slide</span>
+          <span className="sm:hidden">Drag to Move</span>
           {currentType && (
-            <span className="text-blue-600 font-medium capitalize">
+            <span className="text-blue-600 font-medium capitalize text-xs">
               {currentType} Selected
             </span>
           )}

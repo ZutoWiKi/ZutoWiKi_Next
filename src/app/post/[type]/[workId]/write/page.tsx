@@ -208,7 +208,7 @@ export default function WritePage({ params }: WritePageProps) {
               const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
               const id = match ? match[1] : null;
               if (id) {
-                const embed = `<iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/${id}\" frameborder=\"0\" allowfullscreen></iframe>`;
+                const embed = `<div class="youtube-embed-wrapper"><iframe src=\"https://www.youtube.com/embed/${id}\" frameborder=\"0\" allowfullscreen></iframe></div>`;
                 editor.codemirror.replaceSelection(embed);
               } else {
                 alert("유효한 YouTube URL이 아닙니다.");

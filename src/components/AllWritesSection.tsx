@@ -73,15 +73,15 @@ export default function AllWritesSection() {
   }
 
   return (
-    <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">전체 해석글</h2>
+    <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">전체 해석글</h2>
         <select
           value={sortBy}
           onChange={(e) =>
             setSortBy(e.target.value as "time" | "time_old" | "views" | "likes")
           }
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent self-end sm:self-auto"
         >
           <option value="time">최신순</option>
           <option value="time_old">오래된순</option>
@@ -97,13 +97,13 @@ export default function AllWritesSection() {
             onClick={() =>
               router.push(`/post/${write.type_index}/${write.work_id}`)
             }
-            className="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100"
+            className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100"
           >
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-              <h3 className="font-bold text-gray-800 text-xl line-clamp-2 leading-tight flex-1">
+              <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
                 {write.title}
               </h3>
-              <div className="flex items-center gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
+              <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
                 <span className="flex items-center gap-1">
                   👁️ {write.views}
                 </span>
@@ -114,13 +114,13 @@ export default function AllWritesSection() {
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <p className="text-sm text-blue-600 font-medium">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                <p className="text-xs sm:text-sm text-blue-600 font-medium">
                   ← {write.work_title}
                 </p>
-                <p className="text-sm text-gray-500">by {write.work_author}</p>
+                <p className="text-xs sm:text-sm text-gray-500">by {write.work_author}</p>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <span className="text-gray-700 font-medium">
                   {write.user_name}
                 </span>
