@@ -28,7 +28,7 @@ export async function generateMetadata({
     title: `${work.title} - ${typeName} 해석`,
     description: `${work.author}의 ${typeName} "${work.title}"에 대한 다양한 해석을 만나보세요. ${work.description}`,
     openGraph: {
-      title: `${work.title} - ${typeName} 해석 | Yoonseul`,
+      title: `${work.title} - ${typeName} 해석`,
       description: `${work.author}의 ${typeName} "${work.title}"에 대한 다양한 해석을 만나보세요.`,
       images: work.coverImage ? [work.coverImage] : undefined,
     },
