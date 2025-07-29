@@ -4,18 +4,24 @@ import React from "react";
 import FloatingMenu from "@/components/FloatingMenu";
 
 export const metadata: Metadata = {
-  title: "윤슬 | Yoonseul",
-  description: "Developed by lgh, lhj",
   metadataBase: new URL("https://yoonseul.site/"),
+  title: {
+    default: "윤슬 | Yoonseul",
+    template: "%s | Yoonseul",
+  },
   icons: {
     icon: "/yoonseul_logo.svg",
   },
   openGraph: {
-    siteName: "yoonseul",
-    title: "yoonseul",
+    type: "website",
+    url: "https://yoonseul.site/",
+    siteName: "Yoonseul",
+    title: {
+      default: "🌊 [모든 문학 경계의 파괴] - 문학 소통의 장, 윤슬",
+      template: "%s | Yoonseul",
+    },
     description: "문학 소통의 장",
     images: "/yoonseul_logo.svg",
-    url: "https://yoonseul.site/",
   },
 };
 

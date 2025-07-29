@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import AnimatedList from "./AnimatedList";
 import { useCallback } from "react";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
@@ -70,6 +70,7 @@ marked.setOptions({
 export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [writes, setWrites] = useState<Write[]>([]);
   const [selectedWrite, setSelectedWrite] = useState<Write | null>(null);
   const [workInfo, setWorkInfo] = useState<Work | null>(null);
@@ -218,6 +219,19 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     loadData();
   }, [loadData]);
 
+  // 데이터 로딩 후 쿼리 파라미터 확인하여 해당 글 선택
+  useEffect(() => {
+    if (writes.length > 0) {
+      const writeId = searchParams.get('writeId');
+      if (writeId) {
+        const targetWrite = writes.find(write => write.id.toString() === writeId);
+        if (targetWrite) {
+          setSelectedWrite(targetWrite);
+        }
+      }
+    }
+  }, [writes, searchParams]);
+
   const goToWirte = useCallback(async () => {
     if (!isLoggedIn) {
       setShowLoginRequired(true);
@@ -302,18 +316,25 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     }
   }, [selectedWrite, isLoggedIn, isLikeLoading]);
 
-  // 공유 기능 - 링크 복사
+  // 공유 기능 - 개별 해석글 링크 복사
   const handleShare = useCallback(async () => {
+    if (!selectedWrite) return;
+    
     try {
-      const currentUrl = window.location.href;
-      await navigator.clipboard.writeText(currentUrl);
+      const shareSearchParams = new URLSearchParams();
+      shareSearchParams.set('writeId', selectedWrite.id.toString());
+      const writeUrl = `${window.location.origin}${pathname}?${shareSearchParams.toString()}`;
+      await navigator.clipboard.writeText(writeUrl);
       setShowCopyMessage(true);
       setTimeout(() => setShowCopyMessage(false), 2000);
     } catch (error) {
       console.error("클립보드 복사 실패:", error);
       // 폴백: 텍스트 선택 방식
+      const shareSearchParams = new URLSearchParams();
+      shareSearchParams.set('writeId', selectedWrite.id.toString());
+      const writeUrl = `${window.location.origin}${pathname}?${shareSearchParams.toString()}`;
       const textArea = document.createElement("textarea");
-      textArea.value = window.location.href;
+      textArea.value = writeUrl;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand("copy");
@@ -321,7 +342,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       setShowCopyMessage(true);
       setTimeout(() => setShowCopyMessage(false), 2000);
     }
-  }, []);
+  }, [selectedWrite, pathname]);
 
   // 로그인 모달 표시
   const handleShowLogin = () => {
@@ -356,6 +377,13 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const handleWriteSelect = useCallback(
     async (item: string, index: number) => {
       const selectedWrite = sortedWrites[index];
+      
+      // URL 쿼리 파라미터 업데이트 (히스토리에 추가하지 않음)
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      newSearchParams.set('writeId', selectedWrite.id.toString());
+      const newUrl = `${pathname}?${newSearchParams.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+
       setSelectedWrite(selectedWrite);
 
       // 조회수 증가 로직
@@ -403,7 +431,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         );
       }
     },
-    [sortedWrites],
+    [sortedWrites, searchParams, pathname],
   );
 
   const handleParentClick = useCallback(
