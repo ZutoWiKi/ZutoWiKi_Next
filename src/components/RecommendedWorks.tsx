@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GetPopularWorksList, Work } from "./API/GetPopularWorksList";
-import { GetPopularByViewsList } from "@/components/API/GetPopularWorksByViewList";
 import { GetPopularByLikesList } from "@/components/API/GetPopularWorksByLikeList";
 
 export default function RecommendedWorks() {
@@ -17,7 +16,6 @@ export default function RecommendedWorks() {
       const token = localStorage.getItem("token");
       const [writeList, likesList] = await Promise.all([
         GetPopularWorksList(token),
-        GetPopularByViewsList(token),
         GetPopularByLikesList(token),
       ]);
       setWorks(writeList);
