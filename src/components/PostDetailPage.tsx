@@ -15,7 +15,6 @@ import { createPortal } from "react-dom";
 import { marked, Tokens } from "marked";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
-import { UpdateWrite, UpdateWriteData } from "@/components/API/UpdateWrite";
 import { DeleteWrite } from "@/components/API/DeleteWrite";
 import { GetCurrentUser, CurrentUser } from "@/components/API/GetCurrentUser";
 import UserProfileColor from "@/components/UserProfileColor";
@@ -198,7 +197,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   };
 
   // 삭제 확인 모달 컴포넌트
-  const DeleteConfirmModal = React.memo(({
+  const DeleteConfirmModal = React.memo(function DeleteConfirmModal({
     isOpen,
     onClose,
     onConfirm,
@@ -214,7 +213,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     password: string;
     setPassword: (password: string) => void;
     isMounted: boolean;
-  }) => {
+  }) {
     const inputRef = useRef<HTMLInputElement>(null);
 
     // 모달이 열릴 때 입력 필드에 포커스
