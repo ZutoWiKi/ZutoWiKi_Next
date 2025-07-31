@@ -1,6 +1,3 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.yoonseul.kr' 
-  : 'http://127.0.0.1:8000';
 
 export interface DeleteWriteData {
   password: string;
@@ -8,7 +5,7 @@ export interface DeleteWriteData {
 
 export const DeleteWrite = async (writeId: number, password: string, token: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/post/write/${writeId}/delete/`, {
+    const response = await fetch(`http://127.0.0.1:8000/api/post/write/${writeId}/delete/`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

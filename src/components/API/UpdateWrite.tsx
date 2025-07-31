@@ -1,6 +1,3 @@
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.yoonseul.kr' 
-  : 'http://127.0.0.1:8000';
 
 export interface UpdateWriteData {
   title: string;
@@ -9,7 +6,7 @@ export interface UpdateWriteData {
 
 export const UpdateWrite = async (writeId: number, data: UpdateWriteData, token: string) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/post/write/${writeId}/update/`, {
+    const response = await fetch(`http://127.0.0.1:8000/api/post/write/${writeId}/update/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
