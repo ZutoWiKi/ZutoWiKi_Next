@@ -15,8 +15,16 @@ export const DeleteWrite = async (writeId: number, password: string, token: stri
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || '글 삭제에 실패했습니다.');
+      let errorMessage = '글 삭제에 실패했습니다.';
+      try {
+        const errorData = await response.json();
+        console.error('DeleteWrite API Error:', errorData);
+        errorMessage = errorData.error || errorData.detail || JSON.stringify(errorData);
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();
