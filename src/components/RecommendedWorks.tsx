@@ -11,16 +11,44 @@ export default function RecommendedWorks() {
   const [error] = useState<string | null>(null);
   const router = useRouter();
 
+  // 타입 인덱스를 경로로 변환하는 함수
+  const getTypePathFromIndex = (typeIndex: string | number) => {
+    // 숫자인 경우 문자열 매핑
+    const typeMapping: { [key: number]: string } = {
+      0: 'novel',
+      1: 'poem', 
+      2: 'music',
+      3: 'game',
+      4: 'movie',
+      5: 'performance',
+      6: 'animation',
+    };
+    
+    if (typeof typeIndex === 'number') {
+      return typeMapping[typeIndex] || 'novel';
+    }
+    
+    // 이미 문자열인 경우 그대로 반환
+    return typeIndex || 'novel';
+  };
+
   useEffect(() => {
     (async () => {
-      const token = localStorage.getItem("token");
-      const [writeList, likesList] = await Promise.all([
-        GetPopularWorksList(token),
-        GetPopularByLikesList(token),
-      ]);
-      setWorks(writeList);
-      setLikesWorks(likesList);
-      setLoading(false);
+      try {
+        const token = localStorage.getItem("token");
+        const [writeList, likesList] = await Promise.all([
+          GetPopularWorksList(token),
+          GetPopularByLikesList(token),
+        ]);
+        setWorks(writeList || []);
+        setLikesWorks(likesList || []);
+      } catch (error) {
+        console.error('인기 작품 목록 로딩 에러:', error);
+        setWorks([]);
+        setLikesWorks([]);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -37,19 +65,25 @@ export default function RecommendedWorks() {
             <li
               key={w.id}
               className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
-              onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
+              onClick={() => router.push(`/post/${getTypePathFromIndex(w.type_index)}/${w.id}`)}
             >
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
                 {index + 1}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={w.coverImage}
-                alt={w.title}
-                className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
-                width={48}
-                height={64}
-              />
+              {w.coverImage ? (
+                <img
+                  src={w.coverImage}
+                  alt={w.title}
+                  className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                  width={48}
+                  height={64}
+                />
+              ) : (
+                <div className="w-12 h-16 bg-gray-200 rounded mr-3 flex-shrink-0 flex items-center justify-center">
+                  <span className="text-xs text-gray-500">No Image</span>
+                </div>
+              )}
               <div className="flex-1">
                 <p className="font-medium line-clamp-2 text-gray-800">
                   {w.title}
@@ -77,19 +111,25 @@ export default function RecommendedWorks() {
             <li
               key={w.id}
               className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
-              onClick={() => router.push(`/post/${w.type_index}/${w.id}`)}
+              onClick={() => router.push(`/post/${getTypePathFromIndex(w.type_index)}/${w.id}`)}
             >
               <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
                 {index + 1}
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={w.coverImage}
-                alt={w.title}
-                className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
-                width={48}
-                height={64}
-              />
+              {w.coverImage ? (
+                <img
+                  src={w.coverImage}
+                  alt={w.title}
+                  className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                  width={48}
+                  height={64}
+                />
+              ) : (
+                <div className="w-12 h-16 bg-gray-200 rounded mr-3 flex-shrink-0 flex items-center justify-center">
+                  <span className="text-xs text-gray-500">No Image</span>
+                </div>
+              )}
               <div className="flex-1">
                 <p className="font-medium line-clamp-2 text-gray-800">
                   {w.title}

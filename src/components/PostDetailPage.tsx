@@ -15,11 +15,14 @@ import { createPortal } from "react-dom";
 import { marked, Tokens } from "marked";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
+import { UpdateWrite, UpdateWriteData } from "@/components/API/UpdateWrite";
+import { DeleteWrite } from "@/components/API/DeleteWrite";
+import { GetCurrentUser, CurrentUser } from "@/components/API/GetCurrentUser";
 import UserProfileColor from "@/components/UserProfileColor";
 import "github-markdown-css/github-markdown.css";
 import { useRef } from "react";
 import { AnimatedListRef } from "./AnimatedList";
-import { ChevronRightIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon, ChevronLeftIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface PostDetailPageProps {
   workId: string;
@@ -29,6 +32,7 @@ interface Write {
   id: number;
   title: string;
   user_name: string;
+  user_id?: number; // 작성자 ID 추가
   content: string;
   work_title: string;
   work_author: string;
@@ -88,12 +92,23 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const [commentError] = useState<string | null>(null);
   const [showList, setShowList] = useState(true);
   const animatedListRef = useRef<AnimatedListRef>(null);
+  
+  // 수정/삭제 관련 상태
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
-  // 로그인 상태 확인
+  // 로그인 상태 확인 및 현재 사용자 정보 가져오기
   useEffect(() => {
     if (mounted) {
       const token = localStorage.getItem("token");
       setIsLoggedIn(!!token);
+      
+      // 로그인되어 있으면 현재 사용자 정보 가져오기
+      if (token) {
+        GetCurrentUser(token).then(setCurrentUser);
+      }
     }
   }, [mounted]);
 
@@ -181,6 +196,121 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
 
     return createPortal(modalContent, document.body);
   };
+
+  // 삭제 확인 모달 컴포넌트
+  const DeleteConfirmModal = React.memo(({
+    isOpen,
+    onClose,
+    onConfirm,
+    isLoading,
+    password,
+    setPassword,
+    isMounted,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    isLoading: boolean;
+    password: string;
+    setPassword: (password: string) => void;
+    isMounted: boolean;
+  }) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // 모달이 열릴 때 입력 필드에 포커스
+    useEffect(() => {
+      if (isOpen && inputRef.current) {
+        const timer = setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }, [isOpen]);
+
+    if (!isOpen || !isMounted) return null;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const value = e.target.value;
+      setPassword(value);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      e.stopPropagation();
+      if (e.key === 'Enter' && password.trim() && !isLoading) {
+        onConfirm();
+      }
+    };
+
+    const modalContent = (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <div 
+          className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <TrashIcon className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">
+              글 삭제 확인
+            </h3>
+            <p className="text-gray-600 mb-4 text-center">
+              정말로 이 글을 삭제하시겠습니까?
+            </p>
+            <p className="text-sm text-gray-500 mb-2 text-center">
+              삭제 확인을 위해 현재 사용자명을 입력해주세요.
+            </p>
+            {currentUser && (
+              <p className="text-xs text-blue-600 mb-4 text-center font-mono">
+                사용자명: {currentUser.username}
+              </p>
+            )}
+            <input
+              ref={inputRef}
+              type="text"
+              value={password}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="사용자명 입력"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+              disabled={isLoading}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              autoFocus
+              name="delete-confirm"
+              id="delete-confirm"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                disabled={isLoading}
+                className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={onConfirm}
+                disabled={isLoading || !password.trim()}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-50"
+              >
+                {isLoading ? "삭제 중..." : "삭제"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return createPortal(modalContent, document.body);
+  });
 
   // 데이터 로딩 함수 - 토큰과 함께 요청
   const loadData = useCallback(async () => {
@@ -513,6 +643,59 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     setComments(data || []);
   };
 
+  // 수정 모드 시작 - 수정 페이지로 이동
+  const handleEditStart = () => {
+    if (!selectedWrite) return;
+    router.push(`${pathname}/edit/${selectedWrite.id}`);
+  };
+
+
+  // 삭제 확인 모달 열기
+  const handleDeleteStart = () => {
+    setDeletePassword(""); // 먼저 초기화
+    setShowDeleteModal(true);
+  };
+
+  // 삭제 취소
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setDeletePassword("");
+  };
+
+  // 삭제 실행
+  const handleDeleteConfirm = async () => {
+    if (!selectedWrite || !deletePassword.trim()) return;
+    
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setShowLoginRequired(true);
+      return;
+    }
+
+    setIsDeleteLoading(true);
+    try {
+      await DeleteWrite(selectedWrite.id, deletePassword.trim(), token);
+      
+      // 상태에서 삭제된 글 제거
+      setWrites(prev => prev.filter(write => write.id !== selectedWrite.id));
+      setSelectedWrite(null);
+      setShowDeleteModal(false);
+      setDeletePassword("");
+      
+      alert('글이 성공적으로 삭제되었습니다.');
+    } catch (error) {
+      console.error('글 삭제 실패:', error);
+      alert(error instanceof Error ? error.message : '글 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleteLoading(false);
+    }
+  };
+
+  // 작성자인지 확인하는 함수
+  const canEditOrDelete = (write: Write) => {
+    return currentUser && write.user_id === currentUser.id;
+  };
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
@@ -637,9 +820,29 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
             {selectedWrite ? (
               <div className="h-full flex flex-col">
                 <div className="mb-6">
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 leading-relaxed">
-                    {selectedWrite.title}
-                  </h3>
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 leading-relaxed flex-1">
+                      {selectedWrite.title}
+                    </h3>
+                    {canEditOrDelete(selectedWrite) && (
+                      <div className="flex gap-2 ml-4">
+                        <button
+                          onClick={handleEditStart}
+                          className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="수정"
+                        >
+                          <PencilIcon className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={handleDeleteStart}
+                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          title="삭제"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
                     <span>{selectedWrite.user_name}</span>
                     <span>
@@ -654,67 +857,67 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      <Counter
-                        value={selectedWrite.views}
-                        fontSize={14}
-                        places={getPlacesArray(selectedWrite.views)}
-                        textColor="#6B7280"
-                        fontWeight="normal"
-                        gap={2}
-                        horizontalPadding={0}
-                        gradientHeight={0}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                            />
+                          </svg>
+                          <Counter
+                            value={selectedWrite.views}
+                            fontSize={14}
+                            places={getPlacesArray(selectedWrite.views)}
+                            textColor="#6B7280"
+                            fontWeight="normal"
+                            gap={2}
+                            horizontalPadding={0}
+                            gradientHeight={0}
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
                       <svg
                         className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
-                      <Counter
-                        value={selectedWrite.likes}
-                        fontSize={14}
-                        places={getPlacesArray(selectedWrite.likes)}
-                        textColor="#6B7280"
-                        fontWeight="normal"
-                        gap={2}
-                        horizontalPadding={0}
-                        gradientHeight={0}
-                      />
-                    </div>
-                    {/* 파생된 글 뭔지 */}
-                    {!(selectedWrite.parentID == 0) && (
-                      <button
-                        onClick={() =>
-                          handleParentClick(selectedWrite.parentID)
-                        }
-                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0 text-sm"
-                      >
-                        파생한 글: {selectedWrite.parentID}번째로 이동 →
-                      </button>
-                    )}
-                  </div>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                            />
+                          </svg>
+                          <Counter
+                            value={selectedWrite.likes}
+                            fontSize={14}
+                            places={getPlacesArray(selectedWrite.likes)}
+                            textColor="#6B7280"
+                            fontWeight="normal"
+                            gap={2}
+                            horizontalPadding={0}
+                            gradientHeight={0}
+                          />
+                        </div>
+                        {/* 파생된 글 뭔지 */}
+                        {!(selectedWrite.parentID == 0) && (
+                          <button
+                            onClick={() =>
+                              handleParentClick(selectedWrite.parentID)
+                            }
+                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0 text-sm"
+                          >
+                            파생한 글: {selectedWrite.parentID}번째로 이동 →
+                          </button>
+                        )}
+                      </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -744,14 +947,14 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                        />
-                      </svg>
-                      공유
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                            />
+                          </svg>
+                          공유
                     </button>
                   </div>
                 </div>
@@ -991,6 +1194,17 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         isOpen={showLoginRequired}
         onClose={() => setShowLoginRequired(false)}
         onLogin={handleShowLogin}
+        isMounted={mounted}
+      />
+
+      {/* 삭제 확인 모달 */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleteLoading}
+        password={deletePassword}
+        setPassword={setDeletePassword}
         isMounted={mounted}
       />
     </div>
