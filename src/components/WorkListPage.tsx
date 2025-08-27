@@ -9,10 +9,12 @@ const categoryNames = {
   novel: "소설",
   poem: "시",
   music: "음악",
-  movie: "영화",
+  movie: "영화 / 드라마",
   game: "게임",
   performance: "공연",
   animation: "애니메이션",
+  essay: "수필",
+  webtoon: "만화 / 웹툰",
 };
 
 // 타입 인덱스 매핑
@@ -24,6 +26,8 @@ const typeIndexMap = {
   movie: 4,
   performance: 5,
   animation: 6,
+  essay: 7,
+  webtoon: 8,
 };
 
 interface Work {
@@ -187,6 +191,10 @@ export default function WorkListPage({ type }: WorkListPageProps) {
         return { author: "작곡가", authorPlaceholder: "작곡가명을 입력하세요" };
       case "animation":
         return { author: "감독", authorPlaceholder: "감독명을 입력하세요" };
+      case "essay":
+        return { author: "글쓴이", authorPlaceholder: "글쓴이를 입력하세요" };
+      case "webtoon":
+        return { author: "작가", authorPlaceholder: "글쓴이를 입력하세요" };
       default:
         return { author: "작가", authorPlaceholder: "작가명을 입력하세요" };
     }
@@ -291,8 +299,8 @@ export default function WorkListPage({ type }: WorkListPageProps) {
                     {placeholderInfo.author}: {work.author}
                   </p>
                   <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 hidden sm:block">
-                    {work.description && work.description.length > 100 
-                      ? work.description.substring(0, 100) + '...' 
+                    {work.description && work.description.length > 100
+                      ? work.description.substring(0, 100) + "..."
                       : work.description}
                   </p>
                   <div className="mt-2 sm:mt-4 flex items-center text-blue-600 text-xs sm:text-sm font-medium group-hover:text-blue-700">

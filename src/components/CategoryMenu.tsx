@@ -18,6 +18,8 @@ export default function CategoryMenu() {
     { name: "영화 / 드라마", desc: "Movie" },
     { name: "공연", desc: "Performance" },
     { name: "애니메이션", desc: "Animation" },
+    { name: "수필", desc: "Essay" },
+    { name: "만화 / 웹툰", desc: "Webtoon" },
   ];
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function CategoryMenu() {
 
   const getCurrentCategoryName = () => {
     const currentCategory = categories.find(
-      (cat) => cat.desc.toLowerCase() === currentType
+      (cat) => cat.desc.toLowerCase() === currentType,
     );
     return currentCategory ? currentCategory.name : "카테고리";
   };
@@ -80,7 +82,7 @@ export default function CategoryMenu() {
           <div className="py-2">
             {categories.map((category, index) => {
               const isActive = currentType === category.desc.toLowerCase();
-              
+
               return (
                 <button
                   key={index}
