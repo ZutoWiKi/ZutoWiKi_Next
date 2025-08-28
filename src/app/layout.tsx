@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     default: "윤슬 | Yoonseul",
     template: "%s | Yoonseul",
   },
+  verification:{
+    google: "gq2wh4ls3TWaODirKVuJXMyibXZagCgrfKhCWcd1gsc",
+  },
   icons: {
     icon: "/yoonseul_logo.svg",
   },
