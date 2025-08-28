@@ -48,10 +48,10 @@ const GetMyPage: React.FC = () => {
           // 흔히 있을 법한 필드들 모두 검사
           return (
             // 직접 user_id 필드가 있는 경우
-            // @ts-ignore
+            // @ts-expect-error
             w.user_id === userData.id ||
             // write.user 객체가 있는 경우
-            // @ts-ignore
+            // @ts-expect-error
             (w.user && (w.user.id === userData.id || w.user_id === userData.id)) ||
             // 작성자 이름 기반(안전망)
             w.user_name === userData.username ||
