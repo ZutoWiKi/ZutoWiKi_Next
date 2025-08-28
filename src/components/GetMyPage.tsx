@@ -48,10 +48,10 @@ const GetMyPage: React.FC = () => {
           // 흔히 있을 법한 필드들 모두 검사
           return (
             // 직접 user_id 필드가 있는 경우
-            // @ts-expect-error
+            // @ts-expect-error; 이유? 없어!!!!!!!!
             w.user_id === userData.id ||
             // write.user 객체가 있는 경우
-            // @ts-expect-error
+            // @ts-expect-error; 이유? 없어!!!!!!!!
             (w.user && (w.user.id === userData.id || w.user_id === userData.id)) ||
             // 작성자 이름 기반(안전망)
             w.user_name === userData.username ||
@@ -121,8 +121,8 @@ const GetMyPage: React.FC = () => {
               <div
                 onClick={() =>
                   router.push(
-                    `/post/${(write as any).type_index ?? 0}/${
-                      (write as any).work_id ?? write.id
+                    `/post/${write.type_index ?? 0}/${
+                      write.work_id ?? write.id
                     }`,
                   )
                 }
@@ -141,10 +141,10 @@ const GetMyPage: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                     <p className="text-xs sm:text-sm text-blue-600 font-medium">
-                      ← {(write as any).work_title ?? "제목 없음"}
+                      ← {write.work_title ?? "제목 없음"}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      by {(write as any).work_author ?? "작가 없음"}
+                      by {write.work_author ?? "작가 없음"}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
