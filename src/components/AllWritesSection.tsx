@@ -1,7 +1,90 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { GetAllWrites, AllWrite } from "@/components/API/GetAllWrites";
+import { motion, useInView } from "framer-motion";
+
+interface AnimatedWriteProps {
+  write: AllWrite;
+  onClick: () => void;
+}
+
+const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, onClick }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { amount: 0.5, once: false });
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ scale: 0.7, opacity: 0 }}
+      animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
+      transition={{ duration: 0.05, ease: "circIn" }}
+      onClick={onClick}
+      className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100 mx-1"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+        <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
+          {write.title}
+        </h3>
+        <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
+          <span className="flex items-center gap-1">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            {write.views}
+          </span>
+          <span className="flex items-center gap-1">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+            {write.likes}
+          </span>
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+          <p className="text-xs sm:text-sm text-blue-600 font-medium">
+            ← {write.work_title}
+          </p>
+          <p className="text-xs sm:text-sm text-gray-500">
+            by {write.work_author}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+          <span className="text-gray-700 font-medium">{write.user_name}</span>
+          <span>•</span>
+          <span>{new Date(write.created_at).toLocaleDateString()}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function AllWritesSection() {
   const [writes, setWrites] = useState<AllWrite[]>([]);
@@ -33,7 +116,6 @@ export default function AllWritesSection() {
     })();
   }, []);
 
-  // 정렬된 글 목록
   const sortedWrites = [...writes].sort((a, b) => {
     switch (sortBy) {
       case "views":
@@ -61,7 +143,6 @@ export default function AllWritesSection() {
 
   const handlePageChange = (page: number) => {
     if (page === currentPage || isAnimating) return;
-
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentPage(page);
@@ -73,25 +154,20 @@ export default function AllWritesSection() {
     newSort: "time" | "time_old" | "views" | "likes",
   ) => {
     setSortBy(newSort);
-    setCurrentPage(1); // 정렬 변경시 첫 페이지로
+    setCurrentPage(1);
   };
 
-  // 페이지 번호 버튼들 생성
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-
     return pages;
   };
 
@@ -138,89 +214,16 @@ export default function AllWritesSection() {
           </select>
         </div>
 
-        {/* 글 목록 컨테이너 - 그림자 잘림 방지를 위한 padding 추가 */}
         <div className="overflow-visible py-2 px-1">
-          <div
-            className={`space-y-6 transition-all duration-300 ease-in-out ${
-              isAnimating
-                ? "opacity-0 transform translate-x-4"
-                : "opacity-100 transform translate-x-0"
-            }`}
-          >
+          <div className="space-y-6">
             {displayedWrites.map((write) => (
-              <div
+              <AnimatedWrite
                 key={write.id}
+                write={write}
                 onClick={() =>
                   router.push(`/post/${write.type_index}/${write.work_id}`)
                 }
-                className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100 mx-1"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-                  <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
-                    {write.title}
-                  </h3>
-                  <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
-                    <span className="flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      ️{write.views}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
-                      {write.likes}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                    <p className="text-xs sm:text-sm text-blue-600 font-medium">
-                      ← {write.work_title}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-500">
-                      by {write.work_author}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                    <span className="text-gray-700 font-medium">
-                      {write.user_name}
-                    </span>
-                    <span>•</span>
-                    <span>
-                      {new Date(write.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              />
             ))}
           </div>
         </div>
@@ -232,10 +235,8 @@ export default function AllWritesSection() {
           </div>
         )}
 
-        {/* 페이지네이션 */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center mt-8 gap-2">
-            {/* 첫 페이지로 이동 */}
             <button
               onClick={() => handlePageChange(1)}
               disabled={currentPage === 1 || isAnimating}
@@ -255,8 +256,6 @@ export default function AllWritesSection() {
                 />
               </svg>
             </button>
-
-            {/* 이전 페이지 */}
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1 || isAnimating}
@@ -276,8 +275,6 @@ export default function AllWritesSection() {
                 />
               </svg>
             </button>
-
-            {/* 페이지 번호들 */}
             {getPageNumbers().map((pageNum) => (
               <button
                 key={pageNum}
@@ -292,8 +289,6 @@ export default function AllWritesSection() {
                 {pageNum}
               </button>
             ))}
-
-            {/* 다음 페이지 */}
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages || isAnimating}
@@ -313,8 +308,6 @@ export default function AllWritesSection() {
                 />
               </svg>
             </button>
-
-            {/* 마지막 페이지로 이동 */}
             <button
               onClick={() => handlePageChange(totalPages)}
               disabled={currentPage === totalPages || isAnimating}
@@ -337,29 +330,26 @@ export default function AllWritesSection() {
           </div>
         )}
 
-        {/* 페이지 정보 */}
         {totalPages > 1 && (
           <div className="text-center mt-4 text-sm text-gray-500">
             {currentPage} / {totalPages} 페이지
           </div>
         )}
 
-        <style jsx>
-          {`
-            .line-clamp-2 {
-              display: -webkit-box;
-              -webkit-line-clamp: 2;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-            }
-            .line-clamp-3 {
-              display: -webkit-box;
-              -webkit-line-clamp: 3;
-              -webkit-box-orient: vertical;
-              overflow: hidden;
-            }
-          `}
-        </style>
+        <style jsx>{`
+          .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+          .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        `}</style>
       </div>
     </section>
   );
