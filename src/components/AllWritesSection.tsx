@@ -10,7 +10,9 @@ export default function AllWritesSection() {
   const [sortBy, setSortBy] = useState<"time" | "time_old" | "views" | "likes">(
     "time",
   );
-  const [displayCount, setDisplayCount] = useState(6);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const itemsPerPage = 15;
   const router = useRouter();
 
   useEffect(() => {
@@ -50,7 +52,48 @@ export default function AllWritesSection() {
     }
   });
 
-  const displayedWrites = sortedWrites.slice(0, displayCount);
+  const totalPages = Math.ceil(sortedWrites.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const displayedWrites = sortedWrites.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page === currentPage || isAnimating) return;
+
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentPage(page);
+      setIsAnimating(false);
+    }, 150);
+  };
+
+  const handleSortChange = (
+    newSort: "time" | "time_old" | "views" | "likes",
+  ) => {
+    setSortBy(newSort);
+    setCurrentPage(1); // 정렬 변경시 첫 페이지로
+  };
+
+  // 페이지 번호 버튼들 생성
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
 
   if (loading) {
     return (
@@ -74,133 +117,250 @@ export default function AllWritesSection() {
 
   return (
     <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-          전체 해석글
-        </h2>
-        <select
-          value={sortBy}
-          onChange={(e) =>
-            setSortBy(e.target.value as "time" | "time_old" | "views" | "likes")
-          }
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent self-end sm:self-auto"
-        >
-          <option value="time">최신순</option>
-          <option value="time_old">오래된순</option>
-          <option value="views">조회수순</option>
-          <option value="likes">좋아요순</option>
-        </select>
-      </div>
-
-      <div className="space-y-4">
-        {displayedWrites.map((write) => (
-          <div
-            key={write.id}
-            onClick={() =>
-              router.push(`/post/${write.type_index}/${write.work_id}`)
+      <div className="px-1 sm:px-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            전체 해석글
+          </h2>
+          <select
+            value={sortBy}
+            onChange={(e) =>
+              handleSortChange(
+                e.target.value as "time" | "time_old" | "views" | "likes",
+              )
             }
-            className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100"
+            className="px-1 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent self-end sm:self-auto"
           >
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-              <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
-                {write.title}
-              </h3>
-              <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
-                <span className="flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                  ️{write.views}
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                  {write.likes}
-                </span>
-              </div>
-            </div>
+            <option value="time">최신순</option>
+            <option value="time_old">오래된순</option>
+            <option value="views">조회수순</option>
+            <option value="likes">좋아요순</option>
+          </select>
+        </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                <p className="text-xs sm:text-sm text-blue-600 font-medium">
-                  ← {write.work_title}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-500">
-                  by {write.work_author}
-                </p>
+        {/* 글 목록 컨테이너 - 그림자 잘림 방지를 위한 padding 추가 */}
+        <div className="overflow-visible py-2 px-1">
+          <div
+            className={`space-y-6 transition-all duration-300 ease-in-out ${
+              isAnimating
+                ? "opacity-0 transform translate-x-4"
+                : "opacity-100 transform translate-x-0"
+            }`}
+          >
+            {displayedWrites.map((write) => (
+              <div
+                key={write.id}
+                onClick={() =>
+                  router.push(`/post/${write.type_index}/${write.work_id}`)
+                }
+                className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100 mx-1"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                  <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
+                    {write.title}
+                  </h3>
+                  <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
+                    <span className="flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      ️{write.views}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      {write.likes}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <p className="text-xs sm:text-sm text-blue-600 font-medium">
+                      ← {write.work_title}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      by {write.work_author}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                    <span className="text-gray-700 font-medium">
+                      {write.user_name}
+                    </span>
+                    <span>•</span>
+                    <span>
+                      {new Date(write.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-                <span className="text-gray-700 font-medium">
-                  {write.user_name}
-                </span>
-                <span>•</span>
-                <span>{new Date(write.created_at).toLocaleDateString()}</span>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {writes.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">✨</div>
+            <p className="text-gray-500">아직 작성된 해석이 없습니다.</p>
+          </div>
+        )}
+
+        {/* 페이지네이션 */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center mt-8 gap-2">
+            {/* 첫 페이지로 이동 */}
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1 || isAnimating}
+              className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            {/* 이전 페이지 */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1 || isAnimating}
+              className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            {/* 페이지 번호들 */}
+            {getPageNumbers().map((pageNum) => (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                disabled={isAnimating}
+                className={`w-10 h-10 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:transform-none ${
+                  currentPage === pageNum
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                    : "bg-white text-gray-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white border border-gray-200"
+                }`}
+              >
+                {pageNum}
+              </button>
+            ))}
+
+            {/* 다음 페이지 */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages || isAnimating}
+              className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+
+            {/* 마지막 페이지로 이동 */}
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage === totalPages || isAnimating}
+              className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* 페이지 정보 */}
+        {totalPages > 1 && (
+          <div className="text-center mt-4 text-sm text-gray-500">
+            {currentPage} / {totalPages} 페이지
+          </div>
+        )}
+
+        <style jsx>
+          {`
+            .line-clamp-2 {
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+            .line-clamp-3 {
+              display: -webkit-box;
+              -webkit-line-clamp: 3;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+          `}
+        </style>
       </div>
-
-      {writes.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">✨</div>
-          <p className="text-gray-500">아직 작성된 해석이 없습니다.</p>
-        </div>
-      )}
-
-      {/* 더보기 버튼 */}
-      {displayCount < sortedWrites.length && (
-        <div className="text-center mt-8">
-          <button
-            onClick={() => setDisplayCount((prev) => prev + 6)}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          >
-            더 많은 해석 보기 ({sortedWrites.length - displayCount}개 더)
-          </button>
-        </div>
-      )}
-
-      <style jsx>{`
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .line-clamp-3 {
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      `}</style>
     </section>
   );
 }
