@@ -349,8 +349,12 @@ export default function FloatingMenu() {
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        minWidth: hasActiveItem ? "min(300px, 90vw)" : "min(280px, 90vw)",
-        maxWidth: "90vw",
+        minWidth: isCollapsed
+          ? "auto"
+          : hasActiveItem
+            ? "min(300px, 90vw)"
+            : "min(280px, 90vw)",
+        maxWidth: isCollapsed ? "auto" : "90vw",
         maxHeight: "80vh",
         cursor: isDragging ? "grabbing" : "default",
         transform: isDragging
@@ -362,15 +366,20 @@ export default function FloatingMenu() {
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
-      <div className="drag-handle bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between touch-none">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="text-base sm:text-lg font-semibold text-gray-700">
-            Menu
-          </span>
-          {isAnimating && (
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-          )}
-        </div>
+      <div
+        className={`drag-handle bg-gradient-to-r from-gray-100 to-gray-200 px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200/50 cursor-grab active:cursor-grabbing flex items-center justify-between touch-none 
+        ${isCollapsed ? "rounded-xl" : "rounded-t-xl"}`}
+      >
+        {!isCollapsed && (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="text-base sm:text-lg font-semibold text-gray-700">
+              Menu
+            </span>
+            {isAnimating && (
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            )}
+          </div>
+        )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded p-1 transition-all duration-200"
@@ -380,63 +389,64 @@ export default function FloatingMenu() {
       </div>
 
       {!isCollapsed && (
-        <div className="py-2 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          {categories.map((category, index) => {
-            const isActive = currentType === category.desc.toLowerCase();
+        <div>
+          <div className="py-2 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+            {categories.map((category, index) => {
+              const isActive = currentType === category.desc.toLowerCase();
 
-            return (
-              <button
-                key={index}
-                onClick={() => handleCategoryClick(category.desc)}
-                className={`w-full text-left transition-all duration-300 border-b border-gray-100/50 last:border-b-0 font-medium group flex items-center justify-between relative overflow-hidden ${
-                  isActive
-                    ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm px-4 sm:px-7 py-2 sm:py-3"
-                    : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 hover:px-4 sm:hover:px-6 px-3 sm:px-5 py-2 sm:py-3"
-                }`}
-              >
-                {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-r-full"></div>
-                )}
-
-                <span
-                  className={`text-xs sm:text-sm transition-all duration-300 ${
-                    isActive ? "font-semibold" : ""
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleCategoryClick(category.desc)}
+                  className={`w-full text-left transition-all duration-300 border-b border-gray-100/50 last:border-b-0 font-medium group flex items-center justify-between relative overflow-hidden ${
+                    isActive
+                      ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm px-4 sm:px-7 py-2 sm:py-3"
+                      : "text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 hover:px-4 sm:hover:px-6 px-3 sm:px-5 py-2 sm:py-3"
                   }`}
                 >
-                  {category.name}
-                </span>
-
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span
-                    className={`text-xs transition-all duration-300 ${
-                      isActive
-                        ? "text-blue-600 font-medium"
-                        : "text-gray-400 group-hover:text-blue-500"
-                    } hidden sm:inline`}
-                  >
-                    {category.desc}
-                  </span>
                   {isActive && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-r-full"></div>
                   )}
-                </div>
-              </button>
-            );
-          })}
+
+                  <span
+                    className={`text-xs sm:text-sm transition-all duration-300 ${
+                      isActive ? "font-semibold" : ""
+                    }`}
+                  >
+                    {category.name}
+                  </span>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span
+                      className={`text-xs transition-all duration-300 ${
+                        isActive
+                          ? "text-blue-600 font-medium"
+                          : "text-gray-400 group-hover:text-blue-500"
+                      } hidden sm:inline`}
+                    >
+                      {category.desc}
+                    </span>
+                    {isActive && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-b-xl border-t border-gray-200/50">
+            <div className="text-xs text-gray-500 text-center flex flex-col items-center justify-center gap-1">
+              <span className="hidden sm:inline">Drag to Move and Slide</span>
+              <span className="sm:hidden">Drag to Move</span>
+              {currentType && (
+                <span className="text-blue-600 font-medium capitalize text-xs">
+                  {currentType} Selected
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       )}
-
-      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-b-xl border-t border-gray-200/50">
-        <div className="text-xs text-gray-500 text-center flex flex-col items-center justify-center gap-1">
-          <span className="hidden sm:inline">Drag to Move and Slide</span>
-          <span className="sm:hidden">Drag to Move</span>
-          {currentType && (
-            <span className="text-blue-600 font-medium capitalize text-xs">
-              {currentType} Selected
-            </span>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
