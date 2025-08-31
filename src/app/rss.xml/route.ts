@@ -1,5 +1,6 @@
 // app/rss.xml/route.ts
 import { NextResponse } from "next/server";
+import { AllWrite } from "../../components/API/GetAllWrites"
 
 export async function GET() {
   const baseUrl = "https://yoonseul.site";
@@ -8,12 +9,12 @@ export async function GET() {
   const res = await fetch(`${baseUrl}/api/post/write/all/`, {
     next: { revalidate: 86400 }, // 하루마다 새로고침
   });
-  const posts = await res.json();
+  const posts:AllWrite[] = await res.json();
 
   // RSS 아이템 생성
   const items = posts
     .map(
-      (post: any) => `
+      (post: AllWrite) => `
       <item>
         <title><![CDATA[${post.title}]]></title>
         <link>${baseUrl}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</link>
