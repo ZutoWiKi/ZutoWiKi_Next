@@ -1,6 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import {
+  useRouter,
+  usePathname,
+  useSearchParams,
+  useParams,
+} from "next/navigation";
 import AnimatedList from "./AnimatedList";
 import { useCallback } from "react";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
@@ -21,7 +26,12 @@ import UserProfileColor from "@/components/UserProfileColor";
 import "github-markdown-css/github-markdown.css";
 import { useRef } from "react";
 import { AnimatedListRef } from "./AnimatedList";
-import { ChevronRightIcon, ChevronLeftIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronRightIcon,
+  ChevronLeftIcon,
+  PencilIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 
 interface PostDetailPageProps {
   workId: string;
@@ -50,6 +60,18 @@ interface Work {
   description: string;
 }
 
+const categoryPlaceholder = {
+  novel: "작가",
+  poem: "시인",
+  music: "작곡가",
+  movie: "감독",
+  game: "제작사",
+  performance: "작곡가",
+  animation: "감독",
+  essay: "글쓴이",
+  webtoon: "작가",
+};
+
 const renderer = new marked.Renderer();
 
 renderer.list = (token: Tokens.List) => {
@@ -73,6 +95,7 @@ marked.setOptions({
 export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
   const searchParams = useSearchParams();
   const [writes, setWrites] = useState<Write[]>([]);
   const [selectedWrite, setSelectedWrite] = useState<Write | null>(null);
@@ -91,19 +114,22 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const [commentError] = useState<string | null>(null);
   const [showList, setShowList] = useState(true);
   const animatedListRef = useRef<AnimatedListRef>(null);
-  
+
   // 수정/삭제 관련 상태
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
 
+  //get type
+  const type = params.type as string;
+
   // 로그인 상태 확인 및 현재 사용자 정보 가져오기
   useEffect(() => {
     if (mounted) {
       const token = localStorage.getItem("token");
       setIsLoggedIn(!!token);
-      
+
       // 로그인되어 있으면 현재 사용자 정보 가져오기
       if (token) {
         GetCurrentUser(token).then(setCurrentUser);
@@ -237,7 +263,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       e.stopPropagation();
-      if (e.key === 'Enter' && password.trim() && !isLoading) {
+      if (e.key === "Enter" && password.trim() && !isLoading) {
         onConfirm();
       }
     };
@@ -248,7 +274,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
           className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
-        <div 
+        <div
           className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100"
           onClick={(e) => e.stopPropagation()}
         >
@@ -351,9 +377,11 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   // 데이터 로딩 후 쿼리 파라미터 확인하여 해당 글 선택
   useEffect(() => {
     if (writes.length > 0) {
-      const writeId = searchParams.get('writeId');
+      const writeId = searchParams.get("writeId");
       if (writeId) {
-        const targetWrite = writes.find(write => write.id.toString() === writeId);
+        const targetWrite = writes.find(
+          (write) => write.id.toString() === writeId,
+        );
         if (targetWrite) {
           setSelectedWrite(targetWrite);
         }
@@ -448,10 +476,10 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   // 공유 기능 - 개별 해석글 링크 복사
   const handleShare = useCallback(async () => {
     if (!selectedWrite) return;
-    
+
     try {
       const shareSearchParams = new URLSearchParams();
-      shareSearchParams.set('writeId', selectedWrite.id.toString());
+      shareSearchParams.set("writeId", selectedWrite.id.toString());
       const writeUrl = `${window.location.origin}${pathname}?${shareSearchParams.toString()}`;
       await navigator.clipboard.writeText(writeUrl);
       setShowCopyMessage(true);
@@ -460,7 +488,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       console.error("클립보드 복사 실패:", error);
       // 폴백: 텍스트 선택 방식
       const shareSearchParams = new URLSearchParams();
-      shareSearchParams.set('writeId', selectedWrite.id.toString());
+      shareSearchParams.set("writeId", selectedWrite.id.toString());
       const writeUrl = `${window.location.origin}${pathname}?${shareSearchParams.toString()}`;
       const textArea = document.createElement("textarea");
       textArea.value = writeUrl;
@@ -506,12 +534,12 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const handleWriteSelect = useCallback(
     async (item: string, index: number) => {
       const selectedWrite = sortedWrites[index];
-      
+
       // URL 쿼리 파라미터 업데이트 (히스토리에 추가하지 않음)
       const newSearchParams = new URLSearchParams(searchParams.toString());
-      newSearchParams.set('writeId', selectedWrite.id.toString());
+      newSearchParams.set("writeId", selectedWrite.id.toString());
       const newUrl = `${pathname}?${newSearchParams.toString()}`;
-      window.history.replaceState(null, '', newUrl);
+      window.history.replaceState(null, "", newUrl);
 
       setSelectedWrite(selectedWrite);
 
@@ -648,7 +676,6 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     router.push(`${pathname}/edit/${selectedWrite.id}`);
   };
 
-
   // 삭제 확인 모달 열기
   const handleDeleteStart = () => {
     setDeletePassword(""); // 먼저 초기화
@@ -664,7 +691,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   // 삭제 실행
   const handleDeleteConfirm = async () => {
     if (!selectedWrite || !deletePassword.trim()) return;
-    
+
     const token = localStorage.getItem("token");
     if (!token) {
       setShowLoginRequired(true);
@@ -674,17 +701,19 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     setIsDeleteLoading(true);
     try {
       await DeleteWrite(selectedWrite.id, deletePassword.trim(), token);
-      
+
       // 상태에서 삭제된 글 제거
-      setWrites(prev => prev.filter(write => write.id !== selectedWrite.id));
+      setWrites((prev) =>
+        prev.filter((write) => write.id !== selectedWrite.id),
+      );
       setSelectedWrite(null);
       setShowDeleteModal(false);
       setDeletePassword("");
-      
-      alert('글이 성공적으로 삭제되었습니다.');
+
+      alert("글이 성공적으로 삭제되었습니다.");
     } catch (error) {
-      console.error('글 삭제 실패:', error);
-      alert(error instanceof Error ? error.message : '글 삭제에 실패했습니다.');
+      console.error("글 삭제 실패:", error);
+      alert(error instanceof Error ? error.message : "글 삭제에 실패했습니다.");
     } finally {
       setIsDeleteLoading(false);
     }
@@ -783,7 +812,10 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                     {workInfo.title}
                   </h1>
                   <p className="text-sm sm:text-base text-gray-600">
-                    작가: {workInfo.author}
+                    {categoryPlaceholder[
+                      type as keyof typeof categoryPlaceholder
+                    ] || type}{" "}
+                    : {workInfo.author}
                   </p>
                   <div className="text-sm text-gray-500 flex items-center gap-1">
                     <Counter
@@ -806,6 +838,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         </div>
       </div>
 
+      {/* 메인 자료 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 min-h-[calc(100vh-140px)]">
         <div
           className={`
@@ -856,67 +889,67 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          <Counter
-                            value={selectedWrite.views}
-                            fontSize={14}
-                            places={getPlacesArray(selectedWrite.views)}
-                            textColor="#6B7280"
-                            fontWeight="normal"
-                            gap={2}
-                            horizontalPadding={0}
-                            gradientHeight={0}
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
+                      <Counter
+                        value={selectedWrite.views}
+                        fontSize={14}
+                        places={getPlacesArray(selectedWrite.views)}
+                        textColor="#6B7280"
+                        fontWeight="normal"
+                        gap={2}
+                        horizontalPadding={0}
+                        gradientHeight={0}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
                       <svg
                         className="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                            />
-                          </svg>
-                          <Counter
-                            value={selectedWrite.likes}
-                            fontSize={14}
-                            places={getPlacesArray(selectedWrite.likes)}
-                            textColor="#6B7280"
-                            fontWeight="normal"
-                            gap={2}
-                            horizontalPadding={0}
-                            gradientHeight={0}
-                          />
-                        </div>
-                        {/* 파생된 글 뭔지 */}
-                        {!(selectedWrite.parentID == 0) && (
-                          <button
-                            onClick={() =>
-                              handleParentClick(selectedWrite.parentID)
-                            }
-                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0 text-sm"
-                          >
-                            파생한 글: {selectedWrite.parentID}번째로 이동 →
-                          </button>
-                        )}
-                      </div>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      <Counter
+                        value={selectedWrite.likes}
+                        fontSize={14}
+                        places={getPlacesArray(selectedWrite.likes)}
+                        textColor="#6B7280"
+                        fontWeight="normal"
+                        gap={2}
+                        horizontalPadding={0}
+                        gradientHeight={0}
+                      />
+                    </div>
+                    {/* 파생된 글 뭔지 */}
+                    {!(selectedWrite.parentID == 0) && (
+                      <button
+                        onClick={() =>
+                          handleParentClick(selectedWrite.parentID)
+                        }
+                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors cursor-pointer bg-transparent border-none p-0 text-sm"
+                      >
+                        파생한 글: {selectedWrite.parentID}번째로 이동 →
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
@@ -946,14 +979,14 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                            />
-                          </svg>
-                          공유
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                        />
+                      </svg>
+                      공유
                     </button>
                   </div>
                 </div>
