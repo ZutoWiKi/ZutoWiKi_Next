@@ -86,6 +86,32 @@ const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, onClick }) => {
   );
 };
 
+// 빈 카드 컴포넌트 (공간 확보용)
+const EmptyCard: React.FC = () => (
+  <div className="bg-transparent rounded-xl p-3 sm:p-4 mx-1 invisible">
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+      <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
+        임시 제목
+      </h3>
+      <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
+        <span className="flex items-center gap-1">0</span>
+        <span className="flex items-center gap-1">0</span>
+      </div>
+    </div>
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+        <p className="text-xs sm:text-sm text-blue-600 font-medium">← 임시</p>
+        <p className="text-xs sm:text-sm text-gray-500">by 임시</p>
+      </div>
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+        <span className="text-gray-700 font-medium">임시</span>
+        <span>•</span>
+        <span>2024.01.01</span>
+      </div>
+    </div>
+  </div>
+);
+
 export default function AllWritesSection() {
   const [writes, setWrites] = useState<AllWrite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +123,10 @@ export default function AllWritesSection() {
   const [isAnimating, setIsAnimating] = useState(false);
   const itemsPerPage = 15;
   const router = useRouter();
+
+  // 컨테이너 높이 추적을 위한 ref
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [minHeight, setMinHeight] = useState<number>(0);
 
   useEffect(() => {
     (async () => {
@@ -115,6 +145,16 @@ export default function AllWritesSection() {
       }
     })();
   }, []);
+
+  // 페이지 변경 후 높이 업데이트
+  useEffect(() => {
+    if (contentRef.current && !isAnimating) {
+      const currentHeight = contentRef.current.scrollHeight;
+      if (currentHeight > minHeight) {
+        setMinHeight(currentHeight);
+      }
+    }
+  }, [currentPage, isAnimating]);
 
   const sortedWrites = [...writes].sort((a, b) => {
     switch (sortBy) {
@@ -141,12 +181,44 @@ export default function AllWritesSection() {
     startIndex + itemsPerPage,
   );
 
+  // 빈 카드로 최소 높이 확보
+  const renderContent = () => {
+    const content = displayedWrites.map((write) => (
+      <AnimatedWrite
+        key={write.id}
+        write={write}
+        onClick={() =>
+          router.push(`/post/${write.type_index}/${write.work_id}`)
+        }
+      />
+    ));
+
+    // 현재 페이지의 아이템이 최대 개수보다 적으면 빈 카드로 채움
+    const emptySlots = itemsPerPage - displayedWrites.length;
+    if (emptySlots > 0) {
+      for (let i = 0; i < emptySlots; i++) {
+        content.push(<EmptyCard key={`empty-${i}`} />);
+      }
+    }
+
+    return content;
+  };
+
   const handlePageChange = (page: number) => {
     if (page === currentPage || isAnimating) return;
+
+    // 현재 스크롤 위치 저장
+    const scrollY = window.scrollY;
+
     setIsAnimating(true);
     setTimeout(() => {
       setCurrentPage(page);
       setIsAnimating(false);
+
+      // 스크롤 위치 복원 (약간의 지연 후)
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
     }, 150);
   };
 
@@ -155,6 +227,7 @@ export default function AllWritesSection() {
   ) => {
     setSortBy(newSort);
     setCurrentPage(1);
+    setMinHeight(0); // 정렬 변경 시 높이 초기화
   };
 
   const getPageNumbers = () => {
@@ -215,16 +288,14 @@ export default function AllWritesSection() {
         </div>
 
         <div className="overflow-visible py-2 px-1">
-          <div className="space-y-6">
-            {displayedWrites.map((write) => (
-              <AnimatedWrite
-                key={write.id}
-                write={write}
-                onClick={() =>
-                  router.push(`/post/${write.type_index}/${write.work_id}`)
-                }
-              />
-            ))}
+          <div
+            ref={contentRef}
+            className="space-y-6 transition-all duration-300"
+            style={{
+              minHeight: minHeight > 0 ? `${minHeight}px` : "auto",
+            }}
+          >
+            {renderContent()}
           </div>
         </div>
 
