@@ -56,20 +56,13 @@ export default function CategoryMenu() {
     router.push(`/post/${typeSlug}`);
   };
 
-  const getCurrentCategoryName = () => {
-    const currentCategory = categories.find(
-      (cat) => cat.desc.toLowerCase() === currentType,
-    );
-    return currentCategory ? currentCategory.name : "카테고리";
-  };
-
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 sm:px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200 text-sm sm:text-base"
       >
-        <span>{getCurrentCategoryName()}</span>
+        <span>글 쓰기</span>
         <ChevronDownIcon
           className={`w-4 h-4 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

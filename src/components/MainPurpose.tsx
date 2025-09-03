@@ -6,7 +6,7 @@ export default function PurposeSection() {
   return (
     <section className="bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-gray-100">
       {/* 제목 섹션 */}
-      <div className="text-center mb-6">
+      <div className="text-left md:text-center mb-6">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
           💡 원래 문학은 재밌다!
         </h2>
@@ -15,7 +15,7 @@ export default function PurposeSection() {
         </h3>
       </div>
       <hr></hr>
-      <p className="text-center px-2 py-2 text-sm sm:text-base text-gray-600 leading-relaxed break-words overflow-hidden">
+      <p className="text-left md:text-center px-2 py-2 text-sm sm:text-base text-gray-600 leading-relaxed break-words overflow-hidden">
         🌊&ldquo;윤슬&rdquo;에 오신것을 환영합니다!
         <br />
         윤슬은 햇빛이나 달빛이 바다나 파도에 비치어 반짝이는 잔물결을
