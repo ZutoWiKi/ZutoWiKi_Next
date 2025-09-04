@@ -65,6 +65,22 @@ const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, onClick }) => {
             </svg>
             {write.likes}
           </span>
+          <span className="flex items-center gap-1">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            {write.comments}
+          </span>
         </div>
       </div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -116,9 +132,9 @@ export default function AllWritesSection() {
   const [writes, setWrites] = useState<AllWrite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<"time" | "time_old" | "views" | "likes">(
-    "time",
-  );
+  const [sortBy, setSortBy] = useState<
+    "time" | "time_old" | "views" | "likes" | "comments"
+  >("time");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
   const itemsPerPage = 15;
@@ -166,6 +182,8 @@ export default function AllWritesSection() {
         return (
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
+      case "comments":
+        return b.comments - a.comments;
       case "time":
       default:
         return (
@@ -284,6 +302,7 @@ export default function AllWritesSection() {
             <option value="time_old">오래된순</option>
             <option value="views">조회수순</option>
             <option value="likes">좋아요순</option>
+            <option value="comments">댓글순</option>
           </select>
         </div>
 
