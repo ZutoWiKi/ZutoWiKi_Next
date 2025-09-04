@@ -331,13 +331,13 @@ const AuthButtons = () => {
           <form action={handleSignupSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                이름
+                닉네임
               </label>
               <input
                 type="text"
                 name="username"
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm transition-colors duration-200"
-                placeholder="이름을 입력하세요"
+                placeholder="닉네임을 입력하세요"
                 autoComplete="name"
                 required
                 disabled={isLoading}
