@@ -12,6 +12,7 @@ export interface AllWrite {
   created_at: string;
   views: number;
   likes: number;
+  comments: number;
   is_liked?: boolean;
 }
 
