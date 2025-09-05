@@ -222,7 +222,13 @@ const AuthButtons = () => {
           )}
 
           {/* 로그인 폼 */}
-          <form action={handleLoginAction} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLoginAction(new FormData(e.currentTarget));
+            }}
+            className="space-y-4"
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 이메일
@@ -328,7 +334,13 @@ const AuthButtons = () => {
           )}
 
           {/* 회원가입 폼 */}
-          <form action={handleSignupSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSignupSubmit(new FormData(e.currentTarget));
+            }}
+            className="space-y-4"
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 닉네임
