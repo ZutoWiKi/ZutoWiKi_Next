@@ -176,7 +176,7 @@ export default function WritePage({ params }: WritePageProps) {
           })
           .catch(() => onError("업로드 실패"));
       },
-      inputStyle: "contenteditable",
+      inputStyle: "textarea",
       toolbar: [
         "bold",
         "italic",

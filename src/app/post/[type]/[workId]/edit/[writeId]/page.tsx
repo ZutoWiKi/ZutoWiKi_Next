@@ -190,7 +190,7 @@ export default function EditPage() {
           })
           .catch(() => onError("업로드 실패"));
       },
-      inputStyle: "contenteditable",
+      inputStyle: "textarea",
       toolbar: [
         "bold",
         "italic",
