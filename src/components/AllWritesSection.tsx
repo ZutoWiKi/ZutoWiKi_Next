@@ -206,7 +206,7 @@ export default function AllWritesSection() {
         key={write.id}
         write={write}
         onClick={() =>
-          router.push(`/post/${write.type_index}/${write.work_id}`)
+          router.push(`/post/${write.type_index}/${write.work_id}?writeId=${write.id}`)
         }
       />
     ));

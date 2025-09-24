@@ -120,11 +120,7 @@ const GetMyPage: React.FC = () => {
             <div key={write.id} className="space-y-4">
               <div
                 onClick={() =>
-                  router.push(
-                    `/post/${write.type_index ?? 0}/${
-                      write.work_id ?? write.id
-                    }`,
-                  )
+                  router.push(`/post/${write.type_index ?? 0}/${write.work_id ?? write.id}?writeId=${write.id}`,)
                 }
                 className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100"
               >
