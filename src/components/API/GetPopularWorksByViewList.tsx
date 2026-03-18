@@ -13,11 +13,14 @@ export interface Work {
 
 export async function GetPopularByViewsList(token: string | null) {
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/post/popular/views/", {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : "",
+    const res = await fetch(
+      "https://hospitable-illumination-production-e611.up.railway.app/api/post/popular/views/",
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       },
-    });
+    );
     if (!res.ok)
       throw new Error("인기 작품(조회수 순)을 불러오는데 실패했습니다.");
     const data = await res.json();

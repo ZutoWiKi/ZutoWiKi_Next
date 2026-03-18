@@ -21,13 +21,16 @@ export async function PostWork(workData: WorkData) {
   console.log("작품 추가 시도:", workData);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/post/work/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://hospitable-illumination-production-e611.up.railway.app/api/post/work/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(workData),
       },
-      body: JSON.stringify(workData),
-    });
+    );
 
     const data: WorkResponse = await response.json();
 

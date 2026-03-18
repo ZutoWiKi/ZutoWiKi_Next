@@ -29,11 +29,14 @@ export async function GetAllWrites(token?: string | null): Promise<AllWrite[]> {
       headers["Authorization"] = `Token ${token}`;
     }
 
-    const response = await fetch(`http://127.0.0.1:8000/api/post/write/all`, {
-      method: "GET",
-      headers,
-      cache: "no-store",
-    });
+    const response = await fetch(
+      `https://hospitable-illumination-production-e611.up.railway.app/api/post/write/all`,
+      {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      },
+    );
 
     const data = await response.json();
 
