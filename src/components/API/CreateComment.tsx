@@ -7,7 +7,7 @@ export async function CreateComment(
   try {
     //console.log(writeId, content, token);
     const res = await fetch(
-      `http://127.0.0.1:8000/api/post/comment/comments/`,
+      `https://hospitable-illumination-production-e611.up.railway.app/api/post/comment/comments/`,
       {
         method: "POST",
         headers: {

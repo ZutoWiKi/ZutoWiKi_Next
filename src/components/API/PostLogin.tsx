@@ -6,13 +6,16 @@ export async function PostLogin(formData: FormData) {
   console.log("로그인 시도 : ", email);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/user/login/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://hospitable-illumination-production-e611.up.railway.app/api/user/login/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       },
-      body: JSON.stringify({ email, password }),
-    });
+    );
 
     const data = await response.json();
 

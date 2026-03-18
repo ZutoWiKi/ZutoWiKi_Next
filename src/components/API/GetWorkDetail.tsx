@@ -18,13 +18,16 @@ export async function GetWorkDetail(
   console.log("작품 상세 조회 시도:", workId);
 
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/post/work/`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `https://hospitable-illumination-production-e611.up.railway.app/api/post/work/`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    });
+    );
 
     const data = await response.json();
 

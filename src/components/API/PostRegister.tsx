@@ -18,13 +18,16 @@ export async function PostRegister(formData: FormData) {
   console.log("회원가입 시도", username, email);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/user/register/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://hospitable-illumination-production-e611.up.railway.app/api/user/register/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password, confirmPassword }),
       },
-      body: JSON.stringify({ username, email, password, confirmPassword }),
-    });
+    );
 
     const data: RegisterResponse = await response.json();
     console.log("회원가입 응답:", data);

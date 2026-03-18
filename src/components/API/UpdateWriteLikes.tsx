@@ -9,7 +9,7 @@ export async function UpdateWriteLike(
 
   try {
     const response = await fetch(
-      `http://127.0.0.1:8000/api/post/write/${writeId}/likes/`,
+      `https://hospitable-illumination-production-e611.up.railway.app/api/post/write/${writeId}/likes/`,
       {
         method: "PUT",
         headers: {

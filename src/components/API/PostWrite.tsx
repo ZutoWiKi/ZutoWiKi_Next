@@ -22,13 +22,16 @@ export async function PostWrite(writeData: WriteData) {
   console.log("글 작성 시도:", writeData);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/post/write/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://hospitable-illumination-production-e611.up.railway.app/api/post/write/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(writeData),
       },
-      body: JSON.stringify(writeData),
-    });
+    );
 
     const data: WriteResponse = await response.json();
 
