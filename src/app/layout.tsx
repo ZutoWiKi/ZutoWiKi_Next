@@ -8,7 +8,9 @@ import { SITE_URL } from "@/config/site";
 // 네이버 코드는 기본값으로 코드에 둔다. Vercel 환경변수가 있으면 그쪽이 우선한다.
 // 값이 없으면 해당 meta 태그는 아예 렌더되지 않는다.
 const NAVER_VERIFICATION_FALLBACK = "2c5c6643fcffedc68d8ddc987f78706799e4427f";
-const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+const googleVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+  "pnaSNaSI6ASgT97Ym-jM82SrL8vVq-Cp2ze5SygQ8_Q";
 const naverVerification =
   process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION ?? NAVER_VERIFICATION_FALLBACK;
 
