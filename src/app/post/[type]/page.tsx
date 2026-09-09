@@ -22,9 +22,13 @@ export async function generateMetadata({
   return {
     title: `${typeName} 목록`,
     description: `${typeName} 목록을 확인하고 다양한 해석을 만나보세요.`,
+    alternates: {
+      canonical: `/post/${type}`,
+    },
     openGraph: {
       title: `${typeName} 목록`,
       description: `${typeName} 목록을 확인하고 다양한 해석을 만나보세요.`,
+      url: `/post/${type}`,
     },
   };
 }

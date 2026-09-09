@@ -1,12 +1,11 @@
 // app/rss.xml/route.ts
 import { NextResponse } from "next/server";
 import { AllWrite } from "../../components/API/GetAllWrites";
+import { API_URL, SITE_URL } from "@/config/site";
 
 export async function GET() {
-  const baseUrl = "https://yoonseul.app";
-
-  // DRF API 호출 (모든 글)
-  const res = await fetch(`${baseUrl}/api/post/write/all/`, {
+  // DRF API 호출 (모든 글) — 호출은 API 서버로, 피드에 실리는 링크는 서비스 도메인으로
+  const res = await fetch(`${API_URL}/api/post/write/all/`, {
     next: { revalidate: 86400 }, // 하루마다 새로고침
   });
   const posts: AllWrite[] = await res.json();
@@ -17,7 +16,8 @@ export async function GET() {
       (post: AllWrite) => `
       <item>
         <title><![CDATA[${post.title}]]></title>
-        <link>${baseUrl}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</link>
+        <link>${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</link>
+        <guid isPermaLink="true">${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</guid>
         <pubDate>${new Date(post.created_at).toUTCString()}</pubDate>
         <description><![CDATA[${post.content.slice(0, 200)}...]]></description>
       </item>
@@ -30,7 +30,7 @@ export async function GET() {
     <rss version="2.0">
       <channel>
         <title>윤슬 RSS 피드</title>
-        <link>${baseUrl}</link>
+        <link>${SITE_URL}</link>
         <description>윤슬 새 글 알림</description>
         <language>ko</language>
         ${items}

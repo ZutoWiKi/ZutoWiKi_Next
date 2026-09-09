@@ -1,20 +1,18 @@
 // app/sitemap.ts
 import { MetadataRoute } from "next";
 import { AllWrite } from "../components/API/GetAllWrites";
+import { API_URL, SITE_URL } from "@/config/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl =
-    "https://hospitable-illumination-production-e611.up.railway.app";
-
-  // DRF에서 글 목록 가져오기
-  const res = await fetch(`${baseUrl}/api/post/write/all/`, {
+  // DRF에서 글 목록 가져오기 (주소는 API 서버, 사이트맵에 실리는 링크는 서비스 도메인)
+  const res = await fetch(`${API_URL}/api/post/write/all/`, {
     next: { revalidate: 86400 }, // 하루마다 갱신
   });
   const posts: AllWrite[] = await res.json();
 
   // 글 주소 변환
   const postUrls = posts.map((post: AllWrite) => ({
-    url: `${baseUrl}/post/${post.type_index}/${post.work_id}?writeId=${post.id}`,
+    url: `${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}`,
     lastModified: new Date(post.created_at),
     changeFrequency: "weekly" as const,
     priority: 0.7,
@@ -22,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: baseUrl,
+      url: SITE_URL,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
