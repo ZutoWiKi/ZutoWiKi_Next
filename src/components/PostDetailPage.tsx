@@ -17,7 +17,7 @@ import { ViewLimitManager } from "@/components/ViewTracker";
 import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
-import { marked, Tokens } from "marked";
+import { renderMarkdown } from "@/lib/markdown";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
 import { getToken, clearToken, isAuthError } from "@/components/API/session";
@@ -72,26 +72,6 @@ const categoryPlaceholder = {
   essay: "글쓴이",
   webtoon: "작가",
 };
-
-const renderer = new marked.Renderer();
-
-renderer.list = (token: Tokens.List) => {
-  const childrenHtml = token.items
-    .map((li) => {
-      const content = marked.parseInline(li.text);
-      return `<li>${content}</li>`;
-    })
-    .join("");
-  return token.ordered
-    ? `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`
-    : `<ul class="list-disc list-inside pl-5">${childrenHtml}</ul>`;
-};
-
-marked.setOptions({
-  renderer,
-  gfm: true,
-  breaks: true,
-});
 
 export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const router = useRouter();
@@ -977,7 +957,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
                   <div
                     className="markdown-body !bg-white !text-black list-disc list-decimal list-inside"
                     dangerouslySetInnerHTML={{
-                      __html: marked.parse(selectedWrite.content || ""),
+                      __html: renderMarkdown(selectedWrite.content),
                     }}
                   ></div>
                 </div>

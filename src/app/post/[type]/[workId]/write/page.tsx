@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import EasyMDE from "easymde";
-import { marked, Tokens } from "marked";
+import { renderMarkdown } from "@/lib/markdown";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { PostWrite } from "@/components/API/PostWrite";
@@ -18,26 +18,6 @@ interface User {
   email: string;
   date_joined: string;
 }
-
-const renderer = new marked.Renderer();
-
-renderer.list = (token: Tokens.List) => {
-  // token.items 는 ListItem[] 배열
-  const childrenHtml = token.items
-    .map((li) => {
-      // ListItem.text 는 원본 마크다운 텍스트
-      // parseInline 으로 inline 요소만 렌더링
-      const content = marked.parseInline(li.text);
-      return `<li>${content}</li>`;
-    })
-    .join("");
-  // ordered 여부에 따라 ol / ul 태그 선택
-  if (token.ordered) {
-    return `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`;
-  } else {
-    return `<ul class="list-disc list-inside pl-5">${childrenHtml}</ul>`;
-  }
-};
 
 interface WritePageProps {
   params: Promise<{
@@ -152,8 +132,6 @@ export default function WritePage({ params }: WritePageProps) {
   };
 
   const mdeOptions: EasyMDE.Options = useMemo(() => {
-    marked.setOptions({ renderer, gfm: true, breaks: true }); //pedantic
-
     return {
       autofocus: false,
       spellChecker: false,
@@ -237,7 +215,7 @@ export default function WritePage({ params }: WritePageProps) {
         "list-inside",
       ],
       previewRender: (plainText: string) => {
-        const parsedHtml = marked.parse(plainText) as string;
+        const parsedHtml = renderMarkdown(plainText);
         return `<div class="markdown-body" style="background-color: white; color: black; padding: 16px;">${parsedHtml}</div>`;
       },
       minHeight: "450px",

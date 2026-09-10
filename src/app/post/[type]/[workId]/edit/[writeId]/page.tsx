@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import EasyMDE from "easymde";
-import { marked, Tokens } from "marked";
+import { renderMarkdown } from "@/lib/markdown";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { UpdateWrite, UpdateWriteData } from "@/components/API/UpdateWrite";
@@ -34,22 +34,6 @@ interface Write {
   parentID: number;
   is_liked?: boolean;
 }
-
-const renderer = new marked.Renderer();
-
-renderer.list = (token: Tokens.List) => {
-  const childrenHtml = token.items
-    .map((li) => {
-      const content = marked.parseInline(li.text);
-      return `<li>${content}</li>`;
-    })
-    .join("");
-  if (token.ordered) {
-    return `<ol class="list-decimal list-inside pl-5">${childrenHtml}</ol>`;
-  } else {
-    return `<ul class="list-disc list-inside pl-5">${childrenHtml}</ul>`;
-  }
-};
 
 export default function EditPage() {
   const params = useParams();
@@ -169,8 +153,6 @@ export default function EditPage() {
   };
 
   const mdeOptions: EasyMDE.Options = useMemo(() => {
-    marked.setOptions({ renderer, gfm: true, breaks: true });
-
     return {
       autofocus: false,
       spellChecker: false,
@@ -251,7 +233,7 @@ export default function EditPage() {
         "list-inside",
       ],
       previewRender: (plainText: string) => {
-        const parsedHtml = marked.parse(plainText) as string;
+        const parsedHtml = renderMarkdown(plainText);
         return `<div class="markdown-body" style="background-color: white; color: black; padding: 16px;">${parsedHtml}</div>`;
       },
       minHeight: "450px",
