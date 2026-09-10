@@ -25,7 +25,8 @@ const csp = [
   "font-src 'self' data:",
   "connect-src 'self'",
   "media-src 'self' https:",
-  "frame-src 'none'",
+  // 본문의 유튜브 임베드. markdown.ts 가 이 주소 형태만 만들어 낸다.
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
