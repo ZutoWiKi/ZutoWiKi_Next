@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useParams } from "next/navigation";
 import EasyMDE from "easymde";
 import { renderMarkdown } from "@/lib/markdown";
+import { uploadImage } from "@/lib/uploadImage";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { UpdateWrite, UpdateWriteData } from "@/components/API/UpdateWrite";
@@ -126,27 +127,18 @@ export default function EditPage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     const file = e.target.files[0];
-    const formData = new FormData();
-    formData.append("file", file);
-
-    if (!file.type.startsWith("image/")) {
-      alert("사진 파일만 업로드할 수 있습니다.");
-      e.target.value = "";
-      return;
-    }
 
     try {
-      const res = await fetch("/api/post/upload/", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      const url = data.url as string;
+      const url = await uploadImage(file);
       const cm = editorRef.current?.codemirror;
       cm?.replaceSelection(`![${file.name}](${url})`);
       setContent(cm?.getValue() || "");
-    } catch {
-      alert("이미지 업로드에 실패했습니다.");
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : "이미지 업로드에 실패했습니다.",
+      );
     } finally {
       e.target.value = "";
     }
@@ -159,18 +151,15 @@ export default function EditPage() {
       placeholder: "수정할 내용을 입력하세요...",
       uploadImage: true,
       imageUploadFunction: (file, onSuccess, onError) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        fetch("/api/post/upload/", {
-          method: "POST",
-          body: formData,
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            console.log("업로드된 이미지 URL:", data.url);
-            onSuccess(data.url);
-          })
-          .catch(() => onError("업로드 실패"));
+        uploadImage(file)
+          .then(onSuccess)
+          .catch((error) =>
+            onError(
+              error instanceof Error
+                ? error.message
+                : "이미지 업로드에 실패했습니다.",
+            ),
+          );
       },
       inputStyle: "textarea",
       toolbar: [
