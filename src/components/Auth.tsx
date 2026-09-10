@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PostLogin } from "@/components/API/PostLogin";
 import { PostRegister } from "@/components/API/PostRegister";
+import { PostLogout } from "@/components/API/PostLogout";
 import { useRouter } from "next/navigation";
 import { ErrorAlert, SuccessAlert } from "@/components/ErrorAlert";
 import {
@@ -147,7 +148,13 @@ const AuthButtons = () => {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // 서버 토큰까지 지운다. 실패하더라도 이 브라우저에서는 반드시 지운다.
+    const token = getToken();
+    if (token) {
+      await PostLogout(token);
+    }
+
     clearToken();
     setIsLogin(false);
 

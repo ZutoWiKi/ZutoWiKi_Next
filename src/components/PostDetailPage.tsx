@@ -73,6 +73,193 @@ const categoryPlaceholder = {
   webtoon: "작가",
 };
 
+// 아래 모달들은 반드시 모듈 최상위에 둔다.
+//
+// PostDetailPage 안에 정의하면 부모가 리렌더될 때마다 새 컴포넌트 타입이
+// 만들어지고, React 는 이를 다른 컴포넌트로 보고 DOM 을 통째로 교체한다.
+// 그러면 input 의 한글 조합(IME) 상태가 매 타이핑마다 날아가서
+// "이형주" 가 "ㅇㅣㅎㅕㅇㅈㅜ" 처럼 자모로 분리된다.
+// React.memo 로도 막을 수 없다 - 타입 자체가 매번 새로 생기기 때문이다.
+
+// 로그인 요구 모달 컴포넌트
+const LoginRequiredModal = ({
+  isOpen,
+  onClose,
+  onLogin,
+  isMounted,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onLogin: () => void;
+  isMounted: boolean;
+}) => {
+  if (!isOpen || !isMounted) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100">
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            로그인이 필요합니다
+          </h3>
+          <p className="text-gray-600 mb-6">
+            이 기능을 사용하려면 로그인해주세요.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              취소
+            </button>
+            <button
+              onClick={onLogin}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+            >
+              로그인
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+};
+
+// 삭제 확인 모달 컴포넌트
+const DeleteConfirmModal = React.memo(function DeleteConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  password,
+  setPassword,
+  isMounted,
+  username,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+  password: string;
+  setPassword: (password: string) => void;
+  isMounted: boolean;
+  username?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 모달이 열릴 때 입력 필드에 포커스
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!isOpen || !isMounted) return null;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (e.key === "Enter" && password.trim() && !isLoading) {
+      onConfirm();
+    }
+  };
+
+  const modalContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div
+        className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <TrashIcon className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">
+            글 삭제 확인
+          </h3>
+          <p className="text-gray-600 mb-4 text-center">
+            정말로 이 글을 삭제하시겠습니까?
+          </p>
+          <p className="text-sm text-gray-500 mb-2 text-center">
+            삭제 확인을 위해 현재 사용자명을 입력해주세요.
+          </p>
+          {username && (
+            <p className="text-xs text-blue-600 mb-4 text-center font-mono">
+              사용자명: {username}
+            </p>
+          )}
+          <input
+            ref={inputRef}
+            type="text"
+            value={password}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            placeholder="사용자명 입력"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+            disabled={isLoading}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            autoFocus
+            name="delete-confirm"
+            id="delete-confirm"
+          />
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              취소
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isLoading || !password.trim()}
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-50"
+            >
+              {isLoading ? "삭제 중..." : "삭제"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+});
+
 export default function PostDetailPage({ workId }: PostDetailPageProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -138,185 +325,6 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     };
   }, []);
 
-  // 로그인 요구 모달 컴포넌트
-  const LoginRequiredModal = ({
-    isOpen,
-    onClose,
-    onLogin,
-    isMounted,
-  }: {
-    isOpen: boolean;
-    onClose: () => void;
-    onLogin: () => void;
-    isMounted: boolean;
-  }) => {
-    if (!isOpen || !isMounted) return null;
-
-    const modalContent = (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-        <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-          onClick={onClose}
-        />
-        <div className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100">
-          <div className="p-6 text-center">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              로그인이 필요합니다
-            </h3>
-            <p className="text-gray-600 mb-6">
-              이 기능을 사용하려면 로그인해주세요.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={onLogin}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-              >
-                로그인
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    return createPortal(modalContent, document.body);
-  };
-
-  // 삭제 확인 모달 컴포넌트
-  const DeleteConfirmModal = React.memo(function DeleteConfirmModal({
-    isOpen,
-    onClose,
-    onConfirm,
-    isLoading,
-    password,
-    setPassword,
-    isMounted,
-  }: {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-    isLoading: boolean;
-    password: string;
-    setPassword: (password: string) => void;
-    isMounted: boolean;
-  }) {
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    // 모달이 열릴 때 입력 필드에 포커스
-    useEffect(() => {
-      if (isOpen && inputRef.current) {
-        const timer = setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
-        return () => clearTimeout(timer);
-      }
-    }, [isOpen]);
-
-    if (!isOpen || !isMounted) return null;
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const value = e.target.value;
-      setPassword(value);
-    };
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      e.stopPropagation();
-      if (e.key === "Enter" && password.trim() && !isLoading) {
-        onConfirm();
-      }
-    };
-
-    const modalContent = (
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-        <div
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-          onClick={onClose}
-        />
-        <div
-          className="relative bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/30 w-full max-w-sm mx-4 transform transition-all duration-300 scale-100"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="p-6">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <TrashIcon className="w-8 h-8 text-red-600" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2 text-center">
-              글 삭제 확인
-            </h3>
-            <p className="text-gray-600 mb-4 text-center">
-              정말로 이 글을 삭제하시겠습니까?
-            </p>
-            <p className="text-sm text-gray-500 mb-2 text-center">
-              삭제 확인을 위해 현재 사용자명을 입력해주세요.
-            </p>
-            {currentUser && (
-              <p className="text-xs text-blue-600 mb-4 text-center font-mono">
-                사용자명: {currentUser.username}
-              </p>
-            )}
-            <input
-              ref={inputRef}
-              type="text"
-              value={password}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="사용자명 입력"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
-              disabled={isLoading}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-              autoFocus
-              name="delete-confirm"
-              id="delete-confirm"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                disabled={isLoading}
-                className="flex-1 px-4 py-2 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                onClick={onConfirm}
-                disabled={isLoading || !password.trim()}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 disabled:opacity-50"
-              >
-                {isLoading ? "삭제 중..." : "삭제"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-
-    return createPortal(modalContent, document.body);
-  });
 
   // 데이터 로딩 함수 - 토큰과 함께 요청
   const loadData = useCallback(async () => {
@@ -1239,6 +1247,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         password={deletePassword}
         setPassword={setDeletePassword}
         isMounted={mounted}
+        username={currentUser?.username}
       />
     </div>
   );
