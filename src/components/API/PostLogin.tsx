@@ -3,8 +3,6 @@ export async function PostLogin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  console.log("로그인 시도 : ", email);
-
   try {
     const response = await fetch(
       "https://hospitable-illumination-production-e611.up.railway.app/api/user/login/",
@@ -27,9 +25,9 @@ export async function PostLogin(formData: FormData) {
     }
 
     const { token } = data;
-    console.log("로그인 성공:", token);
 
-    // 서버 액션에서는 localStorage에 직접 접근할 수 없으므로 token을 반환
+    // 토큰은 로그에 남기지 않는다. 서버 액션에서는 localStorage에 직접
+    // 접근할 수 없으므로 token 을 호출부로 돌려준다.
     return { token };
   } catch (error) {
     console.error("로그인 에러:", error);

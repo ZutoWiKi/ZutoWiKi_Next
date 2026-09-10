@@ -15,8 +15,6 @@ export async function PostRegister(formData: FormData) {
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  console.log("회원가입 시도", username, email);
-
   try {
     const response = await fetch(
       "https://hospitable-illumination-production-e611.up.railway.app/api/user/register/",
@@ -30,7 +28,6 @@ export async function PostRegister(formData: FormData) {
     );
 
     const data: RegisterResponse = await response.json();
-    console.log("회원가입 응답:", data);
 
     if (!response.ok) {
       // 백엔드에서 온 에러 메시지를 파싱

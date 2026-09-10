@@ -1,13 +1,22 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-module.exports = {
-  images: {
-    domains: ['localhost', 'your-production-domain.com'],
+// 모든 응답에 붙는 보안 헤더.
+// CSP는 아직 넣지 않았다 — 인라인 스타일/스크립트 때문에 깨질 수 있어서
+// Vercel 프리뷰에서 Report-Only로 먼저 확인한 뒤 추가할 것.
+const securityHeaders = [
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-}
+];
+
+const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
+};
 
 export default nextConfig;
