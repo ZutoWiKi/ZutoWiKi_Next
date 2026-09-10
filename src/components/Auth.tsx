@@ -5,6 +5,12 @@ import { PostLogin } from "@/components/API/PostLogin";
 import { PostRegister } from "@/components/API/PostRegister";
 import { useRouter } from "next/navigation";
 import { ErrorAlert, SuccessAlert } from "@/components/ErrorAlert";
+import {
+  getToken,
+  clearToken,
+  verifySession,
+  SESSION_EXPIRED_MESSAGE,
+} from "@/components/API/session";
 
 // Modal 컴포넌트
 const Modal = ({
@@ -48,8 +54,28 @@ const AuthButtons = () => {
 
   useEffect(() => {
     setIsMounted(true);
-    const token = localStorage.getItem("token");
-    setIsLogin(!!token);
+
+    const token = getToken();
+    if (!token) {
+      setIsLogin(false);
+      return;
+    }
+
+    // 토큰이 있으면 일단 로그인 상태로 그리고, 서버에 살아있는지 확인한다.
+    // 죽어 있으면 verifySession 이 토큰을 지우고 false 를 돌려준다.
+    setIsLogin(true);
+    let cancelled = false;
+
+    verifySession(token).then((valid) => {
+      if (cancelled || valid) return;
+      setIsLogin(false);
+      setLoginError(SESSION_EXPIRED_MESSAGE);
+      setShowLogin(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // 에러 메시지 파싱 함수
@@ -122,7 +148,7 @@ const AuthButtons = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    clearToken();
     setIsLogin(false);
 
     // 현재 페이지를 새로고침

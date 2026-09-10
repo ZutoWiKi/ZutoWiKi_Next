@@ -20,6 +20,7 @@ import { createPortal } from "react-dom";
 import { marked, Tokens } from "marked";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
+import { getToken, clearToken, isAuthError } from "@/components/API/session";
 import { DeleteWrite } from "@/components/API/DeleteWrite";
 import { GetCurrentUser, CurrentUser } from "@/components/API/GetCurrentUser";
 import UserProfileColor from "@/components/UserProfileColor";
@@ -462,9 +463,10 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       );
     } catch (error) {
       console.error("좋아요 업데이트 실패:", error);
-      // 에러 처리 - 로그인 만료 등
-      if (error instanceof Error && error.message.includes("로그인")) {
-        localStorage.removeItem("token");
+      // 로그인 만료. 백엔드는 "Invalid token." 처럼 영어로 답할 때도 있어서
+      // 한국어 문구만 보고 판단하면 놓친다.
+      if (isAuthError(error)) {
+        clearToken();
         setIsLoggedIn(false);
         setShowLoginRequired(true);
       }
@@ -660,11 +662,30 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       return;
     }
     if (!selectedWrite || !newComment.trim()) return;
+
+    const token = getToken();
+    if (!token) {
+      setIsLoggedIn(false);
+      setShowLoginRequired(true);
+      return;
+    }
+
     setCommentLoading(true);
-    const token = localStorage.getItem("token")!;
-    await CreateComment(selectedWrite.id, newComment.trim(), token);
-    setNewComment("");
+    const result = await CreateComment(selectedWrite.id, newComment.trim(), token);
     setCommentLoading(false);
+
+    // 토큰이 죽은 경우 — 조용히 넘어가지 말고 다시 로그인하도록 안내한다.
+    if (result.status === 401 || result.status === 403) {
+      clearToken();
+      setIsLoggedIn(false);
+      setShowLoginRequired(true);
+      return;
+    }
+
+    // 그 밖의 실패는 입력한 내용을 지우지 않는다.
+    if (!result.ok) return;
+
+    setNewComment("");
     // 등록 후 목록 리로드
     const data = await GetCommentsList(selectedWrite.id);
     setComments(data || []);
