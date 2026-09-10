@@ -2,6 +2,7 @@ import React, { ReactNode } from "react";
 import Link from "next/link";
 import AuthButtons from "./Auth";
 import CategoryMenu from "./CategoryMenu";
+import VersionTag from "./VersionTag";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -79,6 +80,10 @@ export default function PageLayout({ children }: PageLayoutProps) {
           <p>,&nbsp;</p> 
           <a href="https://github.com/LOOPARAM" className="flex items-center gap-2 font-bold bg-gradient-to-r from-blue-400 via-pink-400 to-orange-300 bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer">
           LOOPARAM</a>
+        </div>
+
+        <div className="max-w-7xl mx-auto flex justify-center items-center pb-2">
+          <VersionTag />
         </div>
 
       </header>

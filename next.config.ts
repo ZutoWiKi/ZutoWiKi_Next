@@ -14,6 +14,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // 푸터에 표시할 프론트 버전. Vercel 이 빌드할 때 커밋 해시를 넣어준다.
+  env: {
+    NEXT_PUBLIC_BUILD_SHA: (
+      process.env.VERCEL_GIT_COMMIT_SHA ?? "dev"
+    ).slice(0, 7),
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

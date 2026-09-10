@@ -18,9 +18,7 @@ interface WriteResponse {
   work?: string | string[];
 }
 
-export async function PostWrite(writeData: WriteData) {
-  console.log("글 작성 시도:", writeData);
-
+export async function PostWrite(writeData: WriteData, token: string) {
   try {
     const response = await fetch(
       "https://hospitable-illumination-production-e611.up.railway.app/api/post/write/",
@@ -28,12 +26,17 @@ export async function PostWrite(writeData: WriteData) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
         },
         body: JSON.stringify(writeData),
       },
     );
 
     const data: WriteResponse = await response.json();
+
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("로그인이 필요합니다. 다시 로그인해 주세요.");
+    }
 
     if (!response.ok) {
       // 백엔드에서 온 에러 메시지를 파싱

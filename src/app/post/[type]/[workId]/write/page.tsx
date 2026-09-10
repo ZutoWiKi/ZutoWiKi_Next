@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import EasyMDE from "easymde";
 import { renderMarkdown } from "@/lib/markdown";
+import { getToken } from "@/components/API/session";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { PostWrite } from "@/components/API/PostWrite";
@@ -255,18 +256,24 @@ export default function WritePage({ params }: WritePageProps) {
     setIsLoading(true);
     setError("");
 
+    const token = getToken();
+    if (!token) {
+      setError("로그인이 필요합니다. 다시 로그인해 주세요.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const writeData = {
         title: title.trim(),
         content: content.trim(),
+        // 작성자는 서버가 토큰에서 판단한다. 이 값은 무시된다.
         user: user.id,
         work: workIdNumber,
         parentID: parentID,
       };
 
-      console.log("글 작성 데이터:", writeData); // 디버깅용
-
-      await PostWrite(writeData);
+      await PostWrite(writeData, token);
       router.back();
     } catch (error) {
       console.error("글 작성 실패:", error); // 디버깅용

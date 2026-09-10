@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { GetWorksList } from "@/components/API/GetWorksList";
 import { PostWork } from "@/components/API/PostWork";
+import { getToken } from "@/components/API/session";
 
 // 카테고리명 매핑
 const categoryNames = {
@@ -142,6 +143,12 @@ export default function WorkListPage({ type }: WorkListPageProps) {
       return;
     }
 
+    const token = getToken();
+    if (!token) {
+      setError("작품을 추가하려면 로그인이 필요합니다.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       newWork.coverImage = newWork.coverImage
@@ -156,8 +163,7 @@ export default function WorkListPage({ type }: WorkListPageProps) {
         coverImage: newWork.coverImage,
       };
 
-      const newWorkData = await PostWork(workData);
-      console.log("새 작품 추가 성공:", newWorkData);
+      await PostWork(workData, token);
 
       // 모달 닫기 및 폼 초기화
       setShowAddModal(false);

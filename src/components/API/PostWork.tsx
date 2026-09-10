@@ -17,9 +17,7 @@ interface WorkResponse {
   typeindex?: string | string[];
 }
 
-export async function PostWork(workData: WorkData) {
-  console.log("작품 추가 시도:", workData);
-
+export async function PostWork(workData: WorkData, token: string) {
   try {
     const response = await fetch(
       "https://hospitable-illumination-production-e611.up.railway.app/api/post/work/",
@@ -27,12 +25,17 @@ export async function PostWork(workData: WorkData) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Token ${token}`,
         },
         body: JSON.stringify(workData),
       },
     );
 
     const data: WorkResponse = await response.json();
+
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("로그인이 필요합니다. 다시 로그인해 주세요.");
+    }
 
     if (!response.ok) {
       // 백엔드에서 온 에러 메시지를 파싱
