@@ -6,6 +6,10 @@ import EasyMDE from "easymde";
 import { renderMarkdown } from "@/lib/markdown";
 import { getToken } from "@/components/API/session";
 import { uploadImage } from "@/lib/uploadImage";
+// 툴바 아이콘. EasyMDE 는 이게 없으면 런타임에 maxcdn 에서 Font Awesome 을
+// 직접 받아오는데, CSP 의 style-src 'self' 가 그걸 막아 아이콘이 전부 사라진다.
+// 그래서 같은 버전(4.7.0)을 의존성으로 넣고 우리 도메인에서 서빙한다.
+import "font-awesome/css/font-awesome.min.css";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { PostWrite } from "@/components/API/PostWrite";
@@ -126,6 +130,8 @@ export default function WritePage({ params }: WritePageProps) {
 
   const mdeOptions: EasyMDE.Options = useMemo(() => {
     return {
+      // 위에서 직접 import 하므로 EasyMDE 가 CDN 에 손을 뻗지 않게 막는다.
+      autoDownloadFontAwesome: false,
       autofocus: false,
       spellChecker: false,
       placeholder:
