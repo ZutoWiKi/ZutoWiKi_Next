@@ -371,20 +371,27 @@ export default function PostDetailPage({
     loadData();
   }, [loadData]);
 
-  // 데이터 로딩 후 어떤 글을 펼칠지 정한다.
-  // 고유 주소(/post/{type}/{workId}/{writeId})가 우선이고, 예전 ?writeId= 주소로
-  // 들어온 경우도 받아준다(작품 페이지에서 새 주소로 넘기지만 만약을 위해).
+  // 주소에 적힌 글을 펼치는 건 "그 주소로 들어왔을 때" 한 번뿐이어야 한다.
+  //
+  // 목록에서 다른 글을 고르면 history.replaceState 로 주소만 바꾸는데,
+  // initialWriteId 는 라우트에서 내려온 고정값이라 그대로 남는다. 그래서 이
+  // 효과가 다시 돌 때마다(목록이 갱신되거나 Next 가 라우터 상태를 다시 맞출 때)
+  // 처음 들어온 글로 되돌려 버렸다. 이미 적용한 번호를 기억해 두고 건너뛴다.
+  const appliedWriteIdRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (writes.length > 0) {
-      const writeId = initialWriteId ?? searchParams.get("writeId");
-      if (writeId) {
-        const targetWrite = writes.find(
-          (write) => write.id.toString() === writeId,
-        );
-        if (targetWrite) {
-          setSelectedWrite(targetWrite);
-        }
-      }
+    if (writes.length === 0) return;
+
+    // 고유 주소(/post/{type}/{workId}/{writeId})가 우선이고, 예전 ?writeId=
+    // 주소로 들어온 경우도 받아준다(작품 페이지에서 새 주소로 넘기지만 만약을 위해).
+    const writeId = initialWriteId ?? searchParams.get("writeId");
+    if (!writeId) return;
+    if (appliedWriteIdRef.current === writeId) return;
+
+    const targetWrite = writes.find((write) => write.id.toString() === writeId);
+    if (targetWrite) {
+      appliedWriteIdRef.current = writeId;
+      setSelectedWrite(targetWrite);
     }
   }, [writes, initialWriteId, searchParams]);
 
