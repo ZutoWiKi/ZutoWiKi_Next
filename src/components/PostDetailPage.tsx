@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import {
   useRouter,
-  usePathname,
   useSearchParams,
   useParams,
 } from "next/navigation";
@@ -18,6 +17,7 @@ import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
 import { renderMarkdown } from "@/lib/markdown";
+import { workPath, writePath } from "@/lib/writeLink";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
 import { getToken, clearToken, isAuthError } from "@/components/API/session";
@@ -36,6 +36,8 @@ import {
 
 interface PostDetailPageProps {
   workId: string;
+  /** 글 고유 주소(/post/{type}/{workId}/{writeId})로 들어왔을 때의 글 번호 */
+  initialWriteId?: string;
 }
 
 interface Write {
@@ -260,9 +262,11 @@ const DeleteConfirmModal = React.memo(function DeleteConfirmModal({
   return createPortal(modalContent, document.body);
 });
 
-export default function PostDetailPage({ workId }: PostDetailPageProps) {
+export default function PostDetailPage({
+  workId,
+  initialWriteId,
+}: PostDetailPageProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const params = useParams();
   const searchParams = useSearchParams();
   const [writes, setWrites] = useState<Write[]>([]);
@@ -291,6 +295,10 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
 
   //get type
   const type = params.type as string;
+
+  // 주소를 현재 경로(pathname)에 이어 붙이면 글 고유 주소(/post/a/1/57)에서
+  // 한 칸씩 밀린다. 항상 작품 주소를 기준으로 조립한다.
+  const basePath = workPath(type, workId);
 
   // 로그인 상태 확인 및 현재 사용자 정보 가져오기
   useEffect(() => {
@@ -363,10 +371,12 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     loadData();
   }, [loadData]);
 
-  // 데이터 로딩 후 쿼리 파라미터 확인하여 해당 글 선택
+  // 데이터 로딩 후 어떤 글을 펼칠지 정한다.
+  // 고유 주소(/post/{type}/{workId}/{writeId})가 우선이고, 예전 ?writeId= 주소로
+  // 들어온 경우도 받아준다(작품 페이지에서 새 주소로 넘기지만 만약을 위해).
   useEffect(() => {
     if (writes.length > 0) {
-      const writeId = searchParams.get("writeId");
+      const writeId = initialWriteId ?? searchParams.get("writeId");
       if (writeId) {
         const targetWrite = writes.find(
           (write) => write.id.toString() === writeId,
@@ -376,7 +386,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         }
       }
     }
-  }, [writes, searchParams]);
+  }, [writes, initialWriteId, searchParams]);
 
   const goToWirte = useCallback(async () => {
     if (!isLoggedIn) {
@@ -384,8 +394,8 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       return;
     }
 
-    router.push(`${pathname}/write`);
-  }, [isLoggedIn, router, pathname]);
+    router.push(`${basePath}/write`);
+  }, [isLoggedIn, router, basePath]);
 
   const goToParentWirte = useCallback(async () => {
     if (!selectedWrite) {
@@ -398,8 +408,8 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       return;
     }
 
-    router.push(`${pathname}/write?parentID=${selectedWrite.id}`);
-  }, [selectedWrite, isLoggedIn, router, pathname]);
+    router.push(`${basePath}/write?parentID=${selectedWrite.id}`);
+  }, [selectedWrite, isLoggedIn, router, basePath]);
 
   // 좋아요 처리 - 토글 기능으로 수정
   const handleLike = useCallback(async () => {
@@ -468,18 +478,14 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     if (!selectedWrite) return;
 
     try {
-      const shareSearchParams = new URLSearchParams();
-      shareSearchParams.set("writeId", selectedWrite.id.toString());
-      const writeUrl = `${window.location.origin}${pathname}?${shareSearchParams.toString()}`;
+      const writeUrl = `${window.location.origin}${writePath(type, workId, selectedWrite.id)}`;
       await navigator.clipboard.writeText(writeUrl);
       setShowCopyMessage(true);
       setTimeout(() => setShowCopyMessage(false), 2000);
     } catch (error) {
       console.error("클립보드 복사 실패:", error);
       // 폴백: 텍스트 선택 방식
-      const shareSearchParams = new URLSearchParams();
-      shareSearchParams.set("writeId", selectedWrite.id.toString());
-      const writeUrl = `${window.location.origin}${pathname}?${shareSearchParams.toString()}`;
+      const writeUrl = `${window.location.origin}${writePath(type, workId, selectedWrite.id)}`;
       const textArea = document.createElement("textarea");
       textArea.value = writeUrl;
       document.body.appendChild(textArea);
@@ -489,7 +495,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
       setShowCopyMessage(true);
       setTimeout(() => setShowCopyMessage(false), 2000);
     }
-  }, [selectedWrite, pathname]);
+  }, [selectedWrite, type, workId]);
 
   // 로그인 모달 표시
   const handleShowLogin = () => {
@@ -525,11 +531,12 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
     async (item: string, index: number) => {
       const selectedWrite = sortedWrites[index];
 
-      // URL 쿼리 파라미터 업데이트 (히스토리에 추가하지 않음)
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-      newSearchParams.set("writeId", selectedWrite.id.toString());
-      const newUrl = `${pathname}?${newSearchParams.toString()}`;
-      window.history.replaceState(null, "", newUrl);
+      // 주소를 그 글의 고유 주소로 바꾼다(히스토리에 쌓지 않는다).
+      window.history.replaceState(
+        null,
+        "",
+        writePath(type, workId, selectedWrite.id),
+      );
 
       setSelectedWrite(selectedWrite);
 
@@ -578,7 +585,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
         );
       }
     },
-    [sortedWrites, searchParams, pathname],
+    [sortedWrites, type, workId],
   );
 
   const handleParentClick = useCallback(
@@ -682,7 +689,7 @@ export default function PostDetailPage({ workId }: PostDetailPageProps) {
   // 수정 모드 시작 - 수정 페이지로 이동
   const handleEditStart = () => {
     if (!selectedWrite) return;
-    router.push(`${pathname}/edit/${selectedWrite.id}`);
+    router.push(`${basePath}/edit/${selectedWrite.id}`);
   };
 
   // 삭제 확인 모달 열기

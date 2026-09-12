@@ -2,6 +2,7 @@
 import { MetadataRoute } from "next";
 import { AllWrite } from "../components/API/GetAllWrites";
 import { API_URL, SITE_URL } from "@/config/site";
+import { writePath } from "@/lib/writeLink";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // DRF에서 글 목록 가져오기 (주소는 API 서버, 사이트맵에 실리는 링크는 서비스 도메인)
@@ -13,7 +14,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 글 주소 변환
   const postUrls = posts.map((post: AllWrite) => ({
-    url: `${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}`,
+    url: `${SITE_URL}${writePath(post.type_index, post.work_id, post.id)}`,
     lastModified: new Date(post.created_at),
     changeFrequency: "weekly" as const,
     priority: 0.7,

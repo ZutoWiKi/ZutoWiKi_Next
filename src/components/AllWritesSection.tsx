@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import { writePath } from "@/lib/writeLink";
 import { useRouter } from "next/navigation";
 import {
   GetWritesPage,
@@ -218,7 +219,7 @@ export default function AllWritesSection() {
         key={write.id}
         write={write}
         onClick={() =>
-          router.push(`/post/${write.type_index}/${write.work_id}?writeId=${write.id}`)
+          router.push(writePath(write.type_index, write.work_id, write.id))
         }
       />
     ));

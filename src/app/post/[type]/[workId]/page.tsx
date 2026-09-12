@@ -1,6 +1,9 @@
 import React from "react";
+import { permanentRedirect } from "next/navigation";
 import PostDetailPage from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
+import { categoryName } from "@/config/categories";
+import { workPath, writePath } from "@/lib/writeLink";
 import { Metadata } from "next";
 
 interface WorkDetailPageProps {
@@ -11,27 +14,29 @@ interface WorkDetailPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const typeNames: Record<string, string> = {
-  song: "곡",
-  album: "앨범",
-  mv: "뮤직비디오",
-};
+/** ?writeId=57 로 들어온 예전 주소인지 확인하고, 맞으면 그 값을 돌려준다. */
+function legacyWriteId(sp: {
+  [key: string]: string | string[] | undefined;
+}): string | null {
+  const raw = sp.writeId;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === "string" && /^\d+$/.test(value) ? value : null;
+}
 
 export async function generateMetadata({
   params,
   searchParams,
 }: WorkDetailPageProps): Promise<Metadata> {
   const { type, workId } = await params;
-  const sp = await searchParams;
-  const writeId = typeof sp.writeId === "string" ? sp.writeId : undefined;
-
   const work = await GetWorkDetail(workId);
-  const typeName = typeNames[type] || "작품";
+  const typeName = categoryName(type);
 
-  // 사이트맵이 ?writeId= 까지 포함해 제출하므로 정본(canonical) 주소도 동일하게 맞춘다.
+  // 예전 주소로 들어왔으면 곧 새 주소로 보낸다. 정본도 새 주소를 가리켜야
+  // 검색엔진이 두 주소를 하나로 합친다.
+  const writeId = legacyWriteId(await searchParams);
   const canonical = writeId
-    ? `/post/${type}/${workId}?writeId=${writeId}`
-    : `/post/${type}/${workId}`;
+    ? writePath(type, workId, writeId)
+    : workPath(type, workId);
 
   return {
     title: `${work.title} - ${typeName} 해석`,
@@ -48,8 +53,18 @@ export async function generateMetadata({
   };
 }
 
-export default async function WorkDetailPage({ params }: WorkDetailPageProps) {
-  const { workId } = await params;
+export default async function WorkDetailPage({
+  params,
+  searchParams,
+}: WorkDetailPageProps) {
+  const { type, workId } = await params;
+
+  // 예전에 공유된 /post/{type}/{workId}?writeId=57 주소를 새 주소로 넘긴다.
+  // 영구 이동(308)이라 검색엔진이 색인을 옮기고, 이미 나간 링크도 그대로 산다.
+  const writeId = legacyWriteId(await searchParams);
+  if (writeId) {
+    permanentRedirect(writePath(type, workId, writeId));
+  }
 
   return <PostDetailPage workId={workId} />;
 }

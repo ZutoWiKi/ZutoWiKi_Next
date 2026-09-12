@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import EasyMDE from "easymde";
 import { renderMarkdown } from "@/lib/markdown";
-import { getToken } from "@/components/API/session";
+import { clearToken, getToken } from "@/components/API/session";
+import { workPath } from "@/lib/writeLink";
 import { uploadImage } from "@/lib/uploadImage";
 // 툴바 아이콘. EasyMDE 는 이게 없으면 런타임에 maxcdn 에서 Font Awesome 을
 // 직접 받아오는데, CSP 의 style-src 'self' 가 그걸 막아 아이콘이 전부 사라진다.
@@ -34,6 +35,7 @@ interface WritePageProps {
 
 export default function WritePage({ params }: WritePageProps) {
   const searchParams = useSearchParams();
+  const routeParams = useParams();
   const parentIDParam = searchParams.get("parentID");
   const parentID = parentIDParam ? parseInt(parentIDParam, 10) : 0;
   const [title, setTitle] = useState("");
@@ -48,14 +50,30 @@ export default function WritePage({ params }: WritePageProps) {
 
   const [workId, setWorkId] = useState<string>("");
 
-  // 사용자 정보 가져오기
+  // 로그인 확인.
+  //
+  // 예전에는 로그인이 필요하면 /login 으로 보냈는데 그런 라우트가 없어서
+  // 404 가 떴다(로그인은 팝업으로 구현돼 있다). 왔던 작품 페이지로 돌려보낸다.
+  //
+  // 그리고 인증이 풀린 경우와 서버·네트워크 장애를 구분한다. 예전에는 요청이
+  // 어떤 이유로 실패하든 화면 밖으로 밀어냈다.
   useEffect(() => {
+    const backToWork = () => {
+      const type = routeParams?.type;
+      const id = routeParams?.workId;
+      router.push(
+        typeof type === "string" && typeof id === "string"
+          ? workPath(type, id)
+          : "/",
+      );
+    };
+
     const fetchUserInfo = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getToken();
         if (!token) {
           setError("로그인이 필요합니다.");
-          router.push("/login"); // 로그인 페이지로 리다이렉트
+          backToWork();
           return;
         }
 
@@ -66,6 +84,14 @@ export default function WritePage({ params }: WritePageProps) {
           },
         });
 
+        // 토큰이 죽었을 때만 내보낸다.
+        if (response.status === 401 || response.status === 403) {
+          clearToken();
+          setError("로그인이 만료되었습니다. 다시 로그인해 주세요.");
+          backToWork();
+          return;
+        }
+
         if (!response.ok) {
           throw new Error("사용자 정보를 가져올 수 없습니다.");
         }
@@ -73,16 +99,18 @@ export default function WritePage({ params }: WritePageProps) {
         const userData = await response.json();
         setUser(userData);
       } catch (error) {
+        // 네트워크·서버 오류다. 쓰던 글을 잃지 않도록 화면은 그대로 두고 알린다.
         console.error("사용자 정보 조회 실패:", error);
-        setError("사용자 정보를 가져오는데 실패했습니다.");
-        router.push("/login");
+        setError(
+          "사용자 정보를 가져오는데 실패했습니다. 새로고침 후 다시 시도해 주세요.",
+        );
       } finally {
         setUserLoading(false);
       }
     };
 
     fetchUserInfo();
-  }, [router]);
+  }, [router, routeParams]);
 
   useEffect(() => {
     const loadParams = async () => {

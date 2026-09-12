@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { AllWrite } from "../../components/API/GetAllWrites";
 import { API_URL, SITE_URL } from "@/config/site";
+import { writePath } from "@/lib/writeLink";
 
 export async function GET() {
   // DRF API 호출 (모든 글) — 호출은 API 서버로, 피드에 실리는 링크는 서비스 도메인으로
@@ -17,8 +18,8 @@ export async function GET() {
       (post: AllWrite) => `
       <item>
         <title><![CDATA[${post.title}]]></title>
-        <link>${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</link>
-        <guid isPermaLink="true">${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</guid>
+        <link>${SITE_URL}${writePath(post.type_index, post.work_id, post.id)}</link>
+        <guid isPermaLink="true">${SITE_URL}${writePath(post.type_index, post.work_id, post.id)}</guid>
         <pubDate>${new Date(post.created_at).toUTCString()}</pubDate>
         <description><![CDATA[${(post.excerpt ?? post.content ?? "").slice(0, 200)}...]]></description>
       </item>
