@@ -17,7 +17,8 @@ import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
 import { renderMarkdown } from "@/lib/markdown";
-import { workPath, writePath } from "@/lib/writeLink";
+import { workPath, writePath, writeTitle } from "@/lib/writeLink";
+import { SITE_NAME } from "@/config/site";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
 import { getToken, clearToken, isAuthError } from "@/components/API/session";
@@ -395,6 +396,29 @@ export default function PostDetailPage({
     }
   }, [writes, initialWriteId, searchParams]);
 
+  // 목록에서 글을 바꿔도 탭 제목이 따라오게 한다.
+  //
+  // 주소는 history.replaceState 로만 바꾸므로 Next 가 라우트를 다시 그리지 않고,
+  // 서버의 generateMetadata 도 돌지 않는다. 그래서 <title> 이 처음 들어온 글에
+  // 머문다. 게다가 Next 는 렌더할 때마다 <title> 요소를 서버 값으로 되돌리므로,
+  // 한 번 써 넣는 것으로는 부족하다. 렌더가 끝난 뒤마다 확인해 맞춘다.
+  //
+  // 공유 주소를 새로 열 때는 서버가 제대로 렌더하므로 그쪽은 원래 정확하다.
+  useEffect(() => {
+    if (!selectedWrite) return;
+
+    // 주소가 그 글을 가리킬 때만 맞춘다. 작품 페이지(/post/{type}/{workId})는
+    // 첫 글을 자동으로 펼치는데, 거기서 글 제목을 달면 주소와 어긋난다.
+    if (window.location.pathname !== writePath(type, workId, selectedWrite.id)) {
+      return;
+    }
+
+    const wanted = `${writeTitle(selectedWrite.title, workInfo?.title)} | ${SITE_NAME}`;
+    if (document.title !== wanted) {
+      document.title = wanted;
+    }
+  });
+
   const goToWirte = useCallback(async () => {
     if (!isLoggedIn) {
       setShowLoginRequired(true);
@@ -544,6 +568,7 @@ export default function PostDetailPage({
         "",
         writePath(type, workId, selectedWrite.id),
       );
+
 
       setSelectedWrite(selectedWrite);
 

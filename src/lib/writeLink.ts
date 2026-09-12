@@ -21,3 +21,16 @@ export function writePath(
 ): string {
   return `${workPath(type, workId)}/${writeId}`;
 }
+
+/**
+ * 해석글 페이지의 제목.
+ *
+ * 서버의 generateMetadata 와 목록에서 글을 바꿀 때가 같은 형식을 써야 해서
+ * 여기 모아 둔다. 사이트 이름(| Yoonseul)은 layout 의 title.template 이 붙인다.
+ */
+export function writeTitle(
+  title: string,
+  workTitle?: string | null,
+): string {
+  return workTitle ? `${title} - ${workTitle} 해석` : title;
+}

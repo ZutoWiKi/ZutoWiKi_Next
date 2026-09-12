@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import PostDetailPage from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
-import { writePath } from "@/lib/writeLink";
+import { writePath, writeTitle } from "@/lib/writeLink";
 import { API_URL } from "@/config/site";
 
 /**
@@ -90,8 +90,7 @@ export async function generateMetadata({
     };
   }
 
-  const workLabel = work ? `${work.title}` : typeName;
-  const title = `${write.title} - ${workLabel} 해석`;
+  const title = writeTitle(write.title, work ? work.title : typeName);
   const description = toDescription(
     write.content,
     work

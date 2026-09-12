@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import React from "react";
 import FloatingMenu from "@/components/FloatingMenu";
-import { SITE_URL } from "@/config/site";
+import { SITE_NAME, SITE_URL } from "@/config/site";
 
 // 검색엔진 소유확인 코드. 어차피 페이지 소스에 그대로 노출되는 공개값이라
 // 네이버 코드는 기본값으로 코드에 둔다. Vercel 환경변수가 있으면 그쪽이 우선한다.
@@ -17,8 +17,8 @@ const naverVerification =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "윤슬 | Yoonseul",
-    template: "%s | Yoonseul",
+    default: `윤슬 | ${SITE_NAME}`,
+    template: `%s | ${SITE_NAME}`,
   },
   // 홈 기준 정본 주소. 하위 페이지는 각자 generateMetadata 에서 덮어쓴다.
   alternates: {
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     locale: "ko_KR",
     title: {
       default: "🌊 [모든 문학 경계의 파괴] - 문학 소통의 장, 윤슬",
-      template: "%s | Yoonseul",
+      template: `%s | ${SITE_NAME}`,
     },
     description:
       "같은 파도에도 윤슬은 저마다 다르게 반짝입니다. 같은 작품에 대한 당신만의 시선을 나누고, 문학의 경계를 지워보세요.",
