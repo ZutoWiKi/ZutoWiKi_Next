@@ -38,7 +38,7 @@ export function clearToken(): void {
  */
 export async function verifySession(token: string): Promise<boolean> {
   try {
-    const res = await fetch("/api_/mypage/", {
+    const res = await fetch("/api_/mypage", {
       headers: { Authorization: `Token ${token}` },
       cache: "no-store",
     });

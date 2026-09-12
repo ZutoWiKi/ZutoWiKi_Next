@@ -59,7 +59,7 @@ export default function WritePage({ params }: WritePageProps) {
           return;
         }
 
-        const response = await fetch("/api_/mypage/", {
+        const response = await fetch("/api_/mypage", {
           credentials: "include",
           headers: {
             Authorization: `Token ${token}`,

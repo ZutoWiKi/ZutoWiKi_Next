@@ -5,7 +5,8 @@ import { API_URL, SITE_URL } from "@/config/site";
 
 export async function GET() {
   // DRF API 호출 (모든 글) — 호출은 API 서버로, 피드에 실리는 링크는 서비스 도메인으로
-  const res = await fetch(`${API_URL}/api/post/write/all/`, {
+  // summary=1 이면 본문 대신 앞 200자(excerpt)만 온다. 설명문에는 그걸로 충분하다.
+  const res = await fetch(`${API_URL}/api/post/write/all/?summary=1`, {
     next: { revalidate: 86400 }, // 하루마다 새로고침
   });
   const posts: AllWrite[] = await res.json();
@@ -19,7 +20,7 @@ export async function GET() {
         <link>${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</link>
         <guid isPermaLink="true">${SITE_URL}/post/${post.type_index}/${post.work_id}?writeId=${post.id}</guid>
         <pubDate>${new Date(post.created_at).toUTCString()}</pubDate>
-        <description><![CDATA[${post.content.slice(0, 200)}...]]></description>
+        <description><![CDATA[${(post.excerpt ?? post.content ?? "").slice(0, 200)}...]]></description>
       </item>
     `,
     )

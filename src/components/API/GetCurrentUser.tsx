@@ -7,7 +7,7 @@ export interface CurrentUser {
 
 export const GetCurrentUser = async (token: string): Promise<CurrentUser | null> => {
   try {
-    const response = await fetch("/api_/mypage/", {
+    const response = await fetch("/api_/mypage", {
       credentials: "include",
       headers: {
         Authorization: `Token ${token}`,

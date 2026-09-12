@@ -1,10 +1,12 @@
-"use server";
+"use client";
 
+import { readApi } from "@/lib/readApi";
+
+/** 목록 카드가 쓰는 필드. 본문(content)은 목록에 싣지 않는다. */
 export interface AllWrite {
   id: number;
   title: string;
   user_name: string;
-  content: string;
   work_title: string;
   work_author: string;
   work_id: number;
@@ -13,50 +15,67 @@ export interface AllWrite {
   views: number;
   likes: number;
   comments: number;
+  excerpt?: string;
   is_liked?: boolean;
+  /** 예전 응답 호환용. 목록에서는 쓰지 않는다. */
+  content?: string;
 }
 
-export async function GetAllWrites(token?: string | null): Promise<AllWrite[]> {
-  console.log("전체 글 목록 조회 시도");
+export interface WritePage {
+  count: number;
+  page: number;
+  page_size: number;
+  num_pages: number;
+  results: AllWrite[];
+}
 
-  try {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
+export type WriteSort = "recent" | "old" | "views" | "likes" | "comments";
+
+export interface GetWritesOptions {
+  page?: number;
+  pageSize?: number;
+  sort?: WriteSort;
+  /** 로그인한 사용자가 쓴 글만 */
+  mine?: boolean;
+  token?: string | null;
+}
+
+/**
+ * 해석글 목록 한 페이지를 가져온다.
+ *
+ * 예전에는 전체를 한 번에 받아 브라우저에서 정렬·자르기를 했다. 글 43건에
+ * 92KB 였고, 그중 16만 자가 목록에서 쓰지도 않는 본문이었다.
+ */
+export async function GetWritesPage({
+  page = 1,
+  pageSize = 15,
+  sort = "recent",
+  mine = false,
+  token,
+}: GetWritesOptions = {}): Promise<WritePage> {
+  const data = await readApi<WritePage | AllWrite[]>(
+    "writes",
+    {
+      page,
+      page_size: pageSize,
+      sort,
+      summary: 1,
+      mine: mine ? 1 : undefined,
+    },
+    token,
+  );
+
+  // 페이지네이션을 모르는 예전 백엔드는 배열을 그대로 준다. 프론트가 먼저
+  // 배포돼도 목록이 깨지지 않도록 받아준다(정렬·쪽나눔은 서버가 해야 정확하다).
+  if (Array.isArray(data)) {
+    return {
+      count: data.length,
+      page: 1,
+      page_size: data.length || pageSize,
+      num_pages: 1,
+      results: data,
     };
-
-    // 토큰이 있으면 Authorization 헤더 추가 (좋아요 상태 확인용)
-    if (token) {
-      headers["Authorization"] = `Token ${token}`;
-    }
-
-    const response = await fetch(
-      `https://hospitable-illumination-production-e611.up.railway.app/api/post/write/all`,
-      {
-        method: "GET",
-        headers,
-        cache: "no-store",
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      const errorMessage =
-        data.detail ||
-        data.message ||
-        "전체 글 목록을 가져오는데 실패했습니다.";
-      throw new Error(errorMessage);
-    }
-
-    console.log("전체 글 목록 조회 성공:", data);
-    return data;
-  } catch (error) {
-    console.error("전체 글 목록 조회 에러:", error);
-
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      throw new Error("서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
-    }
-
-    throw error;
   }
+
+  return data;
 }

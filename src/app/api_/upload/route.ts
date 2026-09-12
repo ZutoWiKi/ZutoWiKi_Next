@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { API_URL } from "@/config/site";
 
 const BACKEND =
-  "https://hospitable-illumination-production-e611.up.railway.app/api/post/upload/";
+  `${API_URL}/api/post/upload/`;
 
 export const dynamic = "force-dynamic";
 

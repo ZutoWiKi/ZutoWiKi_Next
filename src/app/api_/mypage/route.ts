@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { API_URL } from "@/config/site";
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization") ?? "";
   const res = await fetch(
-    "https://hospitable-illumination-production-e611.up.railway.app/api/user/mypage/",
+    `${API_URL}/api/user/mypage/`,
     {
       headers: { Authorization: auth },
     },

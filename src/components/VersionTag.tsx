@@ -12,7 +12,7 @@ export default function VersionTag() {
   useEffect(() => {
     let cancelled = false;
 
-    fetch("/api_/version/", { cache: "no-store" })
+    fetch("/api_/version", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled) setBackVersion(data?.commit ?? "?");

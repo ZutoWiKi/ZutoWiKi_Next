@@ -1,4 +1,7 @@
-"use server";
+"use client";
+
+import { readApi } from "@/lib/readApi";
+
 export interface Work {
   id: number;
   type_index: number;
@@ -6,26 +9,13 @@ export interface Work {
   author: string;
   coverImage: string;
   description: string;
-  num_likes?: number; // 좋아요 수
-  total_views?: number; // 총 조회수
-  total_likes?: number; // 전체 좋아요 수 - 새로 추가
-  write_count?: number; // 해석글 개수
+  num_likes?: number;
+  total_views?: number;
+  total_likes?: number;
+  write_count?: number;
 }
 
-export async function GetPopularWorksList(token: string | null) {
-  try {
-    const res = await fetch(
-      "https://hospitable-illumination-production-e611.up.railway.app/api/post/popular/",
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      },
-    );
-    if (!res.ok) throw new Error("인기 작품을 불러오는데 실패했습니다.");
-    const data = await res.json();
-    return data.works;
-  } catch {
-    console.log("GetPopularWorksList fetch fail");
-  }
+export async function GetPopularWorksList(token: string | null): Promise<Work[]> {
+  const data = await readApi<{ works: Work[] }>("popular", undefined, token);
+  return data.works ?? [];
 }

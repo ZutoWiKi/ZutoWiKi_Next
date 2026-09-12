@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { API_URL } from "@/config/site";
 
 const BACKEND =
-  "https://hospitable-illumination-production-e611.up.railway.app/api/version/";
+  `${API_URL}/api/version/`;
 
 // 항상 실시간으로 물어본다. 캐시되면 배포 확인용으로 쓸 수 없다.
 export const dynamic = "force-dynamic";

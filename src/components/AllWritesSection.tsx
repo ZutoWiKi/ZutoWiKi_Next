@@ -1,7 +1,11 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { GetAllWrites, AllWrite } from "@/components/API/GetAllWrites";
+import {
+  GetWritesPage,
+  AllWrite,
+  WriteSort,
+} from "@/components/API/GetAllWrites";
 import { motion, useInView } from "framer-motion";
 
 interface AnimatedWriteProps {
@@ -128,13 +132,24 @@ const EmptyCard: React.FC = () => (
   </div>
 );
 
+/** 화면의 정렬 이름 → 서버가 쓰는 이름 */
+type SortKey = "time" | "time_old" | "views" | "likes" | "comments";
+
+const SORT_PARAM: Record<SortKey, WriteSort> = {
+  time: "recent",
+  time_old: "old",
+  views: "views",
+  likes: "likes",
+  comments: "comments",
+};
+
 export default function AllWritesSection() {
   const [writes, setWrites] = useState<AllWrite[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<
-    "time" | "time_old" | "views" | "likes" | "comments"
-  >("time");
+  const [sortBy, setSortBy] = useState<SortKey>("time");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
   const itemsPerPage = 15;
@@ -144,23 +159,44 @@ export default function AllWritesSection() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [minHeight, setMinHeight] = useState<number>(0);
 
+  // 정렬·페이지가 바뀔 때마다 그 페이지만 받아온다. 예전에는 전체를 한 번에
+  // 받아 브라우저에서 정렬하고 잘라 썼다.
   useEffect(() => {
+    let canceled = false;
+
     (async () => {
+      setRefreshing(true);
       try {
         const token = localStorage.getItem("token");
-        const writesList = await GetAllWrites(token);
-        setWrites(writesList);
+        const page = await GetWritesPage({
+          page: currentPage,
+          pageSize: itemsPerPage,
+          sort: SORT_PARAM[sortBy],
+          token,
+        });
+        if (canceled) return;
+        setWrites(page.results);
+        setTotalPages(Math.max(1, page.num_pages));
+        setError(null);
       } catch (err) {
+        if (canceled) return;
         setError(
           err instanceof Error
             ? err.message
             : "데이터를 불러오는데 실패했습니다.",
         );
       } finally {
-        setLoading(false);
+        if (!canceled) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     })();
-  }, []);
+
+    return () => {
+      canceled = true;
+    };
+  }, [currentPage, sortBy]);
 
   // 페이지 변경 후 높이 업데이트
   useEffect(() => {
@@ -172,32 +208,8 @@ export default function AllWritesSection() {
     }
   }, [currentPage, isAnimating]);
 
-  const sortedWrites = [...writes].sort((a, b) => {
-    switch (sortBy) {
-      case "views":
-        return b.views - a.views;
-      case "likes":
-        return b.likes - a.likes;
-      case "time_old":
-        return (
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        );
-      case "comments":
-        return b.comments - a.comments;
-      case "time":
-      default:
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-    }
-  });
-
-  const totalPages = Math.ceil(sortedWrites.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedWrites = sortedWrites.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  // 정렬과 페이지 나누기는 서버가 한다. 여기 온 것이 이미 현재 페이지다.
+  const displayedWrites = writes;
 
   // 빈 카드로 최소 높이 확보
   const renderContent = () => {
@@ -240,9 +252,7 @@ export default function AllWritesSection() {
     }, 150);
   };
 
-  const handleSortChange = (
-    newSort: "time" | "time_old" | "views" | "likes",
-  ) => {
+  const handleSortChange = (newSort: SortKey) => {
     setSortBy(newSort);
     setCurrentPage(1);
     setMinHeight(0); // 정렬 변경 시 높이 초기화
@@ -291,11 +301,7 @@ export default function AllWritesSection() {
           </h2>
           <select
             value={sortBy}
-            onChange={(e) =>
-              handleSortChange(
-                e.target.value as "time" | "time_old" | "views" | "likes",
-              )
-            }
+            onChange={(e) => handleSortChange(e.target.value as SortKey)}
             className="px-1 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent self-end sm:self-auto"
           >
             <option value="time">최신순</option>
@@ -312,6 +318,9 @@ export default function AllWritesSection() {
             className="space-y-6 transition-all duration-300"
             style={{
               minHeight: minHeight > 0 ? `${minHeight}px` : "auto",
+              // 페이지를 새로 받아오는 동안 살짝 흐리게. 목록을 지우지 않으므로
+              // 높이가 튀지 않는다.
+              opacity: refreshing ? 0.5 : 1,
             }}
           >
             {renderContent()}

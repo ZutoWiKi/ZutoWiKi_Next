@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { GetAllWrites, AllWrite } from "@/components/API/GetAllWrites";
+import { GetWritesPage, AllWrite } from "@/components/API/GetAllWrites";
 import UserProfileColor from "@/components/UserProfileColor";
 
 interface User {
@@ -28,37 +28,25 @@ const GetMyPage: React.FC = () => {
           return;
         }
 
-        // 사용자 정보 가져오기
-        const userRes = await fetch("/api_/mypage/", {
-          credentials: "include",
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
+        // 사용자 정보와 내 글을 동시에 받는다. 서버 액션이 아니라 보통
+        // 요청이므로 실제로 병렬로 나간다.
+        //
+        // 예전에는 전체 글 목록(92KB)을 통째로 받아 브라우저에서 걸렀다.
+        // 게다가 응답에 user_id 가 없어서 실제로 맞물리는 건 작성자 이름
+        // 비교 한 줄뿐이었다. 이제 서버가 로그인한 사용자 기준으로 걸러준다.
+        const [userRes, myPage] = await Promise.all([
+          fetch("/api_/mypage", {
+            credentials: "include",
+            headers: { Authorization: `Token ${token}` },
+          }),
+          GetWritesPage({ mine: true, pageSize: 100, token }),
+        ]);
 
         if (!userRes.ok) throw new Error("사용자 정보를 불러올 수 없습니다.");
         const userData: User = await userRes.json();
         setUser(userData);
 
-        // GetAllWrites 재사용: AllWrite[]를 그대로 가져온 뒤 사용자 id로 필터
-        const allWrites = await GetAllWrites(token);
-
-        // 서버 응답 형태가 여러가지일 수 있으므로 가능한 키들을 모두 체크해서 필터
-        const myWrites = allWrites.filter((w) => {
-          // 흔히 있을 법한 필드들 모두 검사
-          return (
-            // 직접 user_id 필드가 있는 경우
-            // @ts-expect-error; 이유? 없어!!!!!!!!
-            w.user_id === userData.id ||
-            // write.user 객체가 있는 경우
-            // @ts-expect-error; 이유? 없어!!!!!!!!
-            (w.user && (w.user.id === userData.id || w.user_id === userData.id)) ||
-            // 작성자 이름 기반(안전망)
-            w.user_name === userData.username ||
-            // 혹은 work에 user 정보가 들어있는 케이스 등 필요시 추가 검사
-            false
-          );
-        });
+        const myWrites = myPage.results;
 
         setWrites(myWrites);
         setLoading(false);
