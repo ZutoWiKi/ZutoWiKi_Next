@@ -126,8 +126,10 @@ export const WRITE_EXCERPT_LENGTH = 200;
  * 새로 받으므로 새 글이 사이트맵·피드에 오르기까지 최대 하루 걸린다.
  */
 export async function fetchWriteIndex(): Promise<AllWrite[] | null> {
+  // tags=1 은 백엔드가 읽지 않는 값이다. 응답에 태그가 새로 실리면서, 캐시에 남은 예전
+  // 응답(태그 없음)을 하루 동안 계속 쓰지 않도록 캐시 주소를 바꾼 것이다.
   const data = await getJson<AllWrite[] | { results?: AllWrite[] }>(
-    "/api/post/write/all/?summary=1",
+    "/api/post/write/all/?summary=1&tags=1",
     60 * 60 * 24,
   );
   if (data === null) return null;

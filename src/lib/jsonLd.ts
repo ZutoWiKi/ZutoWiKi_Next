@@ -175,6 +175,8 @@ export function writeJsonLd(
         // 표지가 없으면 사이트 대표 이미지. og:image 와 같은 규칙이다.
         image: work.coverImage || LOGO_URL,
         inLanguage: "ko-KR",
+        // 글쓴이가 단 태그. 없으면 싣지 않는다.
+        keywords: write.tags?.length ? write.tags : undefined,
         about: aboutWork(type, work),
       },
     ],

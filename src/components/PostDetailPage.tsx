@@ -29,6 +29,7 @@ import { getToken, clearToken, isAuthError } from "@/components/API/session";
 import { DeleteWrite } from "@/components/API/DeleteWrite";
 import { GetCurrentUser, CurrentUser } from "@/components/API/GetCurrentUser";
 import UserProfileColor from "@/components/UserProfileColor";
+import TagList from "@/components/TagList";
 import "github-markdown-css/github-markdown.css";
 import { useRef } from "react";
 import { AnimatedListRef } from "./AnimatedList";
@@ -64,6 +65,7 @@ export interface Write {
   likes: number;
   parentID: number;
   is_liked?: boolean; // 사용자의 좋아요 상태
+  tags?: string[]; // 글쓴이가 단 순서대로. 태그 기능 전의 백엔드 응답에는 없다.
 }
 
 export interface Work {
@@ -1022,6 +1024,7 @@ export default function PostDetailPage({
                       </div>
                     )}
                   </div>
+                  <TagList tags={selectedWrite.tags} className="mb-3" />
                   <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
                     <span>{selectedWrite.user_name}</span>
                     <span>
@@ -1179,6 +1182,7 @@ export default function PostDetailPage({
                             <p className="mt-2 text-sm text-gray-600 leading-relaxed">
                               {truncateText(markdownToPlainText(write.content), 160)}
                             </p>
+                            <TagList tags={write.tags} className="mt-2" />
                             <span className="mt-2 inline-block text-sm text-blue-600">
                               읽기 →
                             </span>

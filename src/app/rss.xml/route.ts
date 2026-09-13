@@ -60,6 +60,19 @@ function summary(write: AllWrite): string {
   return cut && !plain.endsWith("…") ? `${plain}…` : plain;
 }
 
+/**
+ * 글의 분류: 갈래, 작품명, 글쓴이가 단 태그 순서.
+ * 태그가 갈래 이름이나 작품명과 같으면(#소설) 한 번만 싣는다.
+ */
+function categories(write: AllWrite): string[] {
+  const names = [
+    categoryName(write.type_index),
+    write.work_title,
+    ...(write.tags ?? []),
+  ].filter((name): name is string => Boolean(name));
+  return [...new Set(names)];
+}
+
 function itemXml(write: AllWrite): string {
   const url = `${SITE_URL}${writePath(write.type_index, write.work_id, write.id)}`;
   const lines = [
@@ -68,8 +81,7 @@ function itemXml(write: AllWrite): string {
     `<guid isPermaLink="true">${xml(url)}</guid>`,
     `<pubDate>${new Date(write.created_at).toUTCString()}</pubDate>`,
     write.user_name ? `<dc:creator>${xml(write.user_name)}</dc:creator>` : "",
-    `<category>${xml(categoryName(write.type_index))}</category>`,
-    write.work_title ? `<category>${xml(write.work_title)}</category>` : "",
+    ...categories(write).map((name) => `<category>${xml(name)}</category>`),
     `<description>${xml(summary(write))}</description>`,
   ].filter(Boolean);
 

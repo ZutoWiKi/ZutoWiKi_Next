@@ -6,6 +6,7 @@ interface WriteData {
   user: number;
   work: number;
   parentID: number;
+  tags: string[];
 }
 
 interface WriteResponse {
@@ -16,6 +17,7 @@ interface WriteResponse {
   content?: string | string[];
   user?: string | string[];
   work?: string | string[];
+  tags?: string | string[];
 }
 
 export async function PostWrite(writeData: WriteData, token: string) {
@@ -65,6 +67,8 @@ export async function PostWrite(writeData: WriteData, token: string) {
         errorMessage = `사용자: ${Array.isArray(data.user) ? data.user.join(", ") : data.user}`;
       } else if (data.work) {
         errorMessage = `작품: ${Array.isArray(data.work) ? data.work.join(", ") : data.work}`;
+      } else if (data.tags) {
+        errorMessage = Array.isArray(data.tags) ? data.tags.join(", ") : data.tags;
       }
 
       throw new Error(errorMessage);

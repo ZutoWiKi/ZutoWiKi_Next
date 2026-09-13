@@ -14,6 +14,7 @@ import "font-awesome/css/font-awesome.min.css";
 import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { PostWrite } from "@/components/API/PostWrite";
+import TagInput from "@/components/TagInput";
 
 const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
@@ -40,6 +41,7 @@ export default function WritePage({ params }: WritePageProps) {
   const parentID = parentIDParam ? parseInt(parentIDParam, 10) : 0;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -292,6 +294,7 @@ export default function WritePage({ params }: WritePageProps) {
         user: user.id,
         work: workIdNumber,
         parentID: parentID,
+        tags,
       };
 
       await PostWrite(writeData, token);
@@ -349,6 +352,9 @@ export default function WritePage({ params }: WritePageProps) {
             disabled={isLoading}
           />
         </div>
+
+        {/* 태그 입력 */}
+        <TagInput value={tags} onChange={setTags} disabled={isLoading} />
 
         {/* 내용 입력 */}
         <div className="bg-white">

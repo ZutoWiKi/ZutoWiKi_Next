@@ -13,6 +13,7 @@ import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { UpdateWrite, UpdateWriteData } from "@/components/API/UpdateWrite";
 import { GetWritesList } from "@/components/API/GetWriteList";
+import TagInput from "@/components/TagInput";
 
 const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
@@ -38,6 +39,7 @@ interface Write {
   likes: number;
   parentID: number;
   is_liked?: boolean;
+  tags?: string[];
 }
 
 export default function EditPage() {
@@ -46,6 +48,7 @@ export default function EditPage() {
   const workId = params.workId as string;
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -115,6 +118,7 @@ export default function EditPage() {
 
         setTitle(currentWrite.title);
         setContent(currentWrite.content);
+        setTags(currentWrite.tags ?? []);
       } catch (error) {
         console.error("글 데이터 로딩 실패:", error);
         setError("글 데이터를 불러오는데 실패했습니다.");
@@ -264,6 +268,7 @@ export default function EditPage() {
       const updateData: UpdateWriteData = {
         title: title.trim(),
         content: content.trim(),
+        tags,
       };
 
       await UpdateWrite(parseInt(writeId), updateData, token);
@@ -329,6 +334,9 @@ export default function EditPage() {
             disabled={isLoading}
           />
         </div>
+
+        {/* 태그 입력 */}
+        <TagInput value={tags} onChange={setTags} disabled={isLoading} />
 
         {/* 내용 입력 */}
         <div className="bg-white">

@@ -2,6 +2,8 @@
 export interface UpdateWriteData {
   title: string;
   content: string;
+  /** 보내면 태그를 이 목록으로 바꾼다. 빼면 서버가 기존 태그를 그대로 둔다. */
+  tags?: string[];
 }
 
 export const UpdateWrite = async (

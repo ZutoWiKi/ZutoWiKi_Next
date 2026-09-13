@@ -102,6 +102,8 @@ export async function generateMetadata({
       description,
       url: canonical,
       images: work?.coverImage ? [work.coverImage] : undefined,
+      publishedTime: write.created_at,
+      tags: write.tags?.length ? write.tags : undefined,
     },
   };
 }
