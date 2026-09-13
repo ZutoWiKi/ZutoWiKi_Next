@@ -4,19 +4,7 @@ import { useRouter } from "next/navigation";
 import { GetWorksList } from "@/components/API/GetWorksList";
 import { PostWork } from "@/components/API/PostWork";
 import { getToken } from "@/components/API/session";
-
-// 카테고리명 매핑
-const categoryNames = {
-  novel: "소설",
-  poem: "시",
-  music: "음악",
-  movie: "영화 / 드라마",
-  game: "게임",
-  performance: "공연",
-  animation: "애니메이션",
-  essay: "수필",
-  webtoon: "만화 / 웹툰",
-};
+import { CATEGORY_NAMES } from "@/config/categories";
 
 // 타입 인덱스 매핑
 const typeIndexMap = {
@@ -131,8 +119,8 @@ export default function WorkListPage({ type }: WorkListPageProps) {
     );
   }
 
-  const categoryName =
-    categoryNames[type as keyof typeof categoryNames] || type;
+  // 갈래 이름은 메타데이터와 같은 표를 쓴다. 표에 없는 갈래는 주소 조각을 그대로 보여준다.
+  const categoryName = CATEGORY_NAMES[type] ?? type;
 
   const handleWorkClick = (workId: number) => {
     router.push(`/post/${type}/${workId}`);
