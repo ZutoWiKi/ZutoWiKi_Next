@@ -1,10 +1,12 @@
 import React from "react";
+import JsonLd from "@/components/JsonLd";
 import PageLayout from "@/components/PageLayout";
 import RecommendedWorks from "@/components/RecommendedWorks";
 import PurposeSection from "@/components/MainPurpose";
 import AllWorksSection from "@/components/AllWorksSection";
 import AllWritesSection from "@/components/AllWritesSection";
 import { HOME_WRITES_PAGE_SIZE } from "@/config/lists";
+import { websiteJsonLd } from "@/lib/jsonLd";
 import {
   fetchAllWorks,
   fetchLatestWrites,
@@ -30,6 +32,8 @@ export default async function HomePage() {
 
   return (
     <PageLayout>
+      {/* 검색 결과에 사이트 이름(윤슬)을 알려주는 구조화 데이터 */}
+      <JsonLd data={websiteJsonLd()} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
           {/* 오른쪽 메인 콘텐츠 */}

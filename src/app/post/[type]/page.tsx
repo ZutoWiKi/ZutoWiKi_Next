@@ -1,6 +1,8 @@
 import { notFound, permanentRedirect } from "next/navigation";
+import JsonLd from "@/components/JsonLd";
 import WorkListPage from "@/components/WorkListPage";
 import { categoryName, isCategory } from "@/config/categories";
+import { categoryJsonLd } from "@/lib/jsonLd";
 import { fetchWorksByType } from "@/lib/serverApi";
 import { categoryPath } from "@/lib/writeLink";
 import { Metadata } from "next";
@@ -55,6 +57,9 @@ export default async function PostTypePage({ params }: PostTypePageProps) {
 
   // 갈래를 옮겨 다닐 때 이전 갈래의 목록이 남지 않도록 갈래마다 새로 만든다.
   return (
-    <WorkListPage key={type} type={type} initialWorks={works ?? undefined} />
+    <>
+      <JsonLd data={categoryJsonLd(type)} />
+      <WorkListPage key={type} type={type} initialWorks={works ?? undefined} />
+    </>
   );
 }

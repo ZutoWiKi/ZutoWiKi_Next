@@ -52,3 +52,13 @@ export function writeTitle(
 ): string {
   return workTitle ? `${title} - ${workTitle} 해석` : title;
 }
+
+/**
+ * 작품 페이지의 제목.
+ *
+ * 서버의 generateMetadata 와 펼친 글을 접고 작품 소개로 돌아올 때가 같은 형식을 써야 해서
+ * writeTitle 과 함께 둔다. 사이트 이름은 여기서도 붙이지 않는다.
+ */
+export function workPageTitle(title: string, typeName: string): string {
+  return `${title} - ${typeName} 해석`;
+}

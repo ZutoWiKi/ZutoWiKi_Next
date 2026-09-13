@@ -62,6 +62,32 @@ input:focus {
     border-radius: 8px;
 }
 
+/* 본문 제목 크기.
+   markdown.ts 가 제목을 한 단계씩 내려서 그리므로(# → h2), 글쓴이가 고른 단계의
+   원래 모양으로 되돌린다. 값은 github-markdown-css 의 h1~h5 와 같다. h6 은 그대로 h6 이다. */
+.markdown-body .md-h1 {
+    font-size: 2em;
+}
+
+.markdown-body .md-h2 {
+    padding-bottom: .3em;
+    font-size: 1.5em;
+    border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body .md-h3 {
+    font-size: 1.25em;
+}
+
+.markdown-body .md-h4 {
+    font-size: 1em;
+}
+
+.markdown-body .md-h5 {
+    font-size: .875em;
+    color: inherit;
+}
+
 /* 모바일에서 유튜브 임베딩 최적화 */
 @media (max-width: 640px) {
     .youtube-embed-wrapper {

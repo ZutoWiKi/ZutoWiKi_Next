@@ -1,10 +1,12 @@
 import React from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
+import JsonLd from "@/components/JsonLd";
 import PostDetailPage from "@/components/PostDetailPage";
-import type { Write } from "@/components/PostDetailPage";
+import type { Work, Write } from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
+import { writeJsonLd } from "@/lib/jsonLd";
 import { fetchWorkWrites } from "@/lib/serverApi";
 import { markdownToPlainText, truncateText } from "@/lib/plainText";
 import { writePath, writeTitle } from "@/lib/writeLink";
@@ -51,6 +53,20 @@ function toDescription(content: string | undefined, fallback: string): string {
   return plain ? truncateText(plain, 155) : fallback;
 }
 
+/** 글 설명문. 메타 설명과 구조화 데이터가 같은 값을 쓴다. */
+function describeWrite(
+  write: Write,
+  work: Work | null,
+  typeName: string,
+): string {
+  return toDescription(
+    write.content,
+    work
+      ? `${work.author}의 ${typeName} "${work.title}"에 대한 해석입니다.`
+      : "윤슬에 올라온 해석입니다.",
+  );
+}
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
@@ -73,12 +89,7 @@ export async function generateMetadata({
   }
 
   const title = writeTitle(write.title, work ? work.title : typeName);
-  const description = toDescription(
-    write.content,
-    work
-      ? `${work.author}의 ${typeName} "${work.title}"에 대한 해석입니다.`
-      : "윤슬에 올라온 해석입니다.",
-  );
+  const description = describeWrite(write, work, typeName);
 
   return {
     title,
@@ -123,13 +134,27 @@ export default async function WriteDetailPage({ params }: PageProps) {
       ? { work, writes: lookup.writes }
       : undefined;
 
+  // 검색엔진용 글 정보와 경로. 서버가 글을 못 받았으면 싣지 않는다.
+  const jsonLd =
+    lookup.status === "found" && work
+      ? writeJsonLd(
+          type,
+          work,
+          lookup.write,
+          describeWrite(lookup.write, work, categoryName(type)),
+        )
+      : null;
+
   // 다른 작품의 글로 옮겨 가면 이전 작품의 글이 남지 않도록 작품마다 새로 만든다.
   return (
-    <PostDetailPage
-      key={workId}
-      workId={workId}
-      initialWriteId={writeId}
-      initialData={initialData}
-    />
+    <>
+      {jsonLd && <JsonLd data={jsonLd} />}
+      <PostDetailPage
+        key={workId}
+        workId={workId}
+        initialWriteId={writeId}
+        initialData={initialData}
+      />
+    </>
   );
 }

@@ -19,8 +19,10 @@ import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
 import { renderMarkdown } from "@/lib/markdown";
 import { formatDate } from "@/lib/formatDate";
-import { workPath, writePath, writeTitle } from "@/lib/writeLink";
+import { markdownToPlainText, truncateText } from "@/lib/plainText";
+import { workPageTitle, workPath, writePath, writeTitle } from "@/lib/writeLink";
 import { SITE_NAME } from "@/config/site";
+import { categoryName } from "@/config/categories";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
 import { CreateComment } from "@/components/API/CreateComment";
 import { getToken, clearToken, isAuthError } from "@/components/API/session";
@@ -84,13 +86,19 @@ const categoryPlaceholder = {
   webtoon: "작가",
 };
 
-/** 주소가 가리키는 글을 고르고, 없으면 첫 글을 펼친다. */
+/**
+ * 처음에 펼칠 글을 고른다.
+ *
+ * 글 주소(/post/{type}/{workId}/{writeId})면 그 글을, 못 찾으면 첫 글을 펼친다.
+ * 작품 주소(/post/{type}/{workId})면 아무 글도 펼치지 않고 작품 소개와 해석글 요약을
+ * 보여준다. 예전에는 작품 페이지도 첫 글 본문을 통째로 펼쳐서, 검색엔진에는 작품
+ * 페이지와 첫 글 페이지가 같은 내용의 두 주소로 보였다.
+ */
 function pickWrite(list: Write[], writeId?: string | null): Write | null {
-  if (writeId) {
-    const found = list.find((write) => write.id.toString() === writeId);
-    if (found) return found;
-  }
-  return list[0] ?? null;
+  if (!writeId) return null;
+  return (
+    list.find((write) => write.id.toString() === writeId) ?? list[0] ?? null
+  );
 }
 
 // 아래 모달들은 반드시 모듈 최상위에 둔다.
@@ -666,6 +674,29 @@ export default function PostDetailPage({
     [sortedWrites, type, workId],
   );
 
+  // 작품 소개에서 해석글 카드를 누르면 목록에서 고른 것과 똑같이 그 자리에서 펼친다.
+  const detailPanelRef = useRef<HTMLDivElement>(null);
+  const handleOverviewSelect = useCallback(
+    (index: number) => {
+      handleWriteSelect(sortedWrites[index].title, index);
+      // 카드가 화면 아래쪽에 있었으면 펼친 글의 첫머리가 보이도록 올려 준다.
+      const panel = detailPanelRef.current;
+      if (panel && panel.getBoundingClientRect().top < 0) {
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    },
+    [handleWriteSelect, sortedWrites],
+  );
+
+  // 작품 페이지에서 펼친 글을 접고 작품 소개로 돌아간다. 펼칠 때처럼 주소만 바꾼다.
+  const showOverview = useCallback(() => {
+    window.history.replaceState(null, "", basePath);
+    setSelectedWrite(null);
+    if (workInfo) {
+      document.title = `${workPageTitle(workInfo.title, categoryName(type))} | ${SITE_NAME}`;
+    }
+  }, [basePath, workInfo, type]);
+
   const handleParentClick = useCallback(
     async (parentId: number) => {
       if (parentId === 0) return; // 원본 글인 경우 아무것도 하지 않음
@@ -947,11 +978,27 @@ export default function PostDetailPage({
             gap-4 sm:gap-8 items-start
             `}
         >
-          {/* 왼쪽: 선택된 해석 상세 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6 min-h-[400px] sm:min-h-[500px]">
+          {/* 왼쪽: 선택된 해석 상세. 펼친 글이 없으면(작품 페이지) 작품 소개와 해석글 요약 */}
+          <div
+            ref={detailPanelRef}
+            className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 p-4 sm:p-6 min-h-[400px] sm:min-h-[500px]"
+          >
             {selectedWrite ? (
               <div className="h-full flex flex-col">
                 <div className="mb-6">
+                  {/* 작품 소개로 가는 길. 작품 페이지에서 펼친 글이면 페이지를 옮기지 않고 그 자리에서 접는다. */}
+                  <Link
+                    href={basePath}
+                    prefetch={false}
+                    onNavigate={(e) => {
+                      if (initialWriteId) return;
+                      e.preventDefault();
+                      showOverview();
+                    }}
+                    className="inline-block mb-3 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    ← 작품 소개 보기
+                  </Link>
                   <div className="flex items-start justify-between mb-3">
                     <WriteTitleTag className="text-xl sm:text-2xl font-bold text-gray-800 leading-relaxed flex-1">
                       {selectedWrite.title}
@@ -1092,30 +1139,59 @@ export default function PostDetailPage({
                 </div>
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-gray-600 text-lg">
-                    해석을 선택해서 읽어보세요
-                  </p>
-                  <p className="text-gray-400 text-sm mt-2">
-                    왼쪽 목록에서 관심있는 해석을 클릭하세요
-                  </p>
-                </div>
+              // 작품 소개와 해석글 요약. 작품 페이지의 첫 화면이다.
+              // 본문은 펼치지 않는다 — 본문까지 실으면 첫 글 페이지와 내용이 통째로 겹친다.
+              <div className="h-full flex flex-col gap-6">
+                {workInfo.description?.trim() && (
+                  <section>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-2">
+                      작품 소개
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {workInfo.description}
+                    </p>
+                  </section>
+                )}
+                <section>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3">
+                    해석 {writes.length}편
+                  </h2>
+                  {sortedWrites.length > 0 ? (
+                    <ul className="space-y-3">
+                      {sortedWrites.map((write, index) => (
+                        <li key={write.id}>
+                          {/* 검색엔진은 글 주소를 따라가고, 사람이 누르면 그 자리에서 펼친다. */}
+                          <Link
+                            href={writePath(type, workId, write.id)}
+                            prefetch={false}
+                            onNavigate={(e) => {
+                              e.preventDefault();
+                              handleOverviewSelect(index);
+                            }}
+                            className="block p-4 bg-white/70 rounded-xl border border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:shadow-md transition-all duration-300"
+                          >
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-800 leading-relaxed">
+                              {write.title}
+                            </h3>
+                            <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                              {write.user_name} · {formatDate(write.created_at)} · 조회 {write.views} · 좋아요 {write.likes}
+                            </p>
+                            <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                              {truncateText(markdownToPlainText(write.content), 160)}
+                            </p>
+                            <span className="mt-2 inline-block text-sm text-blue-600">
+                              읽기 →
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-600">
+                      아직 해석이 없습니다. 첫 번째 해석을 작성해보세요!
+                    </p>
+                  )}
+                </section>
               </div>
             )}
           </div>
@@ -1204,8 +1280,8 @@ export default function PostDetailPage({
               )}
             </div>
 
-            {/* ── 댓글 섹션 ── */}
-            <div className="flex-1 pt-4 sm:pt-6 border-t border-gray-200 flex flex-col max-h-[60vh] sm:max-h-[calc(80vh)]">
+            {/* ── 댓글 섹션 ── 글을 펼쳤을 때만 보인다(작품 소개에서는 어느 글의 댓글인지 알 수 없다). */}
+            <div className={`flex-1 pt-4 sm:pt-6 border-t border-gray-200 flex flex-col max-h-[60vh] sm:max-h-[calc(80vh)] ${selectedWrite ? "" : "hidden"}`}>
               <h4 className="text-base sm:text-lg font-semibold mb-3">댓글</h4>
 
               {/* 댓글 목록 - 남은 공간 모두 사용 */}

@@ -1,10 +1,12 @@
 import React from "react";
 import { permanentRedirect } from "next/navigation";
+import JsonLd from "@/components/JsonLd";
 import PostDetailPage from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
+import { workJsonLd } from "@/lib/jsonLd";
 import { fetchWorkWrites } from "@/lib/serverApi";
-import { workPath, writePath } from "@/lib/writeLink";
+import { workPageTitle, workPath, writePath } from "@/lib/writeLink";
 import { Metadata } from "next";
 
 interface WorkDetailPageProps {
@@ -35,6 +37,7 @@ export async function generateMetadata({
     fetchWorkWrites(workId),
   ]);
   const typeName = categoryName(type);
+  const title = workPageTitle(work.title, typeName);
 
   // 예전 주소로 들어왔으면 곧 새 주소로 보낸다. 정본도 새 주소를 가리켜야
   // 검색엔진이 두 주소를 하나로 합친다.
@@ -44,13 +47,13 @@ export async function generateMetadata({
     : workPath(type, workId);
 
   return {
-    title: `${work.title} - ${typeName} 해석`,
+    title,
     description: `${work.author}의 ${typeName} "${work.title}"에 대한 다양한 해석을 만나보세요. ${work.description}`,
     alternates: {
       canonical,
     },
     openGraph: {
-      title: `${work.title} - ${typeName} 해석`,
+      title,
       description: `${work.author}의 ${typeName} "${work.title}"에 대한 다양한 해석을 만나보세요.`,
       url: canonical,
       images: work.coverImage ? [work.coverImage] : undefined,
@@ -88,12 +91,17 @@ export default async function WorkDetailPage({
     fetchWorkWrites(workId),
   ]);
 
+  // 작품 페이지는 글 본문을 펼치지 않고 작품 소개와 해석글 요약을 보여준다.
+  // 본문까지 그리면 첫 글 페이지와 내용이 통째로 겹친다(PostDetailPage 참고).
   // 다른 작품으로 옮겨 가면 이전 작품의 글이 남지 않도록 작품마다 새로 만든다.
   return (
-    <PostDetailPage
-      key={workId}
-      workId={workId}
-      initialData={work && writes ? { work, writes } : undefined}
-    />
+    <>
+      {work && writes && <JsonLd data={workJsonLd(type, work, writes)} />}
+      <PostDetailPage
+        key={workId}
+        workId={workId}
+        initialData={work && writes ? { work, writes } : undefined}
+      />
+    </>
   );
 }

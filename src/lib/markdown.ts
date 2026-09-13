@@ -143,6 +143,17 @@ renderer.list = (token: Tokens.List) => {
     : `<ul class="list-disc list-inside pl-5">${childrenHtml}</ul>`;
 };
 
+// 본문 제목은 한 단계씩 내려서 그린다(# → h2, ## → h3 …, h6 에서 멈춘다).
+//
+// 글 페이지의 대표 제목(h1)은 글 제목 하나여야 한다. 글쓴이가 # 으로 쓴 소제목까지
+// h1 이 되면 한 페이지에 h1 이 여러 개 생긴다(2026-09 기준 글 43개 중 11개).
+// 모양은 글쓴이가 고른 단계 그대로 보이도록 md-h{단계} 클래스를 달고, globals.css 에서
+// 원래 크기로 되돌린다.
+renderer.heading = function ({ tokens, depth }) {
+  const level = Math.min(depth + 1, 6);
+  return `<h${level} class="md-h${depth}">${this.parser.parseInline(tokens)}</h${level}>\n`;
+};
+
 // 원시 HTML 은 실행하지 않고 글자 그대로 보여준다 (유튜브 임베드만 예외).
 renderer.html = ({ text }) => sanitizeRawHtml(text);
 
