@@ -29,7 +29,11 @@ export async function generateMetadata({
   searchParams,
 }: WorkDetailPageProps): Promise<Metadata> {
   const { type, workId } = await params;
-  const work = await GetWorkDetail(workId);
+  // 해석글 목록은 아래 페이지와 같은 요청이라 Next 가 합쳐 준다.
+  const [work, writes] = await Promise.all([
+    GetWorkDetail(workId),
+    fetchWorkWrites(workId),
+  ]);
   const typeName = categoryName(type);
 
   // 예전 주소로 들어왔으면 곧 새 주소로 보낸다. 정본도 새 주소를 가리켜야
@@ -51,6 +55,9 @@ export async function generateMetadata({
       url: canonical,
       images: work.coverImage ? [work.coverImage] : undefined,
     },
+    // 해석글이 하나도 없는 작품은 내용이 거의 없어서 색인하지 않는다. 글이 달리면 저절로 풀린다.
+    // 글 목록을 못 받았을 때(null)는 멀쩡한 작품을 내리지 않도록 그대로 둔다.
+    ...(writes?.length === 0 ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -65,6 +72,12 @@ export default async function WorkDetailPage({
   const writeId = legacyWriteId(await searchParams);
   if (writeId) {
     permanentRedirect(writePath(type, workId, writeId));
+  }
+
+  // 수필을 /post/essay/... 로 들어오면 정본 주소(/post/esay/...)로 넘긴다(writeLink 참고).
+  const canonical = workPath(type, workId);
+  if (canonical !== `/post/${type}/${workId}`) {
+    permanentRedirect(canonical);
   }
 
   // 첫 HTML 에 작품 정보와 해석글이 들어가도록 서버에서 먼저 받는다.

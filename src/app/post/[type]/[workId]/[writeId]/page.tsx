@@ -1,11 +1,12 @@
 import React from "react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import PostDetailPage from "@/components/PostDetailPage";
 import type { Write } from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
 import { fetchWorkWrites } from "@/lib/serverApi";
+import { markdownToPlainText, truncateText } from "@/lib/plainText";
 import { writePath, writeTitle } from "@/lib/writeLink";
 
 /**
@@ -46,17 +47,8 @@ async function getWrite(
 
 /** 본문 마크다운에서 설명문으로 쓸 만한 첫 문장들을 뽑는다. */
 function toDescription(content: string | undefined, fallback: string): string {
-  if (!content) return fallback;
-  const plain = content
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/[#>*_`~|-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!plain) return fallback;
-  return plain.length > 155 ? `${plain.slice(0, 155)}…` : plain;
+  const plain = markdownToPlainText(content);
+  return plain ? truncateText(plain, 155) : fallback;
 }
 
 export async function generateMetadata({
@@ -104,10 +96,16 @@ export async function generateMetadata({
 }
 
 export default async function WriteDetailPage({ params }: PageProps) {
-  const { workId, writeId } = await params;
+  const { type, workId, writeId } = await params;
 
   // 숫자가 아닌 조각은 글 주소가 아니다.
   if (!/^\d+$/.test(writeId)) notFound();
+
+  // 수필을 /post/essay/... 로 들어오면 정본 주소(/post/esay/...)로 넘긴다(writeLink 참고).
+  const canonicalPath = writePath(type, workId, writeId);
+  if (canonicalPath !== `/post/${type}/${workId}/${writeId}`) {
+    permanentRedirect(canonicalPath);
+  }
 
   // 이 작품에 그 글이 없으면 404 다. 그냥 두면 첫 글이 대신 보여서
   // 한 글이 여러 주소를 갖게 되고 검색엔진에 중복으로 잡힌다.

@@ -115,3 +115,21 @@ export async function fetchPopularWorks(
   );
   return data === null ? null : (data.works ?? []);
 }
+
+/** 백엔드가 summary=1 목록에 싣는 본문 앞부분 길이. ZutoPages/views.py 의 excerpt 와 같아야 한다. */
+export const WRITE_EXCERPT_LENGTH = 200;
+
+/**
+ * 사이트맵·RSS 가 쓰는 전체 글 목록(본문 대신 앞 200자 excerpt).
+ *
+ * 두 곳이 같은 주소·같은 캐시 설정으로 불러서 Next 캐시를 함께 쓴다. 하루에 한 번
+ * 새로 받으므로 새 글이 사이트맵·피드에 오르기까지 최대 하루 걸린다.
+ */
+export async function fetchWriteIndex(): Promise<AllWrite[] | null> {
+  const data = await getJson<AllWrite[] | { results?: AllWrite[] }>(
+    "/api/post/write/all/?summary=1",
+    60 * 60 * 24,
+  );
+  if (data === null) return null;
+  return Array.isArray(data) ? data : (data.results ?? []);
+}
