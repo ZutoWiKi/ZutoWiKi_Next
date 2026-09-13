@@ -1,15 +1,26 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GetAllWorks, AllWork } from "@/components/API/GetAllWorks";
+import { workPath } from "@/lib/writeLink";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
-export default function AllWorksSection() {
-  const [works, setWorks] = useState<AllWork[]>([]);
-  const [loading, setLoading] = useState(true);
+interface AllWorksSectionProps {
+  /**
+   * 서버가 미리 받아온 목록. 있으면 첫 화면을 바로 그려서 검색엔진이 작품 링크를
+   * 읽을 수 있고, 브라우저에서는 뒤에서 조용히 최신으로 맞춘다.
+   */
+  initialWorks?: AllWork[];
+}
+
+export default function AllWorksSection({
+  initialWorks,
+}: AllWorksSectionProps) {
+  const [works, setWorks] = useState<AllWork[]>(initialWorks ?? []);
+  const [loading, setLoading] = useState(!initialWorks);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasInitial = Boolean(initialWorks);
 
   useEffect(() => {
     (async () => {
@@ -17,6 +28,8 @@ export default function AllWorksSection() {
         const worksList = await GetAllWorks();
         setWorks(worksList);
       } catch (err) {
+        // 서버가 준 목록이 이미 보이고 있으면 그대로 둔다.
+        if (hasInitial) return;
         setError(
           err instanceof Error
             ? err.message
@@ -26,7 +39,7 @@ export default function AllWorksSection() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [hasInitial]);
 
   const scrollLeft = () => {
     if (scrollRef.current) {
@@ -90,9 +103,11 @@ export default function AllWorksSection() {
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {works.map((work) => (
-          <div
+          // 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다.
+          <Link
             key={work.id}
-            onClick={() => router.push(`/post/${work.type_index}/${work.id}`)}
+            href={workPath(work.type_index, work.id)}
+            prefetch={false}
             className="flex-shrink-0 w-36 sm:w-48 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-2 border border-gray-100"
           >
             {/* 표지 이미지 */}
@@ -116,7 +131,7 @@ export default function AllWorksSection() {
               </h3>
               <p className="text-xs text-gray-500">— {work.author}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 

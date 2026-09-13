@@ -1,15 +1,24 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { GetPopularWorksList, Work } from "./API/GetPopularWorksList";
 import { GetPopularByLikesList } from "@/components/API/GetPopularWorksByLikeList";
+import { workPath } from "@/lib/writeLink";
 
-export default function RecommendedWorks() {
-  const [works, setWorks] = useState<Work[]>([]);
-  const [likesWorks, setLikesWorks] = useState<Work[]>([]);
-  const [loading, setLoading] = useState(true);
+interface RecommendedWorksProps {
+  /**
+   * 서버가 미리 받아온 두 목록. 있으면 첫 화면을 바로 그려서 검색엔진이 작품
+   * 링크를 읽을 수 있고, 브라우저에서는 뒤에서 조용히 최신으로 맞춘다.
+   */
+  initial?: { byWrites: Work[]; byLikes: Work[] };
+}
+
+export default function RecommendedWorks({ initial }: RecommendedWorksProps) {
+  const [works, setWorks] = useState<Work[]>(initial?.byWrites ?? []);
+  const [likesWorks, setLikesWorks] = useState<Work[]>(initial?.byLikes ?? []);
+  const [loading, setLoading] = useState(!initial);
   const [error] = useState<string | null>(null);
-  const router = useRouter();
+  const hasInitial = Boolean(initial);
 
   // 타입 인덱스를 경로로 변환하는 함수
   const getTypePathFromIndex = (typeIndex: string | number) => {
@@ -46,13 +55,15 @@ export default function RecommendedWorks() {
         setLikesWorks(likesList || []);
       } catch (error) {
         console.error("인기 작품 목록 로딩 에러:", error);
+        // 서버가 준 목록이 이미 보이고 있으면 그대로 둔다.
+        if (hasInitial) return;
         setWorks([]);
         setLikesWorks([]);
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [hasInitial]);
 
   if (loading) return <div className="p-4">로딩 중…</div>;
   if (error) return <div className="p-4 text-red-500">{error}</div>;
@@ -80,80 +91,79 @@ export default function RecommendedWorks() {
         </h2>
         <ul className="space-y-3 sm:space-y-4">
           {likesWorks.map((w, index) => (
-            <li
-              key={w.id}
-              className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
-              onClick={() =>
-                router.push(
-                  `/post/${getTypePathFromIndex(w.type_index)}/${w.id}`,
-                )
-              }
-            >
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
-                {index + 1}
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {w.coverImage ? (
-                <img
-                  src={w.coverImage}
-                  alt={w.title}
-                  className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
-                  width={48}
-                  height={64}
-                />
-              ) : (
-                <div className="w-12 h-16 bg-gray-200 rounded mr-3 flex-shrink-0 flex items-center justify-center">
-                  <span className="text-xs text-gray-500">No Image</span>
+            <li key={w.id}>
+              {/* 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다. */}
+              <Link
+                href={workPath(getTypePathFromIndex(w.type_index), w.id)}
+                prefetch={false}
+                className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
+              >
+                <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-red-400 to-pink-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
+                  {index + 1}
                 </div>
-              )}
-              <div className="flex-1">
-                <p
-                  className="font-medium line-clamp-2 text-gray-800"
-                  title={w.title} // 제목 전체를 hover로 표시
-                >
-                  {w.title}
-                </p>
-                <p
-                  className="text-sm text-gray-500 mb-1"
-                  title={`작가: ${w.author}`} // 작가명도 hover로 표시
-                >
-                  — {w.author}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span className="flex items-center gap-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    {w.write_count || 0}개
-                  </span>
-                  <span className="flex items-center gap-1 font-medium text-red-600">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                      />
-                    </svg>{" "}
-                    {w.total_likes || 0}
-                  </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {w.coverImage ? (
+                  <img
+                    src={w.coverImage}
+                    alt={w.title}
+                    className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                    width={48}
+                    height={64}
+                  />
+                ) : (
+                  <div className="w-12 h-16 bg-gray-200 rounded mr-3 flex-shrink-0 flex items-center justify-center">
+                    <span className="text-xs text-gray-500">No Image</span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p
+                    className="font-medium line-clamp-2 text-gray-800"
+                    title={w.title} // 제목 전체를 hover로 표시
+                  >
+                    {w.title}
+                  </p>
+                  <p
+                    className="text-sm text-gray-500 mb-1"
+                    title={`작가: ${w.author}`} // 작가명도 hover로 표시
+                  >
+                    — {w.author}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      {w.write_count || 0}개
+                    </span>
+                    <span className="flex items-center gap-1 font-medium text-red-600">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>{" "}
+                      {w.total_likes || 0}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </li>
           ))}
         </ul>
@@ -180,80 +190,79 @@ export default function RecommendedWorks() {
         </h2>
         <ul className="space-y-3 sm:space-y-4">
           {works.map((w, index) => (
-            <li
-              key={w.id}
-              className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
-              onClick={() =>
-                router.push(
-                  `/post/${getTypePathFromIndex(w.type_index)}/${w.id}`,
-                )
-              }
-            >
-              <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
-                {index + 1}
-              </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              {w.coverImage ? (
-                <img
-                  src={w.coverImage}
-                  alt={w.title}
-                  className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
-                  width={48}
-                  height={64}
-                />
-              ) : (
-                <div className="w-12 h-16 bg-gray-200 rounded mr-3 flex-shrink-0 flex items-center justify-center">
-                  <span className="text-xs text-gray-500">No Image</span>
+            <li key={w.id}>
+              {/* 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다. */}
+              <Link
+                href={workPath(getTypePathFromIndex(w.type_index), w.id)}
+                prefetch={false}
+                className="flex items-center cursor-pointer hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg transition"
+              >
+                <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 text-white font-bold rounded-full mr-3 flex-shrink-0">
+                  {index + 1}
                 </div>
-              )}
-              <div className="flex-1">
-                <p
-                  className="font-medium line-clamp-2 text-gray-800"
-                  title={w.title} // 제목 전체를 hover로 표시
-                >
-                  {w.title}
-                </p>
-                <p
-                  className="text-sm text-gray-500 mb-1"
-                  title={`작가: ${w.author}`} // 작가명도 hover로 표시
-                >
-                  — {w.author}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span className="flex items-center gap-1 font-medium text-blue-600">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>{" "}
-                    {w.write_count || 0}개
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                      />
-                    </svg>
-                    {w.total_likes || 0}
-                  </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {w.coverImage ? (
+                  <img
+                    src={w.coverImage}
+                    alt={w.title}
+                    className="w-12 h-16 object-cover rounded mr-3 flex-shrink-0"
+                    width={48}
+                    height={64}
+                  />
+                ) : (
+                  <div className="w-12 h-16 bg-gray-200 rounded mr-3 flex-shrink-0 flex items-center justify-center">
+                    <span className="text-xs text-gray-500">No Image</span>
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p
+                    className="font-medium line-clamp-2 text-gray-800"
+                    title={w.title} // 제목 전체를 hover로 표시
+                  >
+                    {w.title}
+                  </p>
+                  <p
+                    className="text-sm text-gray-500 mb-1"
+                    title={`작가: ${w.author}`} // 작가명도 hover로 표시
+                  >
+                    — {w.author}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                    <span className="flex items-center gap-1 font-medium text-blue-600">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>{" "}
+                      {w.write_count || 0}개
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      {w.total_likes || 0}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </li>
           ))}
         </ul>

@@ -2,10 +2,11 @@ import React from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PostDetailPage from "@/components/PostDetailPage";
+import type { Write } from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
+import { fetchWorkWrites } from "@/lib/serverApi";
 import { writePath, writeTitle } from "@/lib/writeLink";
-import { API_URL } from "@/config/site";
 
 /**
  * 해석글 한 편의 고유 주소.
@@ -19,21 +20,17 @@ interface PageProps {
   params: Promise<{ type: string; workId: string; writeId: string }>;
 }
 
-interface WriteRow {
-  id: number;
-  title: string;
-  content?: string;
-  user_name?: string;
-}
-
 /**
  * 작품에 달린 글 중 하나를 서버에서 읽는다. 글 하나만 주는 엔드포인트는 아직 없다.
  *
  * "없는 글"과 "서버에 못 물어봄"을 구분한다. 백엔드가 잠깐 죽었을 때 멀쩡한
  * 글을 404 로 만들면 검색엔진이 색인에서 내려버린다.
+ *
+ * 받은 목록은 본문·조회수까지 첫 화면에 그대로 그리므로 캐시하지 않는다.
+ * 캐시된 목록에는 방금 쓴 글이 없어서 멀쩡한 새 글이 404 가 될 수 있다.
  */
 type WriteLookup =
-  | { status: "found"; write: WriteRow }
+  | { status: "found"; write: Write; writes: Write[] }
   | { status: "missing" }
   | { status: "unavailable" };
 
@@ -41,17 +38,10 @@ async function getWrite(
   workId: string,
   writeId: string,
 ): Promise<WriteLookup> {
-  try {
-    const res = await fetch(`${API_URL}/api/post/write/?work_id=${workId}`, {
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return { status: "unavailable" };
-    const rows: WriteRow[] = await res.json();
-    const write = rows.find((w) => String(w.id) === writeId);
-    return write ? { status: "found", write } : { status: "missing" };
-  } catch {
-    return { status: "unavailable" };
-  }
+  const writes = await fetchWorkWrites(workId);
+  if (writes === null) return { status: "unavailable" };
+  const write = writes.find((w) => String(w.id) === writeId);
+  return write ? { status: "found", write, writes } : { status: "missing" };
 }
 
 /** 본문 마크다운에서 설명문으로 쓸 만한 첫 문장들을 뽑는다. */
@@ -121,9 +111,27 @@ export default async function WriteDetailPage({ params }: PageProps) {
 
   // 이 작품에 그 글이 없으면 404 다. 그냥 두면 첫 글이 대신 보여서
   // 한 글이 여러 주소를 갖게 되고 검색엔진에 중복으로 잡힌다.
-  // 위 generateMetadata 와 같은 요청이라 Next 가 합쳐 준다.
-  const lookup = await getWrite(workId, writeId);
+  // 위 generateMetadata 와 같은 요청들이라 Next 가 합쳐 준다.
+  const [lookup, work] = await Promise.all([
+    getWrite(workId, writeId),
+    GetWorkDetail(workId).catch(() => null),
+  ]);
   if (lookup.status === "missing") notFound();
 
-  return <PostDetailPage workId={workId} initialWriteId={writeId} />;
+  // 첫 HTML 에 본문이 들어가도록 서버가 받은 값을 넘긴다.
+  // 서버가 못 받았으면 예전처럼 브라우저에서 받는다.
+  const initialData =
+    lookup.status === "found" && work
+      ? { work, writes: lookup.writes }
+      : undefined;
+
+  // 다른 작품의 글로 옮겨 가면 이전 작품의 글이 남지 않도록 작품마다 새로 만든다.
+  return (
+    <PostDetailPage
+      key={workId}
+      workId={workId}
+      initialWriteId={writeId}
+      initialData={initialData}
+    />
+  );
 }

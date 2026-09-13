@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   useRouter,
   useSearchParams,
@@ -17,6 +18,7 @@ import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
 import { renderMarkdown } from "@/lib/markdown";
+import { formatDate } from "@/lib/formatDate";
 import { workPath, writePath, writeTitle } from "@/lib/writeLink";
 import { SITE_NAME } from "@/config/site";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
@@ -39,9 +41,15 @@ interface PostDetailPageProps {
   workId: string;
   /** 글 고유 주소(/post/{type}/{workId}/{writeId})로 들어왔을 때의 글 번호 */
   initialWriteId?: string;
+  /**
+   * 서버가 미리 받아온 작품과 해석글. 있으면 첫 HTML 에 본문이 들어가서 검색엔진이
+   * 읽을 수 있다. 예전에는 전부 브라우저에서 받아서 첫 HTML 이 "Loading..." 뿐이었다.
+   * 로그인한 사람의 좋아요 여부는 들어 있지 않으므로 브라우저에서 토큰과 함께 다시 받는다.
+   */
+  initialData?: { work: Work; writes: Write[] };
 }
 
-interface Write {
+export interface Write {
   id: number;
   title: string;
   user_name: string;
@@ -56,7 +64,7 @@ interface Write {
   is_liked?: boolean; // 사용자의 좋아요 상태
 }
 
-interface Work {
+export interface Work {
   id: number;
   title: string;
   author: string;
@@ -75,6 +83,15 @@ const categoryPlaceholder = {
   essay: "글쓴이",
   webtoon: "작가",
 };
+
+/** 주소가 가리키는 글을 고르고, 없으면 첫 글을 펼친다. */
+function pickWrite(list: Write[], writeId?: string | null): Write | null {
+  if (writeId) {
+    const found = list.find((write) => write.id.toString() === writeId);
+    if (found) return found;
+  }
+  return list[0] ?? null;
+}
 
 // 아래 모달들은 반드시 모듈 최상위에 둔다.
 //
@@ -266,16 +283,21 @@ const DeleteConfirmModal = React.memo(function DeleteConfirmModal({
 export default function PostDetailPage({
   workId,
   initialWriteId,
+  initialData,
 }: PostDetailPageProps) {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const [writes, setWrites] = useState<Write[]>([]);
-  const [selectedWrite, setSelectedWrite] = useState<Write | null>(null);
-  const [workInfo, setWorkInfo] = useState<Work | null>(null);
+  const [writes, setWrites] = useState<Write[]>(initialData?.writes ?? []);
+  const [selectedWrite, setSelectedWrite] = useState<Write | null>(() =>
+    initialData ? pickWrite(initialData.writes, initialWriteId) : null,
+  );
+  const [workInfo, setWorkInfo] = useState<Work | null>(
+    initialData?.work ?? null,
+  );
   const [sortBy, setSortBy] = useState<"time" | "views" | "likes">("time");
   const [mounted, setMounted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginRequired, setShowLoginRequired] = useState(false);
@@ -336,41 +358,62 @@ export default function PostDetailPage({
 
 
   // 데이터 로딩 함수 - 토큰과 함께 요청
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  //
+  // silent: 서버가 그린 화면이 이미 있을 때 쓴다. 로딩 화면으로 바꾸지 않고 뒤에서
+  // 값만 갈아끼우며, 실패해도 보이던 화면을 그대로 둔다.
+  const loadData = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      try {
+        if (!silent) {
+          setLoading(true);
+          setError(null);
+        }
 
-      // 토큰 확인
-      const token = localStorage.getItem("token");
+        // 토큰 확인
+        const token = localStorage.getItem("token");
 
-      const [workData, writesData] = await Promise.all([
-        GetWorkDetail(workId),
-        GetWritesList(workId, token), // 토큰을 전달하여 is_liked 정보 포함
-      ]);
+        const [workData, writesData] = await Promise.all([
+          GetWorkDetail(workId),
+          GetWritesList(workId, token), // 토큰을 전달하여 is_liked 정보 포함
+        ]);
 
-      setWorkInfo(workData);
-      setWrites(writesData);
+        setWorkInfo(workData);
+        setWrites(writesData);
 
-      if (writesData.length > 0) {
-        setSelectedWrite(writesData[0]);
+        // 이미 펼쳐 둔 글이 있으면 같은 글의 새 값으로 바꾼다. 새로 받았다고
+        // 첫 글로 되돌리면 주소가 가리키는 글과 화면이 어긋난다.
+        setSelectedWrite((prev) =>
+          prev
+            ? (writesData.find((write: Write) => write.id === prev.id) ??
+              pickWrite(writesData))
+            : pickWrite(writesData),
+        );
+      } catch (err) {
+        console.error("데이터 로딩 에러:", err);
+        if (silent) return;
+        setError(
+          err instanceof Error
+            ? err.message
+            : "데이터를 불러오는데 실패했습니다.",
+        );
+      } finally {
+        if (!silent) setLoading(false);
       }
-    } catch (err) {
-      console.error("데이터 로딩 에러:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "데이터를 불러오는데 실패했습니다.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [workId]);
+    },
+    [workId],
+  );
+
+  const hasInitialData = Boolean(initialData);
 
   useEffect(() => {
     setMounted(true);
-    loadData();
-  }, [loadData]);
+    if (!hasInitialData) {
+      loadData();
+      return;
+    }
+    // 서버가 준 값에는 로그인한 사람의 좋아요 여부가 없다. 로그인 상태일 때만 다시 받아 채운다.
+    if (getToken()) loadData({ silent: true });
+  }, [loadData, hasInitialData]);
 
   // 주소에 적힌 글을 펼치는 건 "그 주소로 들어왔을 때" 한 번뿐이어야 한다.
   //
@@ -378,7 +421,10 @@ export default function PostDetailPage({
   // initialWriteId 는 라우트에서 내려온 고정값이라 그대로 남는다. 그래서 이
   // 효과가 다시 돌 때마다(목록이 갱신되거나 Next 가 라우터 상태를 다시 맞출 때)
   // 처음 들어온 글로 되돌려 버렸다. 이미 적용한 번호를 기억해 두고 건너뛴다.
-  const appliedWriteIdRef = useRef<string | null>(null);
+  // 서버가 준 값으로 그 글을 이미 펼쳐 두었으면 적용한 것으로 친다.
+  const appliedWriteIdRef = useRef<string | null>(
+    initialData && initialWriteId ? initialWriteId : null,
+  );
 
   useEffect(() => {
     if (writes.length === 0) return;
@@ -772,14 +818,9 @@ export default function PostDetailPage({
     return currentUser && write.user_id === currentUser.id;
   };
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
-      </div>
-    );
-  }
-
+  // 예전에는 여기서 mounted 전이면 "Loading..." 만 그렸다. 그래서 서버가 보내는
+  // 첫 HTML 에 본문이 없었다. 서버가 데이터를 넘겨주면 처음부터 본문을 그린다.
+  // (모달은 document 가 있어야 띄울 수 있어서 여전히 mounted 를 본다.)
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
@@ -821,6 +862,10 @@ export default function PostDetailPage({
     ? sortedWrites.findIndex((w) => w.id === selectedWrite.id)
     : -1;
 
+  // 글 고유 주소에서는 글 제목이 페이지의 대표 제목(h1)이고, 작품 페이지에서는
+  // 작품 제목이 h1 이다. 모양은 그대로다 — Tailwind 가 제목 태그의 기본 스타일을 지운다.
+  const WriteTitleTag = initialWriteId ? "h1" : "h2";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* 헤더 */}
@@ -856,9 +901,16 @@ export default function PostDetailPage({
                   />
                 )}
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {workInfo.title}
-                  </h1>
+                  {initialWriteId ? (
+                    // 글 페이지에서는 작품 제목을 작품 페이지로 가는 링크로 둔다.
+                    <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      <Link href={basePath}>{workInfo.title}</Link>
+                    </p>
+                  ) : (
+                    <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                      {workInfo.title}
+                    </h1>
+                  )}
                   <p className="text-sm sm:text-base text-gray-600">
                     {categoryPlaceholder[
                       type as keyof typeof categoryPlaceholder
@@ -901,9 +953,9 @@ export default function PostDetailPage({
               <div className="h-full flex flex-col">
                 <div className="mb-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-800 leading-relaxed flex-1">
+                    <WriteTitleTag className="text-xl sm:text-2xl font-bold text-gray-800 leading-relaxed flex-1">
                       {selectedWrite.title}
-                    </h3>
+                    </WriteTitleTag>
                     {canEditOrDelete(selectedWrite) && (
                       <div className="flex gap-2 ml-4">
                         <button
@@ -926,7 +978,7 @@ export default function PostDetailPage({
                   <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
                     <span>{selectedWrite.user_name}</span>
                     <span>
-                      {new Date(selectedWrite.created_at).toLocaleDateString()}
+                      {formatDate(selectedWrite.created_at)}
                     </span>
                   </div>
                   <div className="flex items-center gap-6 text-sm text-gray-500">
@@ -1101,6 +1153,9 @@ export default function PostDetailPage({
                   itemClassName="hover:bg-blue-50 transition-all duration-300"
                   displayScrollbar={false}
                   initialSelectedIndex={selectedIndex}
+                  itemHrefs={sortedWrites.map((write) =>
+                    writePath(type, workId, write.id),
+                  )}
                 />
               ) : (
                 <div className="h-full flex items-center justify-center">

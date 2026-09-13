@@ -55,6 +55,25 @@ interface AnimatedListProps {
   displayScrollbar?: boolean;
   initialSelectedIndex?: number;
   height?: string;
+  /**
+   * 항목마다 달 실제 주소(선택). 주면 항목 글자를 링크로 감싸서 검색엔진이 따라갈 수
+   * 있게 한다. 그냥 클릭하면 페이지를 옮기지 않고 지금처럼 onItemSelect 로 처리한다.
+   */
+  itemHrefs?: string[];
+}
+
+/**
+ * 목록 항목 안의 링크를 눌렀을 때.
+ *
+ * 그냥 클릭은 페이지 이동을 막고 항목 선택(바깥의 onClick)으로 넘긴다.
+ * Ctrl/⌘/Shift 클릭은 브라우저 기본 동작(새 탭·새 창)을 살리고 선택은 하지 않는다.
+ */
+function keepClickInList(e: React.MouseEvent<HTMLAnchorElement>) {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+    e.stopPropagation();
+    return;
+  }
+  e.preventDefault();
 }
 
 // 외부에서 스크롤 제어를 위한 ref 타입 정의
@@ -91,6 +110,7 @@ const AnimatedList = forwardRef<AnimatedListRef, AnimatedListProps>(
       displayScrollbar = true,
       initialSelectedIndex = -1,
       height,
+      itemHrefs,
     },
     ref,
   ) => {
@@ -244,7 +264,13 @@ const AnimatedList = forwardRef<AnimatedListRef, AnimatedListProps>(
                 } ${itemClassName}`}
               >
                 <p className="text-gray-800 m-0 leading-relaxed text-sm font-medium">
-                  {item}
+                  {itemHrefs?.[index] ? (
+                    <a href={itemHrefs[index]} onClick={keepClickInList}>
+                      {item}
+                    </a>
+                  ) : (
+                    item
+                  )}
                 </p>
               </div>
             </AnimatedItem>

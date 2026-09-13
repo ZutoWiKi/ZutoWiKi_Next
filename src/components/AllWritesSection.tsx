@@ -1,109 +1,114 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
+import Link from "next/link";
 import { writePath } from "@/lib/writeLink";
-import { useRouter } from "next/navigation";
+import { formatDate } from "@/lib/formatDate";
+import { HOME_WRITES_PAGE_SIZE } from "@/config/lists";
 import {
   GetWritesPage,
   AllWrite,
+  WritePage,
   WriteSort,
 } from "@/components/API/GetAllWrites";
 import { motion, useInView } from "framer-motion";
 
 interface AnimatedWriteProps {
   write: AllWrite;
-  onClick: () => void;
+  href: string;
 }
 
-const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, onClick }) => {
+const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, href }) => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { amount: 0.5, once: false });
 
+  // 진짜 링크로 감싼다. 클릭 핸들러로만 이동하면 검색엔진이 글로 가는 길을 못 찾는다.
   return (
-    <motion.div
-      ref={ref}
-      initial={{ scale: 0.7, opacity: 0 }}
-      animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
-      transition={{ duration: 0.05, ease: "circIn" }}
-      onClick={onClick}
-      className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100 mx-1"
-    >
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
-        <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
-          {write.title}
-        </h3>
-        <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
-          <span className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
-            {write.views}
-          </span>
-          <span className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-            {write.likes}
-          </span>
-          <span className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-            {write.comments}
-          </span>
+    <Link href={href} prefetch={false} className="block">
+      <motion.div
+        ref={ref}
+        initial={{ scale: 0.7, opacity: 0 }}
+        animate={inView ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
+        transition={{ duration: 0.05, ease: "circIn" }}
+        className="bg-white rounded-xl p-3 sm:p-4 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 border border-gray-100 mx-1"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+          <h3 className="font-bold text-gray-800 text-lg sm:text-xl line-clamp-2 leading-tight flex-1">
+            {write.title}
+          </h3>
+          <div className="flex items-center gap-3 sm:gap-4 text-sm text-gray-500 sm:ml-4 sm:mt-1">
+            <span className="flex items-center gap-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+              {write.views}
+            </span>
+            <span className="flex items-center gap-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              {write.likes}
+            </span>
+            <span className="flex items-center gap-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              {write.comments}
+            </span>
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-          <p className="text-xs sm:text-sm text-blue-600 font-medium">
-            ← {write.work_title}
-          </p>
-          <p className="text-xs sm:text-sm text-gray-500">
-            by {write.work_author}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+            <p className="text-xs sm:text-sm text-blue-600 font-medium">
+              ← {write.work_title}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-500">
+              by {write.work_author}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+            <span className="text-gray-700 font-medium">{write.user_name}</span>
+            <span>•</span>
+            <span>{formatDate(write.created_at)}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
-          <span className="text-gray-700 font-medium">{write.user_name}</span>
-          <span>•</span>
-          <span>{new Date(write.created_at).toLocaleDateString()}</span>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </Link>
   );
 };
 
@@ -144,17 +149,28 @@ const SORT_PARAM: Record<SortKey, WriteSort> = {
   comments: "comments",
 };
 
-export default function AllWritesSection() {
-  const [writes, setWrites] = useState<AllWrite[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+interface AllWritesSectionProps {
+  /**
+   * 서버가 미리 받아온 첫 페이지(최신순). 있으면 첫 화면을 바로 그려서 검색엔진이
+   * 글 목록과 링크를 읽을 수 있고, 브라우저에서는 뒤에서 조용히 최신으로 맞춘다.
+   */
+  initialPage?: WritePage;
+}
+
+export default function AllWritesSection({
+  initialPage,
+}: AllWritesSectionProps) {
+  const [writes, setWrites] = useState<AllWrite[]>(initialPage?.results ?? []);
+  const [totalPages, setTotalPages] = useState(
+    Math.max(1, initialPage?.num_pages ?? 1),
+  );
+  const [loading, setLoading] = useState(!initialPage);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("time");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnimating, setIsAnimating] = useState(false);
-  const itemsPerPage = 15;
-  const router = useRouter();
+  const itemsPerPage = HOME_WRITES_PAGE_SIZE;
 
   // 컨테이너 높이 추적을 위한 ref
   const contentRef = useRef<HTMLDivElement>(null);
@@ -162,16 +178,22 @@ export default function AllWritesSection() {
 
   // 정렬·페이지가 바뀔 때마다 그 페이지만 받아온다. 예전에는 전체를 한 번에
   // 받아 브라우저에서 정렬하고 잘라 썼다.
+  // 서버가 첫 페이지를 이미 그려 줬으면, 처음 한 번은 목록을 흐리게 만들지 않고
+  // 뒤에서 값만 갈아끼운다. 실패해도 보이던 목록을 그대로 둔다.
+  const quietFirstLoad = useRef(Boolean(initialPage));
+
   useEffect(() => {
     let canceled = false;
+    const quiet = quietFirstLoad.current;
+    quietFirstLoad.current = false;
 
     (async () => {
-      setRefreshing(true);
+      if (!quiet) setRefreshing(true);
       try {
         const token = localStorage.getItem("token");
         const page = await GetWritesPage({
           page: currentPage,
-          pageSize: itemsPerPage,
+          pageSize: HOME_WRITES_PAGE_SIZE,
           sort: SORT_PARAM[sortBy],
           token,
         });
@@ -180,7 +202,7 @@ export default function AllWritesSection() {
         setTotalPages(Math.max(1, page.num_pages));
         setError(null);
       } catch (err) {
-        if (canceled) return;
+        if (canceled || quiet) return;
         setError(
           err instanceof Error
             ? err.message
@@ -218,9 +240,7 @@ export default function AllWritesSection() {
       <AnimatedWrite
         key={write.id}
         write={write}
-        onClick={() =>
-          router.push(writePath(write.type_index, write.work_id, write.id))
-        }
+        href={writePath(write.type_index, write.work_id, write.id)}
       />
     ));
 

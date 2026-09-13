@@ -17,6 +17,15 @@ export const CATEGORY_NAMES: Record<string, string> = {
   webtoon: "만화 / 웹툰",
 };
 
+/**
+ * 주소의 type 조각이 실제 갈래인지.
+ *
+ * `type in CATEGORY_NAMES` 는 "toString" 같은 객체 기본 속성까지 참으로 봐서 쓰지 않는다.
+ */
+export function isCategory(type: string): boolean {
+  return Object.prototype.hasOwnProperty.call(CATEGORY_NAMES, type);
+}
+
 export function categoryName(type: string): string {
   return CATEGORY_NAMES[type] ?? "작품";
 }

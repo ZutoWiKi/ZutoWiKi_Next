@@ -1,10 +1,12 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GetWorksList } from "@/components/API/GetWorksList";
 import { PostWork } from "@/components/API/PostWork";
 import { getToken } from "@/components/API/session";
 import { CATEGORY_NAMES } from "@/config/categories";
+import { workPath } from "@/lib/writeLink";
 
 // 타입 인덱스 매핑
 const typeIndexMap = {
@@ -19,7 +21,7 @@ const typeIndexMap = {
   webtoon: 8,
 };
 
-interface Work {
+export interface Work {
   id: number;
   title: string;
   author: string;
@@ -29,15 +31,22 @@ interface Work {
 
 interface WorkListPageProps {
   type: string;
+  /**
+   * 서버가 미리 받아온 작품 목록. 있으면 첫 HTML 에 목록과 작품 링크가 들어가서
+   * 검색엔진이 읽을 수 있다. 서버도 캐시 없이 방금 받은 값이라 브라우저에서 다시 받지 않는다.
+   */
+  initialWorks?: Work[];
 }
 
-export default function WorkListPage({ type }: WorkListPageProps) {
+export default function WorkListPage({
+  type,
+  initialWorks,
+}: WorkListPageProps) {
   const router = useRouter();
-  const [works, setWorks] = useState<Work[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [works, setWorks] = useState<Work[]>(initialWorks ?? []);
+  const [loading, setLoading] = useState(!initialWorks);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newWork, setNewWork] = useState({
     title: "",
@@ -65,14 +74,20 @@ export default function WorkListPage({ type }: WorkListPageProps) {
     }
   };
 
+  // 서버가 목록을 이미 줬으면 처음에는 다시 받지 않는다. 갈래가 바뀌면 페이지가
+  // 컴포넌트를 새로 만들므로(key={type}) 이 판단은 처음 한 번만 필요하다.
+  //
+  // 예전에는 여기서 mounted 전이면 "Loading..." 만 그렸다. 그래서 서버가 보내는
+  // 첫 HTML 에 목록이 없었다.
+  const skipFirstFetch = useRef(Boolean(initialWorks));
+
   useEffect(() => {
-    setMounted(true);
+    if (skipFirstFetch.current) {
+      skipFirstFetch.current = false;
+      return;
+    }
     fetchWorks();
   }, [type]); // Remove fetchWorks from dependency array to avoid warning
-
-  if (!mounted) {
-    return <div>Loading...</div>;
-  }
 
   if (loading) {
     return (
@@ -121,10 +136,6 @@ export default function WorkListPage({ type }: WorkListPageProps) {
 
   // 갈래 이름은 메타데이터와 같은 표를 쓴다. 표에 없는 갈래는 주소 조각을 그대로 보여준다.
   const categoryName = CATEGORY_NAMES[type] ?? type;
-
-  const handleWorkClick = (workId: number) => {
-    router.push(`/post/${type}/${workId}`);
-  };
 
   const handleAddWork = async () => {
     if (!newWork.title || !newWork.author) {
@@ -266,10 +277,12 @@ export default function WorkListPage({ type }: WorkListPageProps) {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-8">
             {works.map((work) => (
-              <div
+              // 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다.
+              <Link
                 key={work.id}
-                onClick={() => handleWorkClick(work.id)}
-                className="group cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/30 hover:border-white/50 transform hover:-translate-y-2"
+                href={workPath(type, work.id)}
+                prefetch={false}
+                className="group block cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/30 hover:border-white/50 transform hover:-translate-y-2"
               >
                 <div className="aspect-[2/3] sm:aspect-[3/4] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -315,7 +328,7 @@ export default function WorkListPage({ type }: WorkListPageProps) {
                     </svg>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}

@@ -7,9 +7,10 @@ export default function PurposeSection() {
     <section className="bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-gray-100">
       {/* 제목 섹션 */}
       <div className="text-left md:text-center mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+        {/* 홈의 대표 제목(h1). 모양은 예전 h2 와 같다 — Tailwind 가 제목 태그의 기본 스타일을 지운다. */}
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
           💡 원래 문학은 재밌다!
-        </h2>
+        </h1>
         <h3 className="text-lg sm:text-xl font-semibold text-gray-700">
           🔨 오늘부터라면 왜 안 되겠는가? - [모든 문학 경계의 파괴]!
         </h3>

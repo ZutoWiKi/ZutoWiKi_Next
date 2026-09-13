@@ -3,6 +3,7 @@ import { permanentRedirect } from "next/navigation";
 import PostDetailPage from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
+import { fetchWorkWrites } from "@/lib/serverApi";
 import { workPath, writePath } from "@/lib/writeLink";
 import { Metadata } from "next";
 
@@ -66,5 +67,20 @@ export default async function WorkDetailPage({
     permanentRedirect(writePath(type, workId, writeId));
   }
 
-  return <PostDetailPage workId={workId} />;
+  // 첫 HTML 에 작품 정보와 해석글이 들어가도록 서버에서 먼저 받는다.
+  // 작품 정보는 위 generateMetadata 와 같은 요청이라 Next 가 합쳐 준다.
+  // 하나라도 못 받으면 예전처럼 브라우저에서 받는다.
+  const [work, writes] = await Promise.all([
+    GetWorkDetail(workId).catch(() => null),
+    fetchWorkWrites(workId),
+  ]);
+
+  // 다른 작품으로 옮겨 가면 이전 작품의 글이 남지 않도록 작품마다 새로 만든다.
+  return (
+    <PostDetailPage
+      key={workId}
+      workId={workId}
+      initialData={work && writes ? { work, writes } : undefined}
+    />
+  );
 }
