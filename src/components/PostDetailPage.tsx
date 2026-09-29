@@ -21,6 +21,7 @@ import { renderMarkdown } from "@/lib/markdown";
 import { formatDate } from "@/lib/formatDate";
 import { markdownToPlainText, truncateText } from "@/lib/plainText";
 import { workPageTitle, workPath, writePath, writeTitle } from "@/lib/writeLink";
+import { isBotUserAgent } from "@/lib/bot";
 import { SITE_NAME } from "@/config/site";
 import { categoryName } from "@/config/categories";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
@@ -612,7 +613,52 @@ export default function PostDetailPage({
     }
   });
 
-  // PostDetailPage의 handleWriteSelect 함수 수정된 버전
+  // 조회수를 한 번 올린다. 같은 브라우저에서 같은 글은 한 시간에 한 번만 센다
+  // (ViewLimitManager). 검색엔진 로봇과 자동화 브라우저는 세지 않는다.
+  const countView = useCallback(async (writeId: number) => {
+    if (navigator.webdriver || isBotUserAgent(navigator.userAgent)) return;
+
+    const canView = ViewLimitManager.canView(writeId);
+    console.log("조회 가능 여부:", canView);
+
+    if (canView) {
+      try {
+        console.log("조회수 증가 시도 중...");
+        const updatedWrite = await UpdateWriteViews(writeId);
+        console.log("조회수 증가 응답:", updatedWrite);
+
+        if (updatedWrite && updatedWrite.views !== undefined) {
+          // 조회수 증가 성공
+          ViewLimitManager.recordView(writeId);
+
+          // 상태 업데이트
+          setWrites((prev) =>
+            prev.map((write) =>
+              write.id === writeId
+                ? { ...write, views: updatedWrite.views }
+                : write,
+            ),
+          );
+
+          // 응답을 기다리는 사이 다른 글을 골랐으면 그 글의 숫자를 덮어쓰지 않는다.
+          setSelectedWrite((prev) =>
+            prev?.id === writeId ? { ...prev, views: updatedWrite.views } : prev,
+          );
+          console.log("조회수 증가 완료. 새 조회수:", updatedWrite.views);
+        } else {
+          console.log("조회수 증가 실패: 서버 응답이 올바르지 않음");
+        }
+      } catch (error) {
+        console.error("조회수 업데이트 실패:", error);
+      }
+    } else {
+      const timeLeft = ViewLimitManager.getTimeUntilNextView(writeId);
+      const timeLeftFormatted = ViewLimitManager.formatTimeLeft(timeLeft);
+      console.log(
+        `이미 조회한 글입니다. ${timeLeftFormatted} 후 다시 조회할 수 있습니다.`,
+      );
+    }
+  }, []);
 
   const handleWriteSelect = useCallback(
     async (item: string, index: number) => {
@@ -628,53 +674,43 @@ export default function PostDetailPage({
 
       setSelectedWrite(selectedWrite);
 
-      // 조회수 증가 로직
       console.log("선택된 글:", selectedWrite.id, selectedWrite.title);
-
-      const canView = ViewLimitManager.canView(selectedWrite.id);
-      console.log("조회 가능 여부:", canView);
-
-      if (canView) {
-        try {
-          console.log("조회수 증가 시도 중...");
-          const updatedWrite = await UpdateWriteViews(selectedWrite.id);
-          console.log("조회수 증가 응답:", updatedWrite);
-
-          if (updatedWrite && updatedWrite.views !== undefined) {
-            // 조회수 증가 성공
-            ViewLimitManager.recordView(selectedWrite.id);
-
-            // 상태 업데이트
-            setWrites((prev) =>
-              prev.map((write) =>
-                write.id === selectedWrite.id
-                  ? { ...write, views: updatedWrite.views }
-                  : write,
-              ),
-            );
-
-            setSelectedWrite((prev) =>
-              prev ? { ...prev, views: updatedWrite.views } : null,
-            );
-            console.log("조회수 증가 완료. 새 조회수:", updatedWrite.views);
-          } else {
-            console.log("조회수 증가 실패: 서버 응답이 올바르지 않음");
-          }
-        } catch (error) {
-          console.error("조회수 업데이트 실패:", error);
-        }
-      } else {
-        const timeLeft = ViewLimitManager.getTimeUntilNextView(
-          selectedWrite.id,
-        );
-        const timeLeftFormatted = ViewLimitManager.formatTimeLeft(timeLeft);
-        console.log(
-          `이미 조회한 글입니다. ${timeLeftFormatted} 후 다시 조회할 수 있습니다.`,
-        );
-      }
+      await countView(selectedWrite.id);
     },
-    [sortedWrites, type, workId],
+    [sortedWrites, type, workId, countView],
   );
+
+  // 검색 결과나 공유 링크로 글 주소에 바로 들어온 방문도 센다.
+  //
+  // 예전에는 목록이나 카드에서 글을 눌렀을 때만 조회수가 올라서, 검색으로 들어온 방문은
+  // 하나도 잡히지 않았다. 주소가 가리키는 글이 펼쳐지면 그 글을 한 번 센다.
+  // 뒤에서 열린 탭이나 브라우저가 미리 그려 둔 페이지는 실제로 화면에 보일 때 센다.
+  const landingWriteId = initialWriteId ?? searchParams.get("writeId");
+  const countedLandingRef = useRef<string | null>(null);
+  const selectedWriteId = selectedWrite?.id;
+  useEffect(() => {
+    if (!landingWriteId || selectedWriteId === undefined) return;
+    if (selectedWriteId.toString() !== landingWriteId) return;
+    if (countedLandingRef.current === landingWriteId) return;
+
+    const writeId = selectedWriteId;
+    const countOnce = () => {
+      if (countedLandingRef.current === landingWriteId) return;
+      countedLandingRef.current = landingWriteId;
+      countView(writeId);
+    };
+
+    if (document.visibilityState === "visible") {
+      countOnce();
+      return;
+    }
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") countOnce();
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [landingWriteId, selectedWriteId, countView]);
 
   // 작품 소개에서 해석글 카드를 누르면 목록에서 고른 것과 똑같이 그 자리에서 펼친다.
   const detailPanelRef = useRef<HTMLDivElement>(null);
