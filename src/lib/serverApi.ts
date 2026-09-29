@@ -3,6 +3,7 @@ import type { AllWrite, WritePage } from "@/components/API/GetAllWrites";
 import type { Work as PopularWork } from "@/components/API/GetPopularWorksList";
 import type { Write } from "@/components/PostDetailPage";
 import type { Work as ListWork } from "@/components/WorkListPage";
+import type { EventBannerData } from "@/lib/banner";
 import { API_URL } from "@/config/site";
 
 /**
@@ -114,6 +115,19 @@ export async function fetchPopularWorks(
     HOME_REVALIDATE_SECONDS,
   );
   return data === null ? null : (data.works ?? []);
+}
+
+/**
+ * 지금 띄울 이벤트 배너(관리자 화면에서 등록한 것 중 기간이 맞는 것).
+ *
+ * 홈과 같은 주기로 새로 받으므로, 기간을 정해 두면 최대 1분 뒤부터 뜬다.
+ * 실패하면 null → 팝업을 아예 띄우지 않는다. 없어도 되는 것이라 화면을 막지 않는다.
+ */
+export function fetchEventBanners(): Promise<EventBannerData[] | null> {
+  return getJson<EventBannerData[]>(
+    "/api/post/banner/",
+    HOME_REVALIDATE_SECONDS,
+  );
 }
 
 /** 백엔드가 summary=1 목록에 싣는 본문 앞부분 길이. ZutoPages/views.py 의 excerpt 와 같아야 한다. */

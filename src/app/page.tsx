@@ -1,4 +1,5 @@
 import React from "react";
+import EventBanner from "@/components/EventBanner";
 import JsonLd from "@/components/JsonLd";
 import PageLayout from "@/components/PageLayout";
 import RecommendedWorks from "@/components/RecommendedWorks";
@@ -9,6 +10,7 @@ import { HOME_WRITES_PAGE_SIZE } from "@/config/lists";
 import { websiteJsonLd } from "@/lib/jsonLd";
 import {
   fetchAllWorks,
+  fetchEventBanners,
   fetchLatestWrites,
   fetchPopularWorks,
 } from "@/lib/serverApi";
@@ -16,12 +18,13 @@ import {
 export default async function HomePage() {
   // 첫 HTML 에 작품·글 목록과 링크가 들어가도록 서버에서 먼저 받는다.
   // 하나라도 실패하면 그 섹션만 예전처럼 브라우저에서 받는다.
-  const [works, latestWrites, popularByWrites, popularByLikes] =
+  const [works, latestWrites, popularByWrites, popularByLikes, banners] =
     await Promise.all([
       fetchAllWorks(),
       fetchLatestWrites(HOME_WRITES_PAGE_SIZE),
       fetchPopularWorks("writes"),
       fetchPopularWorks("likes"),
+      fetchEventBanners(),
     ]);
 
   // 인기 작품은 모바일·데스크톱용으로 두 번 그리므로 한 번 받아 같이 넘긴다.
@@ -34,6 +37,8 @@ export default async function HomePage() {
     <PageLayout>
       {/* 검색 결과에 사이트 이름(윤슬)을 알려주는 구조화 데이터 */}
       <JsonLd data={websiteJsonLd()} />
+      {/* 관리자 화면에서 등록한 이벤트 팝업. 닫은 사람에게는 뜨지 않는다. */}
+      <EventBanner banners={banners ?? []} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
           {/* 오른쪽 메인 콘텐츠 */}
