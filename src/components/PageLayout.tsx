@@ -1,8 +1,6 @@
 import React, { ReactNode } from "react";
-import Link from "next/link";
-import AuthButtons from "./Auth";
-import CategoryMenu from "./CategoryMenu";
 import SiteFooter from "./SiteFooter";
+import SiteHeader from "./SiteHeader";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -14,26 +12,8 @@ export default function PageLayout({ children }: PageLayoutProps) {
   return (
     <div>
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* 헤더 */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-3 sm:py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link
-              href="/"
-              className="flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
-            >
-              <img 
-                src="/yoonseul_logo.svg" 
-                alt="윤슬 로고" 
-                className="w-6 h-6 sm:w-8 sm:h-8"
-              />
-              Yoonseul
-            </Link>
-            <CategoryMenu />
-          </div>
-          <AuthButtons />
-        </div>
-      </header>
+      {/* 헤더. 갈래 목록·작품·글 페이지도 같은 머리줄을 쓴다. */}
+      <SiteHeader />
       {children}
     </div>
 

@@ -14,7 +14,6 @@ import { UpdateWriteLike } from "@/components/API/UpdateWriteLikes";
 import { UpdateWriteViews } from "@/components/API/UpdateWriteViews";
 import Counter from "./Counter";
 import { ViewLimitManager } from "@/components/ViewTracker";
-import AuthButtons from "@/components/Auth";
 import { AnimatedLikeButton } from "@/components/AnimatedLikeBtn";
 import { createPortal } from "react-dom";
 import { renderMarkdown } from "@/lib/markdown";
@@ -32,6 +31,7 @@ import type { RelatedWrite } from "@/lib/related";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import RelatedWrites from "@/components/RelatedWrites";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 import { SITE_NAME } from "@/config/site";
 import { categoryName } from "@/config/categories";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
@@ -953,6 +953,9 @@ export default function PostDetailPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* 홈과 같은 머리줄(로고 홈 버튼 · 글 쓰기 · 로그인) */}
+      <SiteHeader />
+
       {/* 헤더 */}
       <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto">
@@ -1029,7 +1032,6 @@ export default function PostDetailPage({
                 </div>
               </div>
             </div>
-            <AuthButtons />
           </div>
         </div>
       </div>

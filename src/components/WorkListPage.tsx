@@ -6,6 +6,7 @@ import { PostWork } from "@/components/API/PostWork";
 import { getToken } from "@/components/API/session";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import SiteFooter from "@/components/SiteFooter";
+import SiteHeader from "@/components/SiteHeader";
 import { CATEGORY_NAMES } from "@/config/categories";
 import { workPath } from "@/lib/writeLink";
 
@@ -209,6 +210,9 @@ export default function WorkListPage({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* 홈과 같은 머리줄(로고 홈 버튼 · 글 쓰기 · 로그인) */}
+      <SiteHeader />
+
       {/* 헤더 */}
       <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
