@@ -7,7 +7,8 @@ import type { Work, Write } from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
 import { writeJsonLd } from "@/lib/jsonLd";
-import { fetchWorkWrites } from "@/lib/serverApi";
+import { relatedForWork } from "@/lib/related";
+import { fetchWorkWrites, fetchWriteIndex } from "@/lib/serverApi";
 import { markdownToPlainText, truncateText } from "@/lib/plainText";
 import { writePath, writeTitle } from "@/lib/writeLink";
 
@@ -123,11 +124,20 @@ export default async function WriteDetailPage({ params }: PageProps) {
   // 이 작품에 그 글이 없으면 404 다. 그냥 두면 첫 글이 대신 보여서
   // 한 글이 여러 주소를 갖게 되고 검색엔진에 중복으로 잡힌다.
   // 위 generateMetadata 와 같은 요청들이라 Next 가 합쳐 준다.
-  const [lookup, work] = await Promise.all([
+  // 마지막 것은 "함께 읽을 만한 해석"을 고를 전체 글 목록이다. 사이트맵·RSS 와 같은
+  // 하루짜리 캐시를 같이 써서 글을 열 때마다 백엔드에 묻지 않는다.
+  const [lookup, work, writeIndex] = await Promise.all([
     getWrite(workId, writeId),
     GetWorkDetail(workId).catch(() => null),
+    fetchWriteIndex(),
   ]);
   if (lookup.status === "missing") notFound();
+
+  // 이 작품의 글마다 함께 읽을 다른 작품의 글. 목록으로 다른 글을 펼쳐도 맞는 목록이 보인다.
+  const relatedWrites =
+    lookup.status === "found" && writeIndex
+      ? relatedForWork(lookup.writes, Number(workId), type, writeIndex)
+      : undefined;
 
   // 첫 HTML 에 본문이 들어가도록 서버가 받은 값을 넘긴다.
   // 서버가 못 받았으면 예전처럼 브라우저에서 받는다.
@@ -156,6 +166,7 @@ export default async function WriteDetailPage({ params }: PageProps) {
         workId={workId}
         initialWriteId={writeId}
         initialData={initialData}
+        relatedWrites={relatedWrites}
       />
     </>
   );

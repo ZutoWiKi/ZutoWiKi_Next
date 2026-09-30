@@ -20,8 +20,18 @@ import { createPortal } from "react-dom";
 import { renderMarkdown } from "@/lib/markdown";
 import { formatDate } from "@/lib/formatDate";
 import { markdownToPlainText, truncateText } from "@/lib/plainText";
-import { workPageTitle, workPath, writePath, writeTitle } from "@/lib/writeLink";
+import {
+  categoryPath,
+  workPageTitle,
+  workPath,
+  writePath,
+  writeTitle,
+} from "@/lib/writeLink";
 import { isBotUserAgent } from "@/lib/bot";
+import type { RelatedWrite } from "@/lib/related";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import RelatedWrites from "@/components/RelatedWrites";
+import SiteFooter from "@/components/SiteFooter";
 import { SITE_NAME } from "@/config/site";
 import { categoryName } from "@/config/categories";
 import { GetCommentsList, Comment } from "@/components/API/GetCommentList";
@@ -51,6 +61,11 @@ interface PostDetailPageProps {
    * 로그인한 사람의 좋아요 여부는 들어 있지 않으므로 브라우저에서 토큰과 함께 다시 받는다.
    */
   initialData?: { work: Work; writes: Write[] };
+  /**
+   * 글 번호별 "함께 읽을 만한 해석"(src/lib/related.ts). 서버가 이 작품의 글마다 미리
+   * 골라 둔다. 없으면 그 칸을 그리지 않는다.
+   */
+  relatedWrites?: Record<number, RelatedWrite[]>;
 }
 
 export interface Write {
@@ -295,6 +310,7 @@ export default function PostDetailPage({
   workId,
   initialWriteId,
   initialData,
+  relatedWrites,
 }: PostDetailPageProps) {
   const router = useRouter();
   const params = useParams();
@@ -940,6 +956,17 @@ export default function PostDetailPage({
       {/* 헤더 */}
       <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto">
+          {/* 홈·갈래 목록으로 가는 길. 글 페이지에서는 작품까지 링크다. */}
+          <Breadcrumbs
+            className="mb-3"
+            items={[
+              { label: "홈", href: "/" },
+              { label: categoryName(type), href: categoryPath(type) },
+              initialWriteId
+                ? { label: workInfo.title, href: basePath }
+                : { label: workInfo.title },
+            ]}
+          />
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 sm:gap-0">
             <div className="flex items-center gap-4">
               <button
@@ -1176,6 +1203,8 @@ export default function PostDetailPage({
                     </button>
                   </div>
                 </div>
+
+                <RelatedWrites writes={relatedWrites?.[selectedWrite.id] ?? []} />
               </div>
             ) : (
               // 작품 소개와 해석글 요약. 작품 페이지의 첫 화면이다.
@@ -1385,6 +1414,8 @@ export default function PostDetailPage({
           </div>
         </div>
       </div>
+
+      <SiteFooter clearFloatingButtons />
 
       {/* 플로팅 네비게이션 */}
       <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 flex flex-col gap-2 sm:gap-3 z-40">

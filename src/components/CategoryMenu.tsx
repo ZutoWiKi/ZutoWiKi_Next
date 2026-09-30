@@ -1,26 +1,16 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { CATEGORY_LIST } from "@/config/categories";
+import { categoryPath } from "@/lib/writeLink";
 
 export default function CategoryMenu() {
-  const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [currentType, setCurrentType] = useState<string>("");
   const menuRef = useRef<HTMLDivElement>(null);
-
-  const categories = [
-    { name: "소설", desc: "Novel" },
-    { name: "시", desc: "Poem" },
-    { name: "음악", desc: "Music" },
-    { name: "게임", desc: "Game" },
-    { name: "영화 / 드라마", desc: "Movie" },
-    { name: "공연", desc: "Performance" },
-    { name: "애니메이션", desc: "Animation" },
-    { name: "수필", desc: "Essay" },
-    { name: "만화 / 웹툰", desc: "Webtoon" },
-  ];
 
   useEffect(() => {
     // pathname에서 type 추출 (예: /post/novel → novel)
@@ -49,11 +39,9 @@ export default function CategoryMenu() {
     };
   }, []);
 
-  const handleCategoryClick = (categoryDesc: string) => {
-    const typeSlug = categoryDesc.toLowerCase();
-    setCurrentType(typeSlug);
+  const handleCategoryClick = (type: string) => {
+    setCurrentType(type);
     setIsOpen(false);
-    router.push(`/post/${typeSlug}`);
   };
 
   return (
@@ -73,13 +61,16 @@ export default function CategoryMenu() {
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-48 sm:w-56 bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl border border-white/30 z-50 overflow-hidden">
           <div className="py-2">
-            {categories.map((category, index) => {
-              const isActive = currentType === category.desc.toLowerCase();
+            {CATEGORY_LIST.map((category) => {
+              const isActive = currentType === category.type;
 
+              // 진짜 링크로 둔다(새 탭으로 열기 가능). 누르면 메뉴만 닫고 이동은 링크가 한다.
               return (
-                <button
-                  key={index}
-                  onClick={() => handleCategoryClick(category.desc)}
+                <Link
+                  key={category.type}
+                  href={categoryPath(category.type)}
+                  prefetch={false}
+                  onClick={() => handleCategoryClick(category.type)}
                   className={`w-full text-left px-4 py-3 transition-all duration-200 flex items-center justify-between ${
                     isActive
                       ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700"
@@ -90,12 +81,12 @@ export default function CategoryMenu() {
                     {category.name}
                   </span>
                   <span className="text-xs text-gray-400 hidden sm:inline">
-                    {category.desc}
+                    {category.english}
                   </span>
                   {isActive && (
                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                   )}
-                </button>
+                </Link>
               );
             })}
           </div>

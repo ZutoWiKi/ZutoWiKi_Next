@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { CATEGORY_LIST } from "@/config/categories";
+import { categoryPath } from "@/lib/writeLink";
 
 interface FloatingMenuState {
   position: { x: number; y: number };
@@ -8,7 +11,6 @@ interface FloatingMenuState {
 }
 
 export default function FloatingMenu() {
-  const router = useRouter();
   const pathname = usePathname();
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 90 });
@@ -310,33 +312,13 @@ export default function FloatingMenu() {
     };
   }, []);
 
-  const categories = [
-    { name: "소설", desc: "Novel" },
-    { name: "시", desc: "Poem" },
-    { name: "음악", desc: "Music" },
-    { name: "게임", desc: "Game" },
-    { name: "영화 / 드라마", desc: "Movie" },
-    { name: "공연", desc: "Performance" },
-    { name: "애니메이션", desc: "Animation" },
-    { name: "수필", desc: "Essay" },
-    { name: "만화 / 웹툰", desc: "Webtoon" },
-  ];
-
-  const hasActiveItem = categories.some(
-    (category) => currentType === category.desc.toLowerCase(),
+  const hasActiveItem = CATEGORY_LIST.some(
+    (category) => currentType === category.type,
   );
 
   if (!mounted) {
     return null;
   }
-
-  const handleCategoryClick = (categoryDesc: string) => {
-    const typeSlug = categoryDesc.toLowerCase();
-    setCurrentType(typeSlug);
-
-    // 동적 라우팅 사용: /post/[type]
-    router.push(`/post/${typeSlug}`);
-  };
 
   return (
     <div
@@ -391,13 +373,16 @@ export default function FloatingMenu() {
       {!isCollapsed && (
         <div>
           <div className="py-2 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-            {categories.map((category, index) => {
-              const isActive = currentType === category.desc.toLowerCase();
+            {CATEGORY_LIST.map((category) => {
+              const isActive = currentType === category.type;
 
+              // 진짜 링크로 둔다. 새 탭으로 열 수 있고, 검색엔진도 갈래 목록을 따라간다.
               return (
-                <button
-                  key={index}
-                  onClick={() => handleCategoryClick(category.desc)}
+                <Link
+                  key={category.type}
+                  href={categoryPath(category.type)}
+                  prefetch={false}
+                  onClick={() => setCurrentType(category.type)}
                   className={`w-full text-left transition-all duration-300 border-b border-gray-100/50 last:border-b-0 font-medium group flex items-center justify-between relative overflow-hidden ${
                     isActive
                       ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 shadow-sm px-4 sm:px-7 py-2 sm:py-3"
@@ -424,13 +409,13 @@ export default function FloatingMenu() {
                           : "text-gray-400 group-hover:text-blue-500"
                       } hidden sm:inline`}
                     >
-                      {category.desc}
+                      {category.english}
                     </span>
                     {isActive && (
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></div>
                     )}
                   </div>
-                </button>
+                </Link>
               );
             })}
           </div>

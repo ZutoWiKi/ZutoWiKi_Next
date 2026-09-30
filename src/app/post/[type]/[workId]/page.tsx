@@ -5,7 +5,8 @@ import PostDetailPage from "@/components/PostDetailPage";
 import { GetWorkDetail } from "@/components/API/GetWorkDetail";
 import { categoryName } from "@/config/categories";
 import { workJsonLd } from "@/lib/jsonLd";
-import { fetchWorkWrites } from "@/lib/serverApi";
+import { relatedForWork } from "@/lib/related";
+import { fetchWorkWrites, fetchWriteIndex } from "@/lib/serverApi";
 import { workPageTitle, workPath, writePath } from "@/lib/writeLink";
 import { Metadata } from "next";
 
@@ -86,10 +87,17 @@ export default async function WorkDetailPage({
   // 첫 HTML 에 작품 정보와 해석글이 들어가도록 서버에서 먼저 받는다.
   // 작품 정보는 위 generateMetadata 와 같은 요청이라 Next 가 합쳐 준다.
   // 하나라도 못 받으면 예전처럼 브라우저에서 받는다.
-  const [work, writes] = await Promise.all([
+  // 마지막 것은 글을 펼쳤을 때 아래에 거는 "함께 읽을 만한 해석"용 전체 글 목록이다
+  // (사이트맵·RSS 와 같은 하루 캐시).
+  const [work, writes, writeIndex] = await Promise.all([
     GetWorkDetail(workId).catch(() => null),
     fetchWorkWrites(workId),
+    fetchWriteIndex(),
   ]);
+  const relatedWrites =
+    writes && writeIndex
+      ? relatedForWork(writes, Number(workId), type, writeIndex)
+      : undefined;
 
   // 작품 페이지는 글 본문을 펼치지 않고 작품 소개와 해석글 요약을 보여준다.
   // 본문까지 그리면 첫 글 페이지와 내용이 통째로 겹친다(PostDetailPage 참고).
@@ -101,6 +109,7 @@ export default async function WorkDetailPage({
         key={workId}
         workId={workId}
         initialData={work && writes ? { work, writes } : undefined}
+        relatedWrites={relatedWrites}
       />
     </>
   );

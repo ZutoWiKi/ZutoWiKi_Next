@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { GetWorksList } from "@/components/API/GetWorksList";
 import { PostWork } from "@/components/API/PostWork";
 import { getToken } from "@/components/API/session";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import SiteFooter from "@/components/SiteFooter";
 import { CATEGORY_NAMES } from "@/config/categories";
 import { workPath } from "@/lib/writeLink";
 
@@ -42,7 +43,6 @@ export default function WorkListPage({
   type,
   initialWorks,
 }: WorkListPageProps) {
-  const router = useRouter();
   const [works, setWorks] = useState<Work[]>(initialWorks ?? []);
   const [loading, setLoading] = useState(!initialWorks);
   const [error, setError] = useState<string | null>(null);
@@ -212,9 +212,15 @@ export default function WorkListPage({
       {/* 헤더 */}
       <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 px-4 sm:px-6 py-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
+          <Breadcrumbs
+            className="mb-3"
+            items={[{ label: "홈", href: "/" }, { label: categoryName }]}
+          />
           <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={() => router.push("/")}
+            {/* 홈으로 가는 진짜 링크. 예전에는 버튼이라 검색엔진이 따라가지 못했다. */}
+            <Link
+              href="/"
+              aria-label="홈으로"
               className="text-gray-600 hover:text-gray-800 transition-colors p-2 rounded-full hover:bg-gray-100"
             >
               <svg
@@ -230,7 +236,7 @@ export default function WorkListPage({
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
-            </button>
+            </Link>
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {categoryName} 작품 목록
             </h1>
@@ -333,6 +339,8 @@ export default function WorkListPage({
           </div>
         )}
       </main>
+
+      <SiteFooter clearFloatingButtons />
 
       {/* 플로팅 추가 버튼 */}
       <button
