@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { GetWorksList } from "@/components/API/GetWorksList";
 import { PostWork } from "@/components/API/PostWork";
@@ -29,7 +29,54 @@ export interface Work {
   author: string;
   coverImage: string;
   description: string;
+  /** 그 작품에 달린 해석글 수. 정렬과 "해석 N편" 표시에 쓴다. */
+  write_count?: number;
+  /** 그 작품의 해석글들이 받은 좋아요 총합 */
+  total_likes?: number;
+  /** 가장 최근 해석글 시각. 작품에는 등록 시각이 없어서 "최근" 의 기준으로 쓴다. */
+  latest_write_at?: string | null;
 }
+
+/** 정렬 기준. 값은 백엔드의 ?sort= 와 같은 이름을 쓴다. */
+type WorkSort = "writes" | "updated" | "new" | "old" | "likes" | "title";
+
+const SORT_LABELS: { value: WorkSort; label: string }[] = [
+  { value: "writes", label: "해석 많은 순" },
+  { value: "updated", label: "최근 해석순" },
+  { value: "new", label: "최근 등록순" },
+  { value: "old", label: "먼저 등록순" },
+  { value: "likes", label: "좋아요순" },
+  { value: "title", label: "가나다순" },
+];
+
+const num = (v: number | undefined) => v ?? 0;
+const time = (v: string | null | undefined) =>
+  v ? new Date(v).getTime() : Number.NEGATIVE_INFINITY;
+const byTitle = (a: Work, b: Work) =>
+  a.title.localeCompare(b.title, "ko") || a.id - b.id;
+
+/**
+ * 화면에서 다시 정렬할 때 쓰는 비교 함수.
+ *
+ * 기본값("writes")은 서버가 이미 그 순서로 주므로 목록을 건드리지 않는다.
+ * 서버 정렬과 브라우저 정렬이 미세하게 달라 첫 화면이 어긋나는 걸 막는다.
+ */
+const SORT_COMPARATORS: Record<
+  Exclude<WorkSort, "writes">,
+  (a: Work, b: Work) => number
+> = {
+  updated: (a, b) =>
+    time(b.latest_write_at) - time(a.latest_write_at) ||
+    num(b.write_count) - num(a.write_count) ||
+    byTitle(a, b),
+  new: (a, b) => b.id - a.id,
+  old: (a, b) => a.id - b.id,
+  likes: (a, b) =>
+    num(b.total_likes) - num(a.total_likes) ||
+    num(b.write_count) - num(a.write_count) ||
+    byTitle(a, b),
+  title: byTitle,
+};
 
 interface WorkListPageProps {
   type: string;
@@ -45,6 +92,7 @@ export default function WorkListPage({
   initialWorks,
 }: WorkListPageProps) {
   const [works, setWorks] = useState<Work[]>(initialWorks ?? []);
+  const [sortBy, setSortBy] = useState<WorkSort>("writes");
   const [loading, setLoading] = useState(!initialWorks);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -89,6 +137,12 @@ export default function WorkListPage({
     }
     fetchWorks();
   }, [type]); // Remove fetchWorks from dependency array to avoid warning
+
+  // 서버가 이미 "해석 많은 순"으로 주므로 기본값일 때는 그대로 둔다.
+  const sortedWorks = useMemo(() => {
+    if (sortBy === "writes") return works;
+    return [...works].sort(SORT_COMPARATORS[sortBy]);
+  }, [works, sortBy]);
 
   if (loading) {
     return (
@@ -245,10 +299,28 @@ export default function WorkListPage({
               {categoryName} 작품 목록
             </h1>
           </div>
-          <p className="text-sm sm:text-base text-gray-600">
-            {works.length}개의 {categoryName} 작품이 있습니다. 작품을 클릭하여
-            다양한 해석과 관점을 탐색해보세요.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+            <p className="text-sm sm:text-base text-gray-600">
+              {works.length}개의 {categoryName} 작품이 있습니다. 작품을 클릭하여
+              다양한 해석과 관점을 탐색해보세요.
+            </p>
+            {works.length > 1 && (
+              <label className="flex items-center gap-2 text-sm text-gray-600 shrink-0">
+                <span className="sr-only sm:not-sr-only">정렬</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as WorkSort)}
+                  className="px-2 py-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {SORT_LABELS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
         </div>
       </div>
 
@@ -286,7 +358,7 @@ export default function WorkListPage({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-8">
-            {works.map((work) => (
+            {sortedWorks.map((work) => (
               // 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다.
               <Link
                 key={work.id}
@@ -315,6 +387,13 @@ export default function WorkListPage({
                   <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 font-medium">
                     {placeholderInfo.author}: {work.author}
                   </p>
+                  {typeof work.write_count === "number" && (
+                    <p className="text-gray-500 text-xs mb-2 sm:mb-3">
+                      {work.write_count > 0
+                        ? `해석 ${work.write_count}편`
+                        : "아직 해석이 없습니다"}
+                    </p>
+                  )}
                   <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 hidden sm:block">
                     {work.description && work.description.length > 100
                       ? work.description.substring(0, 100) + "..."

@@ -42,3 +42,7 @@ next-env.d.ts
 
 # claude code local settings
 .claude/settings.local.json
+
+# next build 가 만드는 에이전트 규칙 파일. 빌드 부산물이라 추적하지 않는다.
+/AGENTS.md
+/CLAUDE.md
