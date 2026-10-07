@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import NoticeViewCount from "@/components/NoticeViewCount";
 import PageLayout from "@/components/PageLayout";
 import { formatDate } from "@/lib/formatDate";
 import { renderMarkdown } from "@/lib/markdown";
@@ -106,6 +107,18 @@ export default async function NoticeDetailPage({ params }: PageProps) {
                     <span>{formatDate(notice.updated_at)} 고침</span>
                   </>
                 )}
+              {/* 숫자를 보여주면서 열어 본 것을 한 번 센다. 백엔드가 조회수를
+                  보내지 않으면(예전 백엔드) 아예 그리지 않는다 — "조회 0" 이
+                  계속 떠 있는 것보다 낫다. */}
+              {typeof notice.views === "number" && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <NoticeViewCount
+                    noticeId={notice.id}
+                    initialViews={notice.views}
+                  />
+                </>
+              )}
             </div>
             <div
               // mt 에 ! 를 붙인다. github-markdown-css 가 .markdown-body 의 margin 을

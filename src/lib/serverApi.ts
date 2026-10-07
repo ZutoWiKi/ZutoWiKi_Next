@@ -156,14 +156,19 @@ export async function fetchHomeNotice(): Promise<NoticeSummary | null> {
 /**
  * 공지 목록(최근 것부터). 본문 대신 앞부분만 온다.
  *
- * 사이트맵은 하루짜리 캐시(SITEMAP_REVALIDATE_SECONDS)로 부른다. 공지 때문에
- * 사이트맵 전체가 5분마다 다시 만들어지지 않게 하려는 것이다 — 글 목록도 하루에
- * 한 번만 새로 받으므로 주기를 맞춘다.
+ * 공지 페이지와 사이트맵이 **같은 주기로** 부른다. 전에는 사이트맵만 하루 캐시로
+ * 불렀는데, 같은 주소라도 주기가 다르면 Next 가 캐시 칸을 따로 만든다. 그 바람에
+ * 배포 때 백엔드가 아직 안 떠 있어 실패한 응답이 사이트맵 쪽 칸에 하루 동안 남아,
+ * 공지 페이지는 멀쩡한데 사이트맵에만 공지가 빠졌다.
+ *
+ * 사이트맵이 5분마다 다시 만들어지지만 비싼 글 목록은 그대로 하루 캐시를 쓰므로,
+ * 늘어나는 비용은 이 가벼운 요청 하나뿐이다.
  */
-export function fetchNotices(
-  freshness: Freshness = NOTICE_REVALIDATE_SECONDS,
-): Promise<NoticeSummary[] | null> {
-  return getJson<NoticeSummary[]>("/api/post/notice/", freshness);
+export function fetchNotices(): Promise<NoticeSummary[] | null> {
+  return getJson<NoticeSummary[]>(
+    "/api/post/notice/",
+    NOTICE_REVALIDATE_SECONDS,
+  );
 }
 
 /**
@@ -202,7 +207,7 @@ export const WRITE_EXCERPT_LENGTH = 200;
  * 두 곳이 같은 주소·같은 캐시 설정으로 불러서 Next 캐시를 함께 쓴다. 하루에 한 번
  * 새로 받으므로 새 글이 사이트맵·피드에 오르기까지 최대 하루 걸린다.
  */
-export const SITEMAP_REVALIDATE_SECONDS = 60 * 60 * 24;
+const SITEMAP_REVALIDATE_SECONDS = 60 * 60 * 24;
 
 export async function fetchWriteIndex(): Promise<AllWrite[] | null> {
   // tags=1 은 백엔드가 읽지 않는 값이다. 응답에 태그가 새로 실리면서, 캐시에 남은 예전

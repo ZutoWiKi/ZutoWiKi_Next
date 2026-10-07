@@ -35,6 +35,19 @@ export interface Work {
   total_likes?: number;
   /** 가장 최근 해석글 시각. 작품에는 등록 시각이 없어서 "최근" 의 기준으로 쓴다. */
   latest_write_at?: string | null;
+  /** 지금 목록 맨 위에 고정된 작품인지. 기간이 지난 고정은 백엔드가 false 로 준다. */
+  pinned?: boolean;
+  /** 고정 배지에 쓸 문구. 관리자가 적지 않으면 백엔드가 기본 문구를 채워 준다. */
+  pin_label?: string;
+}
+
+/** 배지 문구를 못 받았을 때 쓸 기본값. 백엔드 WORK_PIN_DEFAULT_LABEL 과 같다. */
+const DEFAULT_PIN_LABEL = "이벤트 중";
+
+/** 고정 중이면 배지에 쓸 문구, 아니면 빈 문자열. */
+function pinBadge(work: Work): string {
+  if (!work.pinned) return "";
+  return work.pin_label?.trim() || DEFAULT_PIN_LABEL;
 }
 
 /** 정렬 기준. 값은 백엔드의 ?sort= 와 같은 이름을 쓴다. */
@@ -56,6 +69,18 @@ const byTitle = (a: Work, b: Work) =>
   a.title.localeCompare(b.title, "ko") || a.id - b.id;
 
 /**
+ * 고정한 작품을 먼저. 보는 사람이 어떤 정렬을 고르든 맨 위에 남아야 한다
+ * (백엔드도 같은 규칙으로 정렬해서 준다).
+ */
+const pinnedFirst = (a: Work, b: Work) =>
+  Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
+
+/** 고정 우선 규칙을 비교 함수 앞에 붙인다. */
+const withPinned =
+  (compare: (a: Work, b: Work) => number) => (a: Work, b: Work) =>
+    pinnedFirst(a, b) || compare(a, b);
+
+/**
  * 화면에서 다시 정렬할 때 쓰는 비교 함수.
  *
  * 기본값("writes")은 서버가 이미 그 순서로 주므로 목록을 건드리지 않는다.
@@ -65,17 +90,21 @@ const SORT_COMPARATORS: Record<
   Exclude<WorkSort, "writes">,
   (a: Work, b: Work) => number
 > = {
-  updated: (a, b) =>
-    time(b.latest_write_at) - time(a.latest_write_at) ||
-    num(b.write_count) - num(a.write_count) ||
-    byTitle(a, b),
-  new: (a, b) => b.id - a.id,
-  old: (a, b) => a.id - b.id,
-  likes: (a, b) =>
-    num(b.total_likes) - num(a.total_likes) ||
-    num(b.write_count) - num(a.write_count) ||
-    byTitle(a, b),
-  title: byTitle,
+  updated: withPinned(
+    (a, b) =>
+      time(b.latest_write_at) - time(a.latest_write_at) ||
+      num(b.write_count) - num(a.write_count) ||
+      byTitle(a, b),
+  ),
+  new: withPinned((a, b) => b.id - a.id),
+  old: withPinned((a, b) => a.id - b.id),
+  likes: withPinned(
+    (a, b) =>
+      num(b.total_likes) - num(a.total_likes) ||
+      num(b.write_count) - num(a.write_count) ||
+      byTitle(a, b),
+  ),
+  title: withPinned(byTitle),
 };
 
 interface WorkListPageProps {
@@ -358,67 +387,80 @@ export default function WorkListPage({
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-8">
-            {sortedWorks.map((work) => (
-              // 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다.
-              <Link
-                key={work.id}
-                href={workPath(type, work.id)}
-                prefetch={false}
-                className="group block cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/30 hover:border-white/50 transform hover:-translate-y-2"
-              >
-                <div className="aspect-[2/3] sm:aspect-[3/4] overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={work.coverImage}
-                    alt={work.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    width={200}
-                    height={300}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = `https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop`;
-                    }}
-                  />
-                </div>
-                <div className="p-3 sm:p-6">
-                  <h3 className="font-bold text-sm sm:text-lg text-gray-800 mb-1 sm:mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
-                    {work.title}
-                  </h3>
-                  <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 font-medium">
-                    {placeholderInfo.author}: {work.author}
-                  </p>
-                  {typeof work.write_count === "number" && (
-                    <p className="text-gray-500 text-xs mb-2 sm:mb-3">
-                      {work.write_count > 0
-                        ? `해석 ${work.write_count}편`
-                        : "아직 해석이 없습니다"}
-                    </p>
-                  )}
-                  <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 hidden sm:block">
-                    {work.description && work.description.length > 100
-                      ? work.description.substring(0, 100) + "..."
-                      : work.description}
-                  </p>
-                  <div className="mt-2 sm:mt-4 flex items-center text-blue-600 text-xs sm:text-sm font-medium group-hover:text-blue-700">
-                    <span className="hidden sm:inline">해석 보기</span>
-                    <span className="sm:hidden">보기</span>
-                    <svg
-                      className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
+            {sortedWorks.map((work) => {
+              // 관리자 화면에서 고정해 둔 작품이면 배지 문구가 있다.
+              const badge = pinBadge(work);
+              return (
+                // 진짜 링크로 둔다. 클릭 핸들러로만 이동하면 검색엔진이 작품으로 가는 길을 못 찾는다.
+                <Link
+                  key={work.id}
+                  href={workPath(type, work.id)}
+                  prefetch={false}
+                  className={`group relative block cursor-pointer bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-white/30 hover:border-white/50 transform hover:-translate-y-2 ${
+                    badge ? "ring-2 ring-amber-400 ring-offset-1" : ""
+                  }`}
+                >
+                  <div className="aspect-[2/3] sm:aspect-[3/4] overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={work.coverImage}
+                      alt={work.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      width={200}
+                      height={300}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=400&fit=crop`;
+                      }}
+                    />
+                    {/* 표지 위에 올리는 이벤트 배지. 사이트의 파란 계열과 달리 따뜻한
+                      색으로 둬서 목록에서 바로 눈에 띄게 한다. */}
+                    {badge && (
+                      <span className="absolute left-2 top-2 z-10 max-w-[calc(100%-1rem)] truncate rounded-full bg-gradient-to-r from-amber-500 to-pink-500 px-2 py-0.5 text-[11px] font-semibold text-white shadow-md sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-xs">
+                        {badge}
+                      </span>
+                    )}
                   </div>
-                </div>
-              </Link>
-            ))}
+                  <div className="p-3 sm:p-6">
+                    <h3 className="font-bold text-sm sm:text-lg text-gray-800 mb-1 sm:mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
+                      {work.title}
+                    </h3>
+                    <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 font-medium">
+                      {placeholderInfo.author}: {work.author}
+                    </p>
+                    {typeof work.write_count === "number" && (
+                      <p className="text-gray-500 text-xs mb-2 sm:mb-3">
+                        {work.write_count > 0
+                          ? `해석 ${work.write_count}편`
+                          : "아직 해석이 없습니다"}
+                      </p>
+                    )}
+                    <p className="text-gray-500 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 hidden sm:block">
+                      {work.description && work.description.length > 100
+                        ? work.description.substring(0, 100) + "..."
+                        : work.description}
+                    </p>
+                    <div className="mt-2 sm:mt-4 flex items-center text-blue-600 text-xs sm:text-sm font-medium group-hover:text-blue-700">
+                      <span className="hidden sm:inline">해석 보기</span>
+                      <span className="sm:hidden">보기</span>
+                      <svg
+                        className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2 group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </main>

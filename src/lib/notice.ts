@@ -12,6 +12,8 @@ export interface NoticeSummary {
   title: string;
   /** 본문 앞 NOTICE_EXCERPT_LENGTH 자. 마크다운 원문이라 평문으로 다듬어 쓴다. */
   excerpt?: string;
+  /** 조회수. 올리는 건 NoticeViewCount 가 한다. */
+  views?: number;
   created_at: string;
   /** 화면에는 쓰지 않는다. 사이트맵의 lastModified 가 쓴다. */
   updated_at?: string;

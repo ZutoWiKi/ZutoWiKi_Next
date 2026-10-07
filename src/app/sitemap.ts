@@ -1,11 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/config/site";
 import { NOTICE_LIST_PATH, noticePath } from "@/lib/notice";
-import {
-  SITEMAP_REVALIDATE_SECONDS,
-  fetchNotices,
-  fetchWriteIndex,
-} from "@/lib/serverApi";
+import { fetchNotices, fetchWriteIndex } from "@/lib/serverApi";
 import { categoryPath, workPath, writePath } from "@/lib/writeLink";
 
 /**
@@ -24,7 +20,7 @@ import { categoryPath, workPath, writePath } from "@/lib/writeLink";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [writes, notices] = await Promise.all([
     fetchWriteIndex(),
-    fetchNotices(SITEMAP_REVALIDATE_SECONDS),
+    fetchNotices(),
   ]);
 
   // 못 받았으면 실패로 끝낸다. 하루마다 다시 만들다 실패하면 Next 가 이전 사이트맵을
