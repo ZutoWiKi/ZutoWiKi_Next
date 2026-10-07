@@ -1,6 +1,7 @@
 import React from "react";
 import EventBanner from "@/components/EventBanner";
 import JsonLd from "@/components/JsonLd";
+import NoticeBar from "@/components/NoticeBar";
 import PageLayout from "@/components/PageLayout";
 import RecommendedWorks from "@/components/RecommendedWorks";
 import PurposeSection from "@/components/MainPurpose";
@@ -11,6 +12,7 @@ import { websiteJsonLd } from "@/lib/jsonLd";
 import {
   fetchAllWorks,
   fetchEventBanners,
+  fetchHomeNotice,
   fetchLatestWrites,
   fetchPopularWorks,
 } from "@/lib/serverApi";
@@ -18,14 +20,21 @@ import {
 export default async function HomePage() {
   // 첫 HTML 에 작품·글 목록과 링크가 들어가도록 서버에서 먼저 받는다.
   // 하나라도 실패하면 그 섹션만 예전처럼 브라우저에서 받는다.
-  const [works, latestWrites, popularByWrites, popularByLikes, banners] =
-    await Promise.all([
-      fetchAllWorks(),
-      fetchLatestWrites(HOME_WRITES_PAGE_SIZE),
-      fetchPopularWorks("writes"),
-      fetchPopularWorks("likes"),
-      fetchEventBanners(),
-    ]);
+  const [
+    works,
+    latestWrites,
+    popularByWrites,
+    popularByLikes,
+    banners,
+    notice,
+  ] = await Promise.all([
+    fetchAllWorks(),
+    fetchLatestWrites(HOME_WRITES_PAGE_SIZE),
+    fetchPopularWorks("writes"),
+    fetchPopularWorks("likes"),
+    fetchEventBanners(),
+    fetchHomeNotice(),
+  ]);
 
   // 인기 작품은 모바일·데스크톱용으로 두 번 그리므로 한 번 받아 같이 넘긴다.
   const popular =
@@ -39,6 +48,8 @@ export default async function HomePage() {
       <JsonLd data={websiteJsonLd()} />
       {/* 관리자 화면에서 등록한 이벤트 팝업. 닫은 사람에게는 뜨지 않는다. */}
       <EventBanner banners={banners ?? []} />
+      {/* 머리줄 바로 아래 한 줄 공지 띠. 눌러서 전문을 읽는다. 없으면 그려지지 않는다. */}
+      <NoticeBar notice={notice} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
           {/* 오른쪽 메인 콘텐츠 */}

@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { CATEGORY_LIST } from "@/config/categories";
+import { NOTICE_LIST_PATH } from "@/lib/notice";
 import { categoryPath } from "@/lib/writeLink";
 import VersionTag from "./VersionTag";
 
@@ -48,6 +49,19 @@ export default function SiteFooter({
             {category.name}
           </Link>
         ))}
+      </nav>
+      {/* 공지는 갈래가 아니므로 따로 둔다. 홈 띠가 내려가도 여기로 찾아올 수 있다. */}
+      <nav
+        aria-label="안내"
+        className="max-w-7xl mx-auto flex justify-center pb-3 text-sm text-gray-700"
+      >
+        <Link
+          href={NOTICE_LIST_PATH}
+          prefetch={false}
+          className="hover:text-blue-700 hover:underline"
+        >
+          공지
+        </Link>
       </nav>
       <div className="max-w-7xl mx-auto flex justify-center items-center">
         <div className="flex items-center">

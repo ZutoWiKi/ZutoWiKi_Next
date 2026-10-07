@@ -1,6 +1,11 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/config/site";
-import { fetchWriteIndex } from "@/lib/serverApi";
+import { NOTICE_LIST_PATH, noticePath } from "@/lib/notice";
+import {
+  SITEMAP_REVALIDATE_SECONDS,
+  fetchNotices,
+  fetchWriteIndex,
+} from "@/lib/serverApi";
 import { categoryPath, workPath, writePath } from "@/lib/writeLink";
 
 /**
@@ -17,7 +22,10 @@ import { categoryPath, workPath, writePath } from "@/lib/writeLink";
  * changeFrequency·priority 는 구글이 쓰지 않는 값이라 넣지 않는다.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const writes = await fetchWriteIndex();
+  const [writes, notices] = await Promise.all([
+    fetchWriteIndex(),
+    fetchNotices(SITEMAP_REVALIDATE_SECONDS),
+  ]);
 
   // 못 받았으면 실패로 끝낸다. 하루마다 다시 만들다 실패하면 Next 가 이전 사이트맵을
   // 계속 내보낸다. 여기서 홈만 담아 성공시키면 그 빈약한 사이트맵이 하루 동안 나간다.
@@ -41,6 +49,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       `${SITE_URL}${writePath(write.type_index, write.work_id, write.id)}`,
       date,
     );
+  }
+
+  // 공지는 글과 달리 못 받아도 사이트맵을 내보낸다. 부수적인 페이지라, 이것 때문에
+  // 글 주소가 통째로 빠지는 게 더 나쁘다. 고친 날이 있으면 그날을 쓴다.
+  if (notices?.length) {
+    pages.set(`${SITE_URL}${NOTICE_LIST_PATH}`, undefined);
+    for (const notice of notices) {
+      const date = new Date(notice.updated_at ?? notice.created_at);
+      pages.set(`${SITE_URL}${noticePath(notice.id)}`, date);
+      // 목록은 가장 최근에 바뀐 공지의 날짜를 쓴다.
+      touch(`${SITE_URL}${NOTICE_LIST_PATH}`, date);
+    }
   }
 
   return [...pages].map(([url, lastModified]) => ({ url, lastModified }));

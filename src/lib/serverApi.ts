@@ -4,6 +4,7 @@ import type { Work as PopularWork } from "@/components/API/GetPopularWorksList";
 import type { Write } from "@/components/PostDetailPage";
 import type { Work as ListWork } from "@/components/WorkListPage";
 import type { EventBannerData } from "@/lib/banner";
+import type { NoticeDetail, NoticeSummary } from "@/lib/notice";
 import { API_URL } from "@/config/site";
 
 /**
@@ -77,6 +78,14 @@ export async function fetchWorksByType(
  */
 const HOME_REVALIDATE_SECONDS = 60;
 
+/**
+ * 공지 목록·본문을 새로 받는 주기.
+ *
+ * 공지는 올린 뒤 거의 바뀌지 않아서 홈보다 길게 둔다. 급히 고쳐야 하면 그래도
+ * 5분 안에는 반영된다.
+ */
+const NOTICE_REVALIDATE_SECONDS = 300;
+
 export function fetchAllWorks(): Promise<AllWork[] | null> {
   return getJson<AllWork[]>("/api/post/work/all/", HOME_REVALIDATE_SECONDS);
 }
@@ -130,6 +139,60 @@ export function fetchEventBanners(): Promise<EventBannerData[] | null> {
   );
 }
 
+/**
+ * 지금 홈 맨 위 띠에 띄울 공지 하나. 없으면 null.
+ *
+ * 홈과 같은 주기로 새로 받으므로, 관리자 화면에서 올린 공지는 최대 1분 뒤부터 뜬다.
+ * 백엔드가 못 받아도 null → 띠를 그리지 않는다. 없어도 되는 것이라 홈을 막지 않는다.
+ */
+export async function fetchHomeNotice(): Promise<NoticeSummary | null> {
+  const rows = await getJson<NoticeSummary[]>(
+    "/api/post/notice/?home=1",
+    HOME_REVALIDATE_SECONDS,
+  );
+  return rows?.[0] ?? null;
+}
+
+/**
+ * 공지 목록(최근 것부터). 본문 대신 앞부분만 온다.
+ *
+ * 사이트맵은 하루짜리 캐시(SITEMAP_REVALIDATE_SECONDS)로 부른다. 공지 때문에
+ * 사이트맵 전체가 5분마다 다시 만들어지지 않게 하려는 것이다 — 글 목록도 하루에
+ * 한 번만 새로 받으므로 주기를 맞춘다.
+ */
+export function fetchNotices(
+  freshness: Freshness = NOTICE_REVALIDATE_SECONDS,
+): Promise<NoticeSummary[] | null> {
+  return getJson<NoticeSummary[]>("/api/post/notice/", freshness);
+}
+
+/**
+ * 공지 한 건.
+ *
+ * "없는 공지"와 "서버에 못 물어봄"을 구분한다. 백엔드가 잠깐 죽었을 때 멀쩡한
+ * 공지를 404 로 만들면 검색엔진이 색인에서 내려버린다(해석글 페이지와 같은 이유).
+ */
+export type NoticeLookup =
+  | { status: "found"; notice: NoticeDetail }
+  | { status: "missing" }
+  | { status: "unavailable" };
+
+export async function fetchNotice(id: string): Promise<NoticeLookup> {
+  try {
+    const res = await fetch(
+      `${API_URL}/api/post/notice/${encodeURIComponent(id)}/`,
+      {
+        next: { revalidate: NOTICE_REVALIDATE_SECONDS },
+      },
+    );
+    if (res.status === 404) return { status: "missing" };
+    if (!res.ok) return { status: "unavailable" };
+    return { status: "found", notice: (await res.json()) as NoticeDetail };
+  } catch {
+    return { status: "unavailable" };
+  }
+}
+
 /** 백엔드가 summary=1 목록에 싣는 본문 앞부분 길이. ZutoPages/views.py 의 excerpt 와 같아야 한다. */
 export const WRITE_EXCERPT_LENGTH = 200;
 
@@ -139,12 +202,14 @@ export const WRITE_EXCERPT_LENGTH = 200;
  * 두 곳이 같은 주소·같은 캐시 설정으로 불러서 Next 캐시를 함께 쓴다. 하루에 한 번
  * 새로 받으므로 새 글이 사이트맵·피드에 오르기까지 최대 하루 걸린다.
  */
+export const SITEMAP_REVALIDATE_SECONDS = 60 * 60 * 24;
+
 export async function fetchWriteIndex(): Promise<AllWrite[] | null> {
   // tags=1 은 백엔드가 읽지 않는 값이다. 응답에 태그가 새로 실리면서, 캐시에 남은 예전
   // 응답(태그 없음)을 하루 동안 계속 쓰지 않도록 캐시 주소를 바꾼 것이다.
   const data = await getJson<AllWrite[] | { results?: AllWrite[] }>(
     "/api/post/write/all/?summary=1&tags=1",
-    60 * 60 * 24,
+    SITEMAP_REVALIDATE_SECONDS,
   );
   if (data === null) return null;
   return Array.isArray(data) ? data : (data.results ?? []);
