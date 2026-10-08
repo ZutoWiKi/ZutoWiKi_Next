@@ -4,6 +4,8 @@ export interface UpdateWriteData {
   content: string;
   /** 보내면 태그를 이 목록으로 바꾼다. 빼면 서버가 기존 태그를 그대로 둔다. */
   tags?: string[];
+  /** 보내면 스포일러 주의를 이 값으로 바꾼다. 빼면 서버가 그대로 둔다. */
+  spoiler?: boolean;
 }
 
 export const UpdateWrite = async (

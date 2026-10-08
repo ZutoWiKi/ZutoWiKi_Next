@@ -210,10 +210,11 @@ export const WRITE_EXCERPT_LENGTH = 200;
 const SITEMAP_REVALIDATE_SECONDS = 60 * 60 * 24;
 
 export async function fetchWriteIndex(): Promise<AllWrite[] | null> {
-  // tags=1 은 백엔드가 읽지 않는 값이다. 응답에 태그가 새로 실리면서, 캐시에 남은 예전
-  // 응답(태그 없음)을 하루 동안 계속 쓰지 않도록 캐시 주소를 바꾼 것이다.
+  // tags=1·spoiler=1 은 백엔드가 읽지 않는 값이다. 응답에 태그·스포일러 표시가 새로
+  // 실리면서, 캐시에 남은 예전 응답(그 값 없음)을 하루 동안 계속 쓰지 않도록 캐시 주소를
+  // 바꾼 것이다. 스포일러 표시가 없으면 RSS 가 가려야 할 본문 앞부분을 싣는다.
   const data = await getJson<AllWrite[] | { results?: AllWrite[] }>(
-    "/api/post/write/all/?summary=1&tags=1",
+    "/api/post/write/all/?summary=1&tags=1&spoiler=1",
     SITEMAP_REVALIDATE_SECONDS,
   );
   if (data === null) return null;

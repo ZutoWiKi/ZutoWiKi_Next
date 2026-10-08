@@ -10,6 +10,7 @@ import { writeJsonLd } from "@/lib/jsonLd";
 import { relatedForWork } from "@/lib/related";
 import { fetchWorkWrites, fetchWriteIndex } from "@/lib/serverApi";
 import { markdownToPlainText, truncateText } from "@/lib/plainText";
+import { spoilerDescription } from "@/lib/spoiler";
 import { writePath, writeTitle } from "@/lib/writeLink";
 
 /**
@@ -60,6 +61,9 @@ function describeWrite(
   work: Work | null,
   typeName: string,
 ): string {
+  // 스포일러 주의 글은 본문 앞부분 대신 안내문을 싣는다. 설명문은 검색 결과와
+  // 카카오톡·X 같은 공유 미리보기에 그대로 보여서, 화면에서 가려도 여기서 새어 나간다.
+  if (write.spoiler) return spoilerDescription(work?.title ?? write.work_title);
   return toDescription(
     write.content,
     work

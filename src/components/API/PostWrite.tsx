@@ -7,6 +7,7 @@ interface WriteData {
   work: number;
   parentID: number;
   tags: string[];
+  spoiler: boolean;
 }
 
 interface WriteResponse {

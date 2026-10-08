@@ -41,6 +41,8 @@ import { DeleteWrite } from "@/components/API/DeleteWrite";
 import { GetCurrentUser, CurrentUser } from "@/components/API/GetCurrentUser";
 import UserProfileColor from "@/components/UserProfileColor";
 import TagList from "@/components/TagList";
+import SpoilerBadge from "@/components/SpoilerBadge";
+import SpoilerGuard from "@/components/SpoilerGuard";
 import "github-markdown-css/github-markdown.css";
 import { useRef } from "react";
 import { AnimatedListRef } from "./AnimatedList";
@@ -82,6 +84,7 @@ export interface Write {
   parentID: number;
   is_liked?: boolean; // 사용자의 좋아요 상태
   tags?: string[]; // 글쓴이가 단 순서대로. 태그 기능 전의 백엔드 응답에는 없다.
+  spoiler?: boolean; // 스포일러 주의. 이 기능 전의 백엔드 응답에는 없다.
 }
 
 export interface Work {
@@ -1089,6 +1092,7 @@ export default function PostDetailPage({
                       </div>
                     )}
                   </div>
+                  {selectedWrite.spoiler && <SpoilerBadge className="mb-3" />}
                   <TagList tags={selectedWrite.tags} className="mb-3" />
                   <div className="flex items-center justify-between text-gray-600 text-sm mb-4">
                     <span>{selectedWrite.user_name}</span>
@@ -1168,12 +1172,19 @@ export default function PostDetailPage({
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                  <div
-                    className="markdown-body !bg-white !text-black list-disc list-decimal list-inside"
-                    dangerouslySetInnerHTML={{
-                      __html: renderMarkdown(selectedWrite.content),
-                    }}
-                  ></div>
+                  {/* 스포일러 주의 글이면 본문을 가려 둔다. 글마다 따로 가리도록 글 번호로 key 를 준다. */}
+                  <SpoilerGuard
+                    key={selectedWrite.id}
+                    active={Boolean(selectedWrite.spoiler)}
+                    writeId={selectedWrite.id}
+                  >
+                    <div
+                      className="markdown-body !bg-white !text-black list-disc list-decimal list-inside"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(selectedWrite.content),
+                      }}
+                    ></div>
+                  </SpoilerGuard>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-200">
@@ -1246,9 +1257,23 @@ export default function PostDetailPage({
                             <p className="mt-1 text-xs sm:text-sm text-gray-500">
                               {write.user_name} · {formatDate(write.created_at)} · 조회 {write.views} · 좋아요 {write.likes}
                             </p>
-                            <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                              {truncateText(markdownToPlainText(write.content), 160)}
-                            </p>
+                            {write.spoiler ? (
+                              // 스포일러 주의 글은 미리보기도 가린다. 눌러서 펼치면 본문 쪽에서 다시 한 번 묻는다.
+                              <>
+                                <SpoilerBadge className="mt-2" />
+                                <div
+                                  aria-hidden="true"
+                                  data-nosnippet=""
+                                  className="mt-2 text-sm text-gray-600 leading-relaxed blur-sm select-none"
+                                >
+                                  {truncateText(markdownToPlainText(write.content), 160)}
+                                </div>
+                              </>
+                            ) : (
+                              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                                {truncateText(markdownToPlainText(write.content), 160)}
+                              </p>
+                            )}
                             <TagList tags={write.tags} className="mt-2" />
                             <span className="mt-2 inline-block text-sm text-blue-600">
                               읽기 →

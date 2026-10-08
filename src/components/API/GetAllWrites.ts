@@ -19,6 +19,8 @@ export interface AllWrite {
   is_liked?: boolean;
   /** 글쓴이가 단 순서대로. 태그 기능 전의 백엔드 응답에는 없다. */
   tags?: string[];
+  /** 스포일러 주의. 이 기능 전의 백엔드 응답에는 없다. */
+  spoiler?: boolean;
   /** 예전 응답 호환용. 목록에서는 쓰지 않는다. */
   content?: string;
 }

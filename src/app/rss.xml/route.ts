@@ -4,6 +4,7 @@ import { categoryName } from "@/config/categories";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/config/site";
 import { markdownToPlainText, truncateText } from "@/lib/plainText";
 import { fetchWriteIndex, WRITE_EXCERPT_LENGTH } from "@/lib/serverApi";
+import { spoilerDescription } from "@/lib/spoiler";
 import { writePath, writeTitle } from "@/lib/writeLink";
 
 /** 피드에 싣는 최근 글 수. 수집기는 최신 글만 보므로 전부 실을 필요가 없다. */
@@ -45,6 +46,9 @@ function xml(value: string): string {
  * 그대로 들어 있다. 평문으로 바꾸고, 뒤가 더 있는 글에만 …를 붙인다.
  */
 function summary(write: AllWrite): string {
+  // 스포일러 주의 글은 본문 앞부분을 싣지 않는다. 피드 구독기는 요약을 그대로 보여 준다.
+  if (write.spoiler) return spoilerDescription(write.work_title);
+
   const source = write.excerpt ?? write.content ?? "";
   // 백엔드는 본문을 앞 200자에서 자른다. 200자를 꽉 채웠으면 뒤가 더 있는 글이다.
   const cut = Array.from(source).length >= WRITE_EXCERPT_LENGTH;

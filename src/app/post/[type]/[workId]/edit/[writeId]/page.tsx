@@ -14,6 +14,7 @@ import "github-markdown-css/github-markdown.css";
 import { UpdateWrite, UpdateWriteData } from "@/components/API/UpdateWrite";
 import { GetWritesList } from "@/components/API/GetWriteList";
 import TagInput from "@/components/TagInput";
+import SpoilerToggle from "@/components/SpoilerToggle";
 
 const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
@@ -40,6 +41,7 @@ interface Write {
   parentID: number;
   is_liked?: boolean;
   tags?: string[];
+  spoiler?: boolean;
 }
 
 export default function EditPage() {
@@ -49,6 +51,7 @@ export default function EditPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [spoiler, setSpoiler] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -119,6 +122,7 @@ export default function EditPage() {
         setTitle(currentWrite.title);
         setContent(currentWrite.content);
         setTags(currentWrite.tags ?? []);
+        setSpoiler(Boolean(currentWrite.spoiler));
       } catch (error) {
         console.error("글 데이터 로딩 실패:", error);
         setError("글 데이터를 불러오는데 실패했습니다.");
@@ -269,6 +273,7 @@ export default function EditPage() {
         title: title.trim(),
         content: content.trim(),
         tags,
+        spoiler,
       };
 
       await UpdateWrite(parseInt(writeId), updateData, token);
@@ -337,6 +342,13 @@ export default function EditPage() {
 
         {/* 태그 입력 */}
         <TagInput value={tags} onChange={setTags} disabled={isLoading} />
+
+        {/* 스포일러 주의 */}
+        <SpoilerToggle
+          checked={spoiler}
+          onChange={setSpoiler}
+          disabled={isLoading}
+        />
 
         {/* 내용 입력 */}
         <div className="bg-white">

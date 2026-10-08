@@ -15,6 +15,7 @@ import "easymde/dist/easymde.min.css";
 import "github-markdown-css/github-markdown.css";
 import { PostWrite } from "@/components/API/PostWrite";
 import TagInput from "@/components/TagInput";
+import SpoilerToggle from "@/components/SpoilerToggle";
 
 const SimpleMDEEditor = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
@@ -42,6 +43,7 @@ export default function WritePage({ params }: WritePageProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [spoiler, setSpoiler] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -295,6 +297,7 @@ export default function WritePage({ params }: WritePageProps) {
         work: workIdNumber,
         parentID: parentID,
         tags,
+        spoiler,
       };
 
       await PostWrite(writeData, token);
@@ -355,6 +358,13 @@ export default function WritePage({ params }: WritePageProps) {
 
         {/* 태그 입력 */}
         <TagInput value={tags} onChange={setTags} disabled={isLoading} />
+
+        {/* 스포일러 주의 */}
+        <SpoilerToggle
+          checked={spoiler}
+          onChange={setSpoiler}
+          disabled={isLoading}
+        />
 
         {/* 내용 입력 */}
         <div className="bg-white">

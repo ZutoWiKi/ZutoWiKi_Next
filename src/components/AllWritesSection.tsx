@@ -11,6 +11,8 @@ import {
   WriteSort,
 } from "@/components/API/GetAllWrites";
 import { motion, useInView } from "framer-motion";
+import SpoilerBadge from "@/components/SpoilerBadge";
+import { markHomeEntry } from "@/lib/spoiler";
 
 interface AnimatedWriteProps {
   write: AllWrite;
@@ -22,8 +24,14 @@ const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, href }) => {
   const inView = useInView(ref, { amount: 0.5, once: false });
 
   // 진짜 링크로 감싼다. 클릭 핸들러로만 이동하면 검색엔진이 글로 가는 길을 못 찾는다.
+  // 홈에서 눌러 들어간 글은 스포일러 가림막을 스크롤로도 풀 수 있다(src/lib/spoiler.ts).
   return (
-    <Link href={href} prefetch={false} className="block">
+    <Link
+      href={href}
+      prefetch={false}
+      onNavigate={() => markHomeEntry(write.id)}
+      className="block"
+    >
       <motion.div
         ref={ref}
         initial={{ scale: 0.7, opacity: 0 }}
@@ -100,6 +108,7 @@ const AnimatedWrite: React.FC<AnimatedWriteProps> = ({ write, href }) => {
             <p className="text-xs sm:text-sm text-gray-500">
               by {write.work_author}
             </p>
+            {write.spoiler && <SpoilerBadge className="self-start sm:self-auto" />}
           </div>
           <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
             <span className="text-gray-700 font-medium">{write.user_name}</span>
